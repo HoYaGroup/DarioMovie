@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <!--
+      鎖住縮放：小朋友雙指亂捏時畫面才不會跑掉
+    -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+    />
+
+    <!-- iOS 專用：加入主畫面後以獨立 App 開啟，沒有 Safari 網址列與分頁列 -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="我的影片" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="theme-color" content="#14122e" />
+    <!-- 私人使用的網站，不要讓 Google 之類的搜尋引擎收錄 -->
+    <meta name="robots" content="noindex, nofollow, noarchive" />
+
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon-180.png" />
+    <link rel="icon" type="image/png" href="icons/icon-192.png" />
+    <!-- 先連上 YouTube，讓小朋友點下去時能快一點開始播 -->
+    <link rel="preconnect" href="https://www.youtube.com" />
+    <link rel="preconnect" href="https://i.ytimg.com" />
+
+    <title>我的學習影片</title>
+
+    <script>
+      // 在畫面畫出來之前就把主題定下來，否則選亮色的人每次開啟
+      // 都會先閃一下深色。這段必須是同步執行的 inline script。
+      try {
+        var t = localStorage.getItem('kidtube.theme') || 'dark'
+        var r = t === 'system' ? (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark') : t
+        document.documentElement.setAttribute('data-theme', r)
+      } catch (e) {}
+    </script>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

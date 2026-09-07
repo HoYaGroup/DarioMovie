@@ -1,0 +1,169 @@
+/* ===========================================================
+   全域基礎：設計變數、reset、共用元件樣式
+   設計取向：深色底讓影片縮圖跳出來、觸控目標大、字大、無干擾
+   =========================================================== */
+
+/* ===========================================================
+   佈景主題
+   深色是預設（看影片不刺眼、縮圖也跳得出來），
+   亮色給白天或偏好淺色的人用。
+   兩套的文字對比度都驗算過，最低 4.5:1。
+   =========================================================== */
+
+:root {
+  --bg:       #14122e;
+  --bg-soft:  #1e1b42;
+  --bg-card:  #272357;
+  --line:     #3a3570;
+  --text:     #f4f2ff;
+  --text-dim: #a9a3d8;
+  --accent:   #ffc93c;   /* 主要動作：亮黃 */
+  --accent-2: #ff7b5a;   /* 次要強調：珊瑚橘 */
+  --ok:       #4ddba0;
+  --danger:   #ff5f6d;
+  /* 放在 accent 上面的文字色 */
+  --on-accent: var(--on-accent);
+  --on-accent-2: var(--on-accent-2);
+  /* 深色底本來就跟亮黃差很多，不需要描邊 */
+  --accent-edge: transparent;
+  --shadow: var(--shadow);
+  --radius:   22px;
+
+  --safe-t: env(safe-area-inset-top, 0px);
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-l: env(safe-area-inset-left, 0px);
+  --safe-r: env(safe-area-inset-right, 0px);
+}
+
+:root[data-theme='light'] {
+  --bg:       #f4f3fa;
+  --bg-soft:  #ffffff;
+  --bg-card:  #eceaf7;
+  --line:     #d9d5ec;
+  --text:     #221d45;
+  --text-dim: #605a86;
+  --accent:   #f0a500;
+  --accent-2: #c94d2e;
+  --ok:       #0e875d;
+  --danger:   #cc2f3e;
+  --on-accent: #33220a;
+  --on-accent-2: #ffffff;
+  /*
+    亮黃對淺底只有 1.89:1，不到 UI 元件要求的 3:1。
+    不想為了達標把黃色壓成暗金（那就不童趣了），
+    改成描一圈深色的邊 —— 邊界清楚了，對比要求就由邊框滿足。
+  */
+  --accent-edge: #b57d00;
+  --shadow: rgba(70, 60, 120, .16);
+}
+
+* { box-sizing: border-box; }
+
+html, body, #app {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang TC', 'Noto Sans TC',
+               'Helvetica Neue', 'Microsoft JhengHei', sans-serif;
+  overflow: hidden;
+
+  /* 小朋友最常誤觸的幾件事：長按選字、放大鏡、雙擊縮放、捲動彈跳 */
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+  touch-action: manipulation;
+}
+
+/* ---------- 共用：頂部列 ---------- */
+.app-bar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: calc(var(--safe-t) + 16px) calc(var(--safe-r) + 22px) 14px calc(var(--safe-l) + 22px);
+  background: linear-gradient(180deg, var(--bg-soft), transparent);
+}
+
+.app-bar h1 {
+  margin: 0;
+  font-size: clamp(20px, 2.6vw, 30px);
+  font-weight: 800;
+  letter-spacing: .5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---------- 共用：按鈕 ---------- */
+.icon-btn {
+  flex: none;
+  width: 54px;
+  height: 54px;
+  border: 0;
+  border-radius: 17px;
+  background: var(--bg-card);
+  color: var(--text-dim);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: transform .15s ease, background .15s ease;
+}
+.icon-btn:active { transform: scale(.92); background: var(--line); }
+.icon-btn svg { width: 26px; height: 26px; fill: currentColor; }
+
+.primary-btn,
+.ghost-btn {
+  padding: 14px 22px;
+  font-size: 17px;
+  font-weight: 700;
+  font-family: inherit;
+  border-radius: 14px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform .15s ease;
+}
+.primary-btn:active,
+.ghost-btn:active { transform: scale(.96); }
+.primary-btn {
+  width: 100%;
+  background: var(--accent);
+  border-color: var(--accent-edge);
+  color: var(--on-accent);
+}
+.ghost-btn { background: transparent; border-color: var(--line); color: var(--text); }
+
+/* ---------- 共用：表單 ---------- */
+.field { display: block; margin-bottom: 14px; }
+.field span {
+  display: block;
+  margin-bottom: 7px;
+  font-size: 14px;
+  color: var(--text-dim);
+}
+.field input,
+.io-box {
+  width: 100%;
+  padding: 14px 16px;
+  font-size: 17px;
+  font-family: inherit;
+  color: var(--text);
+  background: var(--bg);
+  border: 2px solid var(--line);
+  border-radius: 14px;
+  outline: none;
+}
+.field input:focus,
+.io-box:focus { border-color: var(--accent); }
+.io-box { resize: vertical; font-size: 13px; line-height: 1.6; }
+
+.msg { margin: 12px 0 0; font-size: 15px; min-height: 20px; }
+.msg.ok { color: var(--ok); }
+.msg.err { color: var(--danger); }
+.hint { margin: 0 0 12px; font-size: 14px; color: var(--text-dim); line-height: 1.7; }

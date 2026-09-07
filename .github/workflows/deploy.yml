@@ -1,0 +1,79 @@
+# 推到 main 分支就自動建置並部署到 GitHub Pages
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:   # 也可以在 Actions 頁面手動觸發
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 同時只跑一個部署，後推的會取代前一個
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # 不想讓片單出現在 repo 裡的話：
+      #   1. 把 public/playlist.txt 加進 .gitignore
+      #   2. 到 Settings → Secrets and variables → Actions 建一個叫 PLAYLIST 的 secret，
+      #      內容就是整份片單
+      # 沒設定這個 secret 時，會照常用 repo 裡的 public/playlist.txt
+      - name: 從 Secret 寫入片單（有設定才會執行）
+        env:
+          PLAYLIST: ${{ secrets.PLAYLIST }}
+        run: |
+          if [ -n "$PLAYLIST" ]; then
+            printf '%s\n' "$PLAYLIST" > public/playlist.txt
+            echo "已從 Secret 寫入片單（$(wc -l < public/playlist.txt) 行）"
+          else
+            echo "沒有 PLAYLIST secret，使用 repo 裡的 public/playlist.txt"
+          fi
+
+      # GitHub Pages 的網址分兩種：
+      #   <帳號>.github.io          → 網站在根目錄
+      #   <帳號>.github.io/<repo>/  → 網站在子目錄，Vite 要知道這個前綴
+      - name: 決定 base path
+        run: |
+          OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          REPO="${{ github.event.repository.name }}"
+          if [ "$(echo "$REPO" | tr '[:upper:]' '[:lower:]')" = "$OWNER.github.io" ]; then
+            echo "VITE_BASE_PATH=/" >> "$GITHUB_ENV"
+          else
+            echo "VITE_BASE_PATH=/$REPO/" >> "$GITHUB_ENV"
+          fi
+
+      - run: npm run build
+
+      # 少了這個檔案，GitHub Pages 會用 Jekyll 處理，
+      # 把底線開頭的目錄整個忽略掉，網站就變空白
+      - run: touch dist/.nojekyll
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
