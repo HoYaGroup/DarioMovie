@@ -10,6 +10,7 @@ interface YTPlayer {
   getCurrentTime: () => number
   getDuration: () => number
   getPlayerState: () => number
+  setPlaybackRate: (rate: number) => void
   destroy: () => void
 }
 declare global {
@@ -71,6 +72,13 @@ export function useYouTubePlayer(options: {
   let tickTimer: ReturnType<typeof setInterval> | null = null
   let lastTickAt = 0
   let finished = false
+  /** 目前載入的影片 ID；切字幕要整個重建播放器時要知道重建誰 */
+  let currentVideoId = ''
+
+  /** 播放速度、字幕開關、單片重複，三者都要在每次換片後重新套用到新的播放器實例 */
+  const playbackRate = ref(1)
+  const captionsOn = ref(false)
+  const repeat = ref(false)
 
   const isPlaying = computed(() => status.value === 'playing')
   const progress = computed(() => (duration.value ? currentTime.value / duration.value : 0))
@@ -113,10 +121,52 @@ export function useYouTubePlayer(options: {
 
   function finish() {
     if (finished) return
+    // 重複播放：跳回開頭繼續放，不當成「真的播完」，也就不會觸發關閉或換下一部
+    if (repeat.value) {
+      try { player?.seekTo(0, true) } catch { /* 播放器可能已被卸載 */ }
+      return
+    }
     finished = true
     stopTick()
     try { player?.stopVideo() } catch { /* 播放器可能已被卸載 */ }
     options.onFinish()
+  }
+
+  /** 換片之後，把播放速度重新套用到新的播放器狀態上 */
+  function applySettings() {
+    if (!player) return
+    try { player.setPlaybackRate(playbackRate.value) } catch { /* 略過 */ }
+  }
+
+  function setPlaybackRate(rate: number) {
+    playbackRate.value = rate
+    if (player && ready) {
+      try { player.setPlaybackRate(rate) } catch { /* 略過 */ }
+    }
+  }
+
+  /**
+   * 字幕開關。
+   *
+   * YouTube 那組沒有官方文件的 loadModule/setOption('captions',...) 實測完全失效
+   * （tracklist 永遠是空的，設什麼語言都沒用）——唯一真的有效的是建立播放器當下的
+   * cc_load_policy 參數，但它只能在「新建」播放器時生效，播到一半改不了。
+   * 所以切字幕的唯一辦法是把播放器整個砍掉重建，重建時記住目前播到哪，蓋回去繼續播。
+   */
+  function setCaptionsOn(flag: boolean) {
+    if (captionsOn.value === flag) return
+    captionsOn.value = flag
+    if (!player || !currentVideoId) return
+    const resumeSec = player.getCurrentTime() || 0
+    try { player.destroy() } catch { /* 已經沒了就算了 */ }
+    player = null
+    ready = false
+    status.value = 'loading'
+    createPlayer(currentVideoId, resumeSec)
+  }
+
+  function toggleRepeat() {
+    repeat.value = !repeat.value
   }
 
   function onStateChange(e: { data: number }) {
@@ -134,8 +184,54 @@ export function useYouTubePlayer(options: {
     }
   }
 
+  /** 真正建立播放器實例；resumeSec > 0 表示是切字幕重建的，就緒後要先跳到原本播到的位置 */
+  function createPlayer(videoId: string, resumeSec: number) {
+    if (!hostRef.value) return
+
+    // 自建掛載點：YT 會把它整個換成 iframe，這樣 Vue 就不會去碰被換掉的節點
+    const mountPoint = document.createElement('div')
+    hostRef.value.innerHTML = ''
+    hostRef.value.appendChild(mountPoint)
+
+    player = new window.YT!.Player(mountPoint, {
+      videoId,
+      // 走隱私加強模式網域：不讀寫 youtube.com 的任何 cookie，字幕開關才不會被
+      // 「這台裝置曾經在 youtube.com 打開過字幕」這種殘留偏好蓋過去
+      host: 'https://www.youtube-nocookie.com',
+      playerVars: {
+        autoplay: 1,
+        controls: 0,        // 不載入 YouTube 原生控制列 → 沒有 logo、標題、分享、稍後觀看
+        disablekb: 1,       // 停用鍵盤快捷鍵
+        fs: 0,              // 停用原生全螢幕鈕（iOS 全螢幕會被系統播放器接管，那裡有推薦）
+        iv_load_policy: 3,  // 關閉影片註解卡
+        modestbranding: 1,
+        playsinline: 1,     // iOS 必須：不讓原生播放器接管畫面
+        rel: 0,             // 相關影片限制在同頻道（2018 年後的語意，仍值得帶上）
+        // 字幕唯一真正有效的開關只有這個，而且只能在建立當下生效（見 setCaptionsOn 說明）
+        cc_load_policy: captionsOn.value ? 1 : 0,
+        cc_lang_pref: 'en',
+        enablejsapi: 1,
+        origin: window.location.origin,
+      },
+      events: {
+        onReady: () => {
+          ready = true
+          applySettings()
+          if (resumeSec > 0) {
+            try { player?.seekTo(resumeSec, true) } catch { /* 略過 */ }
+          }
+          // iOS 可能擋掉自動播放；擋掉也無妨，小朋友點畫面就會開始
+          try { player?.playVideo() } catch { /* 使用者手勢不足，等他點畫面 */ }
+        },
+        onStateChange,
+        onError: () => { status.value = 'error' },
+      },
+    })
+  }
+
   /** 建立播放器並開始播放指定影片 */
   async function load(videoId: string) {
+    currentVideoId = videoId
     finished = false
     status.value = 'loading'
     currentTime.value = 0
@@ -146,39 +242,11 @@ export function useYouTubePlayer(options: {
 
     if (player && ready) {
       player.loadVideoById(videoId)
+      applySettings()
       return
     }
 
-    // 自建掛載點：YT 會把它整個換成 iframe，這樣 Vue 就不會去碰被換掉的節點
-    const mountPoint = document.createElement('div')
-    hostRef.value.innerHTML = ''
-    hostRef.value.appendChild(mountPoint)
-
-    player = new window.YT!.Player(mountPoint, {
-      videoId,
-      playerVars: {
-        autoplay: 1,
-        controls: 0,        // 不載入 YouTube 原生控制列 → 沒有 logo、標題、分享、稍後觀看
-        disablekb: 1,       // 停用鍵盤快捷鍵
-        fs: 0,              // 停用原生全螢幕鈕（iOS 全螢幕會被系統播放器接管，那裡有推薦）
-        iv_load_policy: 3,  // 關閉影片註解卡
-        modestbranding: 1,
-        playsinline: 1,     // iOS 必須：不讓原生播放器接管畫面
-        rel: 0,             // 相關影片限制在同頻道（2018 年後的語意，仍值得帶上）
-        cc_load_policy: 0,
-        enablejsapi: 1,
-        origin: window.location.origin,
-      },
-      events: {
-        onReady: () => {
-          ready = true
-          // iOS 可能擋掉自動播放；擋掉也無妨，小朋友點畫面就會開始
-          try { player?.playVideo() } catch { /* 使用者手勢不足，等他點畫面 */ }
-        },
-        onStateChange,
-        onError: () => { status.value = 'error' },
-      },
-    })
+    createPlayer(videoId, 0)
   }
 
   function play() {
@@ -233,5 +301,6 @@ export function useYouTubePlayer(options: {
   return {
     hostRef, status, isPlaying, currentTime, duration, progress,
     load, toggle, play, pause, seekBy, previewSeek, commitSeek, finish, teardown,
+    playbackRate, setPlaybackRate, captionsOn, setCaptionsOn, repeat, toggleRepeat,
   }
 }

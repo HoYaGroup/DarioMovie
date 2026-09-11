@@ -5,6 +5,7 @@ import { useTheme, THEME_COLORS } from '~/composables/useTheme'
 import { useLibrary } from '~/composables/useLibrary'
 import { useWatchTime } from '~/composables/useWatchTime'
 import { useDisplay } from '~/composables/useDisplay'
+import { useContinueWatching } from '~/composables/useContinueWatching'
 import { useParentGate } from '~/composables/useParentGate'
 import { warmUpYouTubeApi } from '~/composables/useYouTubePlayer'
 import VideoLibrary from '~/components/VideoLibrary.vue'
@@ -18,11 +19,16 @@ type Screen = 'library' | 'watch' | 'site' | 'parent'
 const { appTitle, init } = useLibrary()
 const { init: initWatchTime, resetSession } = useWatchTime()
 const { init: initDisplay } = useDisplay()
+const { init: initContinueWatching } = useContinueWatching()
 const { init: initTheme, resolved: themeResolved } = useTheme()
 const { requestAccess } = useParentGate()
 
 const screen = ref<Screen>('library')
 const playing = ref<VideoItem | null>(null)
+/** 目前這部影片所屬的清單，播完（或按下一部）就照這個順序循環播放 */
+const queue = ref<VideoItem[]>([])
+/** 從「接續播放」進來的話，這是要跳到的秒數；一般點片單就是 0 */
+const resumeAt = ref(0)
 
 // 相當於原本 Nuxt 版 pages/index.vue 的 useHead()：同步 <title> 與 PWA 狀態列底色
 watchEffect(() => {
@@ -35,6 +41,7 @@ onMounted(() => {
   init()
   initWatchTime()
   initDisplay()
+  initContinueWatching()
   initTheme()
   // 先把 YouTube 的指令碼載進來，小朋友點下去才不用等
   warmUpYouTubeApi()
@@ -57,10 +64,24 @@ function pushScreen(next: Screen) {
   history.pushState({ screen: next }, '')
 }
 
-function play(video: VideoItem) {
+function play(video: VideoItem, list: VideoItem[] = [video]) {
   playing.value = video
+  resumeAt.value = 0
+  // 網站沒有「播完」這件事，清單循環只對真的影片有意義，混在同一冊裡也要濾掉
+  queue.value = list.filter((v) => (v.kind ?? 'video') === 'video')
   // 網站在 App 裡面開，小朋友不會跳出去回不來
   pushScreen(video.kind === 'site' ? 'site' : 'watch')
+}
+
+/** 從片單畫面的「接續播放」點進來，額外帶一個要跳到的秒數 */
+function playResume(video: VideoItem, list: VideoItem[], positionSec: number) {
+  play(video, list)
+  resumeAt.value = positionSec
+}
+
+/** 播完（或重複播放跳過）自動接下一部，接到清單尾端就繞回第一部 */
+function advance(video: VideoItem) {
+  playing.value = video
 }
 
 function backToLibrary() {
@@ -95,6 +116,7 @@ function onPopState() {
     <VideoLibrary
       v-if="screen === 'library'"
       @play="play"
+      @resume="playResume"
       @open-parent="openParent"
     />
 
@@ -105,7 +127,10 @@ function onPopState() {
     <VideoStage
       v-else-if="screen === 'watch' && playing"
       :video="playing"
+      :queue="queue"
+      :resume-at="resumeAt"
       @close="backToLibrary"
+      @advance="advance"
     />
 
     <SiteStage

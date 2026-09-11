@@ -1,21 +1,49 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
-import { thumbUrl, categoryColor, type VideoItem } from '~/utils/youtube'
+import { thumbUrl, categoryColor, formatTime, type VideoItem } from '~/utils/youtube'
 import { humanMinutes, countdown, useWatchTime } from '~/composables/useWatchTime'
 import { useLibrary } from '~/composables/useLibrary'
 import { useDisplay } from '~/composables/useDisplay'
+import { useContinueWatching } from '~/composables/useContinueWatching'
 import { useTheme } from '~/composables/useTheme'
 import { useTvMode } from '~/composables/useTvMode'
 
-const emit = defineEmits<{ play: [video: VideoItem]; openParent: [] }>()
+const emit = defineEmits<{
+  play: [video: VideoItem, queue: VideoItem[]]
+  resume: [video: VideoItem, queue: VideoItem[], positionSec: number]
+  openParent: []
+}>()
 
 const {
   sections, categories, appTitle, groupsIn, countIn, categoriesIn, countInSection, syncStatus,
+  videos, looseVideosIn, videosInSub,
 } = useLibrary()
 const { hasLimit, remainingSeconds, isLimitReached, isResting, restRemainingSeconds } = useWatchTime()
 const { settings: display, lastGroupOf, rememberGroup } = useDisplay()
+const { entry: continueEntry, isResumable, clear: clearContinue } = useContinueWatching()
 const { resolved: themeResolved, setTheme } = useTheme()
 const { isTv } = useTvMode()
+
+/** 上次看到一半、值得問要不要接續的那支影片；找不到（可能被刪了）或已經快看完就不問 */
+const continueVideo = computed(() => {
+  const e = continueEntry.value
+  if (!e || !isResumable(e)) return null
+  return videos.value.find((v) => v.uid === e.uid) ?? null
+})
+
+const continueTimeLabel = computed(() => (continueEntry.value ? formatTime(continueEntry.value.positionSec) : ''))
+
+/** 重建這支影片當初所在的那份清單，接續播放也一樣照這份清單循環 */
+function queueFor(video: VideoItem): VideoItem[] {
+  return video.subId ? videosInSub(video.subId) : looseVideosIn(video.categoryId)
+}
+
+function resumeContinueWatching() {
+  const video = continueVideo.value
+  const e = continueEntry.value
+  if (!video || !e) return
+  emit('resume', video, queueFor(video), e.positionSec)
+}
 
 /** 電視上沒有家長設定入口，也就不需要對焦一顆看不到的按鈕 */
 const rootRef = ref<HTMLElement | null>(null)
@@ -46,7 +74,7 @@ onMounted(() => {
   if (isTv) {
     const focusFirstInteractive = () => {
       nextTick(() => {
-        const target = rootRef.value?.querySelector<HTMLElement>('.tabs .tab, .grid .card')
+        const target = rootRef.value?.querySelector<HTMLElement>('.continue-bar, .tabs .tab, .grid .card')
           ?? rootRef.value?.querySelector<HTMLElement>('button, [href], input, select, [tabindex]')
         target?.focus()
       })
@@ -232,6 +260,22 @@ onBeforeUnmount(cancelHold)
       </button>
     </header>
 
+    <!-- 接續播放：小朋友自己點才會跳回去繼續看，不會一開 App 就自動跳進播放畫面 -->
+    <div v-if="continueVideo && !isBlocked" class="continue-bar">
+      <button class="continue-main" type="button" @click="resumeContinueWatching">
+        <span class="continue-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+        </span>
+        <span class="continue-text">
+          接續播放：<strong>{{ continueVideo.title || '影片' }}</strong>
+        </span>
+        <span class="continue-time">{{ continueTimeLabel }}</span>
+      </button>
+      <button class="continue-dismiss" aria-label="不用了，關掉這個提示" @click="clearContinue">
+        <svg viewBox="0 0 24 24"><path d="M6.4 5 5 6.4 10.6 12 5 17.6 6.4 19l5.6-5.6 5.6 5.6 1.4-1.4-5.6-5.6L19 6.4 17.6 5 12 10.6z" /></svg>
+      </button>
+    </div>
+
     <!-- 休息中：倒數完會自動解鎖，不必按任何按鈕 -->
     <div v-if="isResting" class="locked">
       <span class="locked-icon" aria-hidden="true">👀</span>
@@ -370,7 +414,7 @@ onBeforeUnmount(cancelHold)
             :key="video.uid"
             class="card"
             type="button"
-            @click="emit('play', video)"
+            @click="emit('play', video, group.videos)"
           >
             <!-- 網站沒有縮圖，用一個看得懂的圖示，也順便跟影片區分開 -->
             <div
@@ -446,6 +490,75 @@ onBeforeUnmount(cancelHold)
   font-weight: 700;
   white-space: nowrap;
 }
+
+/* ---------- 接續播放 ---------- */
+.continue-bar {
+  flex: none;
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+  margin: 0 calc(var(--safe-r) + 22px) 18px calc(var(--safe-l) + 22px);
+}
+
+.continue-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 20px;
+  border: 0;
+  border-radius: var(--radius);
+  background: var(--accent);
+  color: var(--on-accent);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: transform .15s ease;
+}
+.continue-main:active { transform: scale(.98); }
+
+.continue-icon {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .25);
+  display: grid;
+  place-items: center;
+}
+.continue-icon svg { width: 20px; height: 20px; fill: currentColor; }
+
+.continue-text {
+  flex: 1;
+  min-width: 0;
+  font-size: 16px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.continue-text strong { font-weight: 800; }
+
+.continue-time {
+  flex: none;
+  font-size: 15px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  opacity: .9;
+}
+
+.continue-dismiss {
+  flex: none;
+  width: 48px;
+  border: 0;
+  border-radius: var(--radius);
+  background: var(--bg-card);
+  color: var(--text-dim);
+  cursor: pointer;
+}
+.continue-dismiss svg { width: 20px; height: 20px; fill: currentColor; }
+.continue-dismiss:active { transform: scale(.94); }
 
 /* ---------- 額度用完的鎖定畫面 ---------- */
 .locked {

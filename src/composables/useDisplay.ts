@@ -11,15 +11,26 @@ export type GroupMode =
 
 export interface DisplaySettings {
   groupMode: GroupMode
+  /** 播放速度，換一部影片後會沿用同一個設定，不用每次重調 */
+  playbackRate: number
+  /** 字幕是否預設開啟 */
+  captionsOn: boolean
 }
 
 /**
  * 預設「記住上次看的」：
  * 小朋友這週在上第 3 課，打開 App 就直接是第 3 課，不用每次重點一遍。
  */
-const DEFAULTS: DisplaySettings = { groupMode: 'remember' }
+const DEFAULTS: DisplaySettings = { groupMode: 'remember', playbackRate: 1, captionsOn: false }
 
 const MODES: GroupMode[] = ['all', 'accordion', 'remember']
+
+/**
+ * 播放速度可選的檔位。
+ * 0.9 不是 YouTube 選單上原本就有的檔位，但實測 setPlaybackRate(0.9) 真的會生效
+ * （不會被吃掉或就近吸附到 1），所以慢速區間多切一格給需要慢慢跟讀的小朋友用。
+ */
+export const PLAYBACK_RATES = [0.5, 0.75, 0.9, 1, 1.25, 1.5, 2]
 
 /**
  * 畫面顯示設定。
@@ -38,6 +49,10 @@ export function useDisplay() {
         const parsed = JSON.parse(raw)
         settings.value = {
           groupMode: MODES.includes(parsed.groupMode) ? parsed.groupMode : DEFAULTS.groupMode,
+          playbackRate: PLAYBACK_RATES.includes(parsed.playbackRate)
+            ? parsed.playbackRate
+            : DEFAULTS.playbackRate,
+          captionsOn: typeof parsed.captionsOn === 'boolean' ? parsed.captionsOn : DEFAULTS.captionsOn,
         }
       }
     } catch { /* 壞掉就用預設 */ }
@@ -46,6 +61,16 @@ export function useDisplay() {
 
   function setGroupMode(mode: GroupMode) {
     settings.value = { ...settings.value, groupMode: mode }
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(settings.value)) } catch { /* 略過 */ }
+  }
+
+  function setPlaybackRate(rate: number) {
+    settings.value = { ...settings.value, playbackRate: rate }
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(settings.value)) } catch { /* 略過 */ }
+  }
+
+  function setCaptionsOn(flag: boolean) {
+    settings.value = { ...settings.value, captionsOn: flag }
     try { localStorage.setItem(STORE_KEY, JSON.stringify(settings.value)) } catch { /* 略過 */ }
   }
 
@@ -74,5 +99,5 @@ export function useDisplay() {
     try { localStorage.setItem(LAST_GROUP_KEY, JSON.stringify(map)) } catch { /* 略過 */ }
   }
 
-  return { settings, init, setGroupMode, lastGroupOf, rememberGroup }
+  return { settings, init, setGroupMode, setPlaybackRate, setCaptionsOn, lastGroupOf, rememberGroup }
 }
