@@ -1,19 +1,24 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { thumbUrl, categoryColor, type VideoItem } from '~/utils/youtube'
 import { humanMinutes, countdown, useWatchTime } from '~/composables/useWatchTime'
 import { useLibrary } from '~/composables/useLibrary'
 import { useDisplay } from '~/composables/useDisplay'
 import { useTheme } from '~/composables/useTheme'
+import { useTvMode } from '~/composables/useTvMode'
 
 const emit = defineEmits<{ play: [video: VideoItem]; openParent: [] }>()
 
 const {
-  sections, categories, appTitle, groupsIn, countIn, categoriesIn, countInSection,
+  sections, categories, appTitle, groupsIn, countIn, categoriesIn, countInSection, syncStatus,
 } = useLibrary()
 const { hasLimit, remainingSeconds, isLimitReached, isResting, restRemainingSeconds } = useWatchTime()
 const { settings: display, lastGroupOf, rememberGroup } = useDisplay()
 const { resolved: themeResolved, setTheme } = useTheme()
+const { isTv } = useTvMode()
+
+/** 電視上沒有家長設定入口，也就不需要對焦一顆看不到的按鈕 */
+const rootRef = ref<HTMLElement | null>(null)
 
 /** 小朋友自己就能換亮暗，光線變了不用找家長 */
 function toggleTheme() {
@@ -33,6 +38,31 @@ onMounted(() => {
   mq = window.matchMedia('(max-width: 560px), (max-height: 520px)')
   isCompact.value = mq.matches
   mq.addEventListener('change', onMqChange)
+
+  // 電視遙控器沒有滑鼠可以點，進畫面先把焦點放到內容上（優先分區/單元標籤或影片卡片，
+  // 略過右上角的亮暗切換這種裝飾性按鈕，小朋友才不用先按一堆方向鍵才碰得到真正的內容）。
+  // 要等 playlist.txt 同步完成（syncStatus 脫離 idle/syncing）才能對焦，
+  // 不然畫面初次渲染用的是備援片單，同步完成後整批 DOM 會被換掉，焦點也就跟著不見了。
+  if (isTv) {
+    const focusFirstInteractive = () => {
+      nextTick(() => {
+        const target = rootRef.value?.querySelector<HTMLElement>('.tabs .tab, .grid .card')
+          ?? rootRef.value?.querySelector<HTMLElement>('button, [href], input, select, [tabindex]')
+        target?.focus()
+      })
+    }
+
+    // 再次進到片單畫面時（例如看完影片返回），同步早就結束了，不用等，直接對焦
+    if (syncStatus.value.state === 'idle' || syncStatus.value.state === 'syncing') {
+      const stopFocusWatch = watch(syncStatus, (status) => {
+        if (status.state === 'idle' || status.state === 'syncing') return
+        stopFocusWatch()
+        focusFirstInteractive()
+      })
+    } else {
+      focusFirstInteractive()
+    }
+  }
 })
 
 onBeforeUnmount(() => mq?.removeEventListener('change', onMqChange))
@@ -167,7 +197,7 @@ onBeforeUnmount(cancelHold)
 </script>
 
 <template>
-  <section class="library" :class="{ 'is-accordion': isAccordion }">
+  <section ref="rootRef" class="library" :class="{ 'is-accordion': isAccordion }">
     <header class="app-bar">
       <div class="brand">
         <h1>{{ appTitle }}</h1>
@@ -186,7 +216,9 @@ onBeforeUnmount(cancelHold)
         <span aria-hidden="true">{{ themeResolved === 'dark' ? '☀️' : '🌙' }}</span>
       </button>
 
+      <!-- 電視版沒有家長設定入口：長按手勢在遙控器上沒有對應操作，家長改用手機/電腦開同一個網址設定 -->
       <button
+        v-if="!isTv"
         class="icon-btn"
         :class="{ 'is-holding': isHolding }"
         aria-label="家長設定（長按）"
@@ -362,11 +394,11 @@ onBeforeUnmount(cancelHold)
       <template v-if="categories.length">
         <span class="empty-emoji" aria-hidden="true">{{ activeCategory?.emoji }}</span><br>
         「{{ activeCategory?.name }}」還沒有影片。<br>
-        長按右上角的齒輪，進入家長設定新增。
+        {{ isTv ? '請用手機或電腦開同一個網址，進入家長設定新增。' : '長按右上角的齒輪，進入家長設定新增。' }}
       </template>
       <template v-else>
         還沒有分區。<br>
-        長按右上角的齒輪，進入家長設定建立。
+        {{ isTv ? '請用手機或電腦開同一個網址，進入家長設定建立。' : '長按右上角的齒輪，進入家長設定建立。' }}
       </template>
     </p>
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, watchEffect } from 'vue'
+import { ref, onMounted, onBeforeUnmount, watchEffect } from 'vue'
 import type { VideoItem } from '~/utils/youtube'
 import { useTheme, THEME_COLORS } from '~/composables/useTheme'
 import { useLibrary } from '~/composables/useLibrary'
@@ -38,17 +38,39 @@ onMounted(() => {
   initTheme()
   // 先把 YouTube 的指令碼載進來，小朋友點下去才不用等
   warmUpYouTubeApi()
+  window.addEventListener('popstate', onPopState)
 })
+
+onBeforeUnmount(() => {
+  window.removeEventListener('popstate', onPopState)
+})
+
+/**
+ * 電視遙控器的「返回」鍵在 TWA 裡預設會被當成瀏覽器上一頁，
+ * 沒特別處理的話，在播放畫面按一下返回鍵會直接把整個 App 關掉。
+ * 用 pushState 記一筆「目前不在片單畫面」，讓返回鍵第一下先回到片單。
+ */
+let navigatingViaPopstate = false
+
+function pushScreen(next: Screen) {
+  screen.value = next
+  history.pushState({ screen: next }, '')
+}
 
 function play(video: VideoItem) {
   playing.value = video
   // 網站在 App 裡面開，小朋友不會跳出去回不來
-  screen.value = video.kind === 'site' ? 'site' : 'watch'
+  pushScreen(video.kind === 'site' ? 'site' : 'watch')
 }
 
 function backToLibrary() {
   screen.value = 'library'
   playing.value = null
+  // App 內的「返回」按鈕觸發時，順手把剛剛推的那筆歷史記錄消耗掉，
+  // 避免遙控器返回鍵之後還要多按一次才能真的離開
+  if (!navigatingViaPopstate && history.state?.screen) {
+    history.back()
+  }
 }
 
 async function openParent() {
@@ -56,8 +78,15 @@ async function openParent() {
   if (granted) {
     // 家長進來通常就是要調時間，順手把「連續觀看」歸零
     resetSession()
-    screen.value = 'parent'
+    pushScreen('parent')
   }
+}
+
+function onPopState() {
+  if (screen.value === 'library') return
+  navigatingViaPopstate = true
+  backToLibrary()
+  navigatingViaPopstate = false
 }
 </script>
 
@@ -97,4 +126,11 @@ async function openParent() {
 
 <style>
 .app-root { height: 100%; }
+
+/* 電視遙控器用方向鍵移動焦點時要看得見游標在哪；滑鼠/觸控點擊不會觸發 :focus-visible，不影響原本外觀 */
+:focus-visible {
+  outline: 4px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 8px;
+}
 </style>

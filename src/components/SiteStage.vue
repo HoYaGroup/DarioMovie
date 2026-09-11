@@ -1,10 +1,14 @@
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import type { VideoItem } from '~/utils/youtube'
 import { useWatchTime } from '~/composables/useWatchTime'
+import { useTvMode } from '~/composables/useTvMode'
 
 const props = defineProps<{ item: VideoItem }>()
 const emit = defineEmits<{ close: [] }>()
+
+const { isTv } = useTvMode()
+const backBtnRef = ref<HTMLButtonElement | null>(null)
 
 const loading = ref(true)
 const failed = ref(false)
@@ -34,6 +38,11 @@ onMounted(() => {
   timeoutId = setTimeout(() => {
     if (loading.value) failed.value = true
   }, 8000)
+
+  // 內嵌網站本身多半沒辦法用遙控器操作，先確保「按返回鍵一定能離開」這條路可靠
+  if (isTv) {
+    nextTick(() => backBtnRef.value?.focus())
+  }
 })
 
 onBeforeUnmount(() => {
@@ -72,7 +81,7 @@ function onLoaded() {
     </div>
 
     <div class="controls">
-      <button class="ctrl-btn ctrl-back" aria-label="回到影片清單" @click="emit('close')">
+      <button ref="backBtnRef" class="ctrl-btn ctrl-back" aria-label="回到影片清單" @click="emit('close')">
         <svg viewBox="0 0 24 24"><path d="M15.4 7.4 14 6l-6 6 6 6 1.4-1.4-4.6-4.6z" /></svg>
         <span>返回</span>
       </button>

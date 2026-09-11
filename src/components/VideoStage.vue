@@ -1,11 +1,15 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { formatTime, type VideoItem } from '~/utils/youtube'
 import { countdown, useWatchTime } from '~/composables/useWatchTime'
 import { useYouTubePlayer } from '~/composables/useYouTubePlayer'
+import { useTvMode } from '~/composables/useTvMode'
 
 const props = defineProps<{ video: VideoItem }>()
 const emit = defineEmits<{ close: [] }>()
+
+const { isTv } = useTvMode()
+const playBtnRef = ref<HTMLButtonElement | null>(null)
 
 const {
   addSeconds, flush, isLimitReached,
@@ -83,6 +87,11 @@ onMounted(() => {
   tapHintTimer = setTimeout(() => {
     if (status.value === 'loading') needsTap.value = true
   }, 3000)
+
+  // 電視遙控器沒有滑鼠可以點畫面，把焦點放到看得見的播放/暫停鈕上
+  if (isTv) {
+    nextTick(() => playBtnRef.value?.focus())
+  }
 })
 
 onBeforeUnmount(() => {
@@ -190,7 +199,7 @@ function toggleFullscreen() {
         <span>10秒</span>
       </button>
 
-      <button class="ctrl-btn ctrl-play" aria-label="播放或暫停" @click="toggle">
+      <button ref="playBtnRef" class="ctrl-btn ctrl-play" aria-label="播放或暫停" @click="toggle">
         <svg v-if="isPlaying" viewBox="0 0 24 24"><path d="M8 5h3v14H8zM13 5h3v14h-3z" /></svg>
         <svg v-else viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
       </button>
