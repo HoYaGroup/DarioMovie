@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { computed, watch, onMounted, onBeforeUnmount, nextTick, ref } from 'vue'
 import { thumbUrl, categoryColor, formatTime, type VideoItem } from '~/utils/youtube'
 import { humanMinutes, countdown, useWatchTime } from '~/composables/useWatchTime'
 import { useLibrary } from '~/composables/useLibrary'
@@ -7,6 +7,7 @@ import { useDisplay } from '~/composables/useDisplay'
 import { useContinueWatching } from '~/composables/useContinueWatching'
 import { useTheme } from '~/composables/useTheme'
 import { useTvMode } from '~/composables/useTvMode'
+import { useState } from '~/composables/useState'
 
 const emit = defineEmits<{
   play: [video: VideoItem, queue: VideoItem[]]
@@ -104,8 +105,11 @@ const isBlocked = computed(() => isLimitReached.value || isResting.value)
 
 /* ---------- 大分類與分區切換 ---------- */
 
-const pickedSectionId = ref('')
-const pickedId = ref('')
+// 看影片時 VideoLibrary 會被 v-if 整個卸載，看完返回是重新掛載的新實例，
+// 一般 ref 會歸零回到預設分類；用 useState 存在模組層級，卸載重掛都拿得回同一份，
+// 才能讓「返回」停在原本瀏覽的大分類／分區，而不是跳回預設的第一個大分類。
+const pickedSectionId = useState('library.pickedSectionId', () => '')
+const pickedId = useState('library.pickedId', () => '')
 
 // 家長可能把當前的分類或分區刪掉，所以一律用 computed 求一次有效的值
 const activeSection = computed(() =>

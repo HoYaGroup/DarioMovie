@@ -13,7 +13,7 @@ const emit = defineEmits<{ close: []; advance: [video: VideoItem] }>()
 const { isTv } = useTvMode()
 const playBtnRef = ref<HTMLButtonElement | null>(null)
 
-const { settings: display, setPlaybackRate: persistRate, setCaptionsOn: persistCaptionsOn } = useDisplay()
+const { settings: display, setPlaybackRate: persistRate } = useDisplay()
 const { save: saveContinue } = useContinueWatching()
 
 /** 目前這部影片在清單裡的位置，播完（或重複播放跳過）要接下一部，接到尾端就繞回第一部 */
@@ -92,7 +92,7 @@ function onTick(deltaSec: number) {
 const {
   hostRef, status, isPlaying, currentTime, duration, progress,
   load, toggle, play, pause, seekBy, previewSeek, commitSeek,
-  playbackRate, setPlaybackRate, captionsOn, setCaptionsOn, repeat, toggleRepeat,
+  playbackRate, setPlaybackRate, repeat, toggleRepeat,
 } = useYouTubePlayer({
   onFinish: () => {
     // 影片播完那一刻剛好額度也用完的極少數情況，直接回清單顯示「時間到了」，不要還接下一部
@@ -112,9 +112,8 @@ const {
   onTick,
 })
 
-// 播放速度與字幕開關沿用上次設定，換片時 useYouTubePlayer 內部會自動重新套用
+// 播放速度沿用上次設定，換片時 useYouTubePlayer 內部會自動重新套用
 setPlaybackRate(display.value.playbackRate)
-setCaptionsOn(display.value.captionsOn)
 
 /** 點一下往慢遞減：1× → 0.9× → 0.75× → 0.5× → 繞回 2× 再往下減 */
 function cycleSpeed() {
@@ -122,16 +121,6 @@ function cycleSpeed() {
   const next = PLAYBACK_RATES[(idx - 1 + PLAYBACK_RATES.length) % PLAYBACK_RATES.length] ?? 1
   setPlaybackRate(next)
   persistRate(next)
-}
-
-function onToggleCaptions() {
-  const next = !captionsOn.value
-  // 切字幕要整個重建播放器（見 useYouTubePlayer 的說明），跟換片一樣會重新浮出推薦卡，
-  // 也一樣可能被瀏覽器擋自動播放，所以兩個計時器都要重新武裝
-  flashBigCover()
-  armTapHint()
-  setCaptionsOn(next)
-  persistCaptionsOn(next)
 }
 
 const speedLabel = computed(() => `${playbackRate.value}×`)
@@ -164,6 +153,7 @@ function flashBigCover() {
 function loadVideo(id: string) {
   flashBigCover()
   armTapHint()
+  page.value = 0
   load(id)
 }
 
@@ -183,7 +173,15 @@ function continueWatching() {
 }
 
 const isFullscreen = ref(false)
-/** iOS 可能擋掉自動播放；等太久就改口提示小朋友點畫面。換片、切字幕重建播放器都算一次新的自動播放，都要重新武裝這個計時器 */
+
+/**
+ * 手機、平板這種窄螢幕（見底部 900px 斷點）容不下全部按鈕，仿 YouTube 的做法：固定單行
+ * 高度，用左右頁籤切換兩組按鈕，而不是往下展開第二行（那樣會讓影片顯示區塊忽大忽小）。
+ * 0 = 常用控制（返回／上下一首／播放／全螢幕），1 = 較少用到的設定（倒退10秒／速度／重複）。
+ */
+const page = ref<0 | 1>(0)
+
+/** iOS 可能擋掉自動播放；等太久就改口提示小朋友點畫面。換片都算一次新的自動播放，要重新武裝這個計時器 */
 const needsTap = ref(false)
 let tapHintTimer: ReturnType<typeof setTimeout> | null = null
 
@@ -331,28 +329,39 @@ function toggleFullscreen() {
     </div>
 
     <!-- 完全自製的控制列，取代 YouTube 原生控制列 -->
-    <div class="controls">
-      <button class="ctrl-btn ctrl-back" aria-label="回到影片清單" @click="emit('close')">
+    <div class="controls" :class="{ 'page-b': page === 1 }">
+      <button class="ctrl-btn ctrl-back ctrl-page-a" aria-label="回到影片清單" @click="emit('close')">
         <svg viewBox="0 0 24 24"><path d="M15.4 7.4 14 6l-6 6 6 6 1.4-1.4-4.6-4.6z" /></svg>
         <span>返回</span>
       </button>
 
-      <button class="ctrl-btn" aria-label="倒退 10 秒" @click="onSeekBack">
+      <!-- 窄螢幕比較少用，跟播放速度／重複放同一頁；夠寬的桌面視窗仍維持原本位置 -->
+      <button class="ctrl-btn ctrl-page-b" aria-label="倒退 10 秒" @click="onSeekBack">
         <svg viewBox="0 0 24 24"><path d="M12 5V1L7 6l5 5V7a6 6 0 1 1-6 6H4a8 8 0 1 0 8-8z" /></svg>
         <span>10秒</span>
       </button>
 
-      <button v-if="queue.length > 1" class="ctrl-btn" aria-label="上一首" @click="playPrev">
+      <button v-if="queue.length > 1" class="ctrl-btn ctrl-page-a" aria-label="上一首" @click="playPrev">
         <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z" /></svg>
       </button>
 
-      <button ref="playBtnRef" class="ctrl-btn ctrl-play" aria-label="播放或暫停" @click="toggle">
+      <!--
+        觸控／滑鼠使用者點畫面（shield／暫停遮罩）就能切換播放，這顆按鈕對他們是多的，
+        拿掉能讓控制列更寬鬆。電視遙控器沒有「點畫面」這個手勢，一定要留一個看得到、
+        能被遙控器移入焦點的播放鈕，所以只在電視模式才顯示。
+      -->
+      <button v-if="isTv" ref="playBtnRef" class="ctrl-btn ctrl-play ctrl-page-a" aria-label="播放或暫停" @click="toggle">
         <svg v-if="isPlaying" viewBox="0 0 24 24"><path d="M8 5h3v14H8zM13 5h3v14h-3z" /></svg>
         <svg v-else viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
       </button>
 
-      <button v-if="queue.length > 1" class="ctrl-btn" aria-label="下一首" @click="playNext">
+      <button v-if="queue.length > 1" class="ctrl-btn ctrl-page-a" aria-label="下一首" @click="playNext">
         <svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z" /></svg>
+      </button>
+
+      <!-- 窄螢幕才會顯示：切到「其他設定」那一頁（見底部樣式），夠寬的桌面視窗就整排一起顯示 -->
+      <button class="ctrl-btn ctrl-page-nav ctrl-page-next" type="button" aria-label="更多控制項" @click="page = 1">
+        <svg viewBox="0 0 24 24"><path d="M8.6 5.4 7.2 6.8 13.4 13l-6.2 6.2 1.4 1.4L16.2 13z" /></svg>
       </button>
 
       <div class="seek-wrap">
@@ -371,12 +380,16 @@ function toggleFullscreen() {
         <span class="time">{{ formatTime(duration) }}</span>
       </div>
 
-      <button class="ctrl-btn ctrl-speed" aria-label="播放速度" @click="cycleSpeed">
+      <button class="ctrl-btn ctrl-page-nav ctrl-page-prev" type="button" aria-label="返回播放控制" @click="page = 0">
+        <svg viewBox="0 0 24 24"><path d="M15.4 5.4 16.8 6.8 10.6 13l6.2 6.2-1.4 1.4L7.8 13z" /></svg>
+      </button>
+
+      <button class="ctrl-btn ctrl-speed ctrl-page-b" aria-label="播放速度" @click="cycleSpeed">
         <span class="rate-label">{{ speedLabel }}</span>
       </button>
 
       <button
-        class="ctrl-btn"
+        class="ctrl-btn ctrl-page-b"
         :class="{ 'is-active': repeat }"
         aria-label="重複播放這一部"
         :aria-pressed="repeat"
@@ -386,17 +399,12 @@ function toggleFullscreen() {
         <span>重複</span>
       </button>
 
-      <button
-        class="ctrl-btn"
-        :class="{ 'is-active': captionsOn }"
-        aria-label="影片文字（字幕）"
-        :aria-pressed="captionsOn"
-        @click="onToggleCaptions"
-      >
-        <span class="rate-label">CC</span>
-      </button>
-
-      <button class="ctrl-btn" aria-label="全螢幕切換" @click="toggleFullscreen">
+      <!--
+        故意放在整排最後：DOM 順序決定桌面／平板單行版的視覺順序（全螢幕最常用、排最後
+        一顆方便單手觸及右側）；手機分頁版靠 order 決定順序，DOM 位置只影響同一頁內排序，
+        所以放在這裡仍然會排在「常用」那一頁的最後一顆、緊接在 › 箭頭之前。
+      -->
+      <button class="ctrl-btn ctrl-page-a" aria-label="全螢幕切換" @click="toggleFullscreen">
         <svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3Zm-2-4h2V7h3V5H5v5Zm12 7h-3v2h5v-5h-2v3ZM14 5v2h3v3h2V5h-5Z" /></svg>
       </button>
     </div>
@@ -559,10 +567,10 @@ function toggleFullscreen() {
 
 .ctrl-back { background: var(--accent-2); color: var(--on-accent-2); }
 
-/* 重複播放／字幕開啟時反白，小朋友一眼看出目前是開的 */
+/* 重複播放開啟時反白，小朋友一眼看出目前是開的 */
 .ctrl-btn.is-active { background: var(--accent); color: var(--on-accent); }
 
-/* 播放速度／字幕這兩顆按鈕本身就是文字（1× / CC），窄螢幕也不能被下面的規則藏起來 */
+/* 播放速度這顆按鈕本身就是文字（1×），不像其他按鈕的 span 只是輔助說明，窄螢幕也不能被下面的規則藏起來 */
 .rate-label {
   font-size: 17px;
   font-weight: 800;
@@ -637,9 +645,88 @@ function toggleFullscreen() {
 
 .is-fullscreen .now-title { display: none; }
 
-@media (max-width: 560px) {
-  /* 速度／字幕鈕的文字就是內容本身（1× / CC），不像其他按鈕的 span 只是輔助說明，窄螢幕也要留著 */
+/* 分頁切換鈕只在下面窄螢幕斷點以下才用得到，其餘寬度一次顯示全部按鈕，直接不顯示 */
+.ctrl-page-nav { display: none; }
+
+/*
+ * 900px 這個斷點不是隨便抓的：桌面版全部按鈕＋進度條攤開成一整排，實測大約要 900px 寬
+ * 才放得下（見下面 .ctrl-btn 的桌面版尺寸）。手機當然不夠，但 iPad 這種平板直向（768px）
+ * 也不夠，塞不下就會變成進度條被擠到只剩一小截、按鈕互相疊到的慘況，所以斷點要抓到能
+ * 涵蓋平板直向寬度，不能只想著手機。
+ *
+ * 這裡只縮小按鈕尺寸，不強制換行：進度條 flex:1 會自動跟縮小後的按鈕擠在同一排，
+ * 放得下就是一排（大部分平板／手機橫向都放得下）。真的窄到下面那個斷點、縮小後還是
+ * 放不下整排，才會強制把進度條獨立成一整排、按鈕分頁。
+ */
+@media (max-width: 900px) {
+  /* 播放速度這顆按鈕的文字就是內容本身（1×），不像其他按鈕的 span 只是輔助說明，窄螢幕也要留著 */
   .ctrl-btn span:not(.rate-label) { display: none; }
-  .ctrl-btn { min-width: 56px; padding: 0 10px; }
+  .ctrl-btn { min-width: 44px; padding: 0 6px; }
+  /*
+   * 按鈕縮小後常常填不滿整排寬度，預設靠左排會在右邊留一大塊難看的空白。改成
+   * space-between，讓按鈕依裝置寬度平均撐開；進度條那排只有它自己一個 100% 寬的項目，
+   * 不受影響。進度條還跟按鈕擠在同一排的寬度（900~620px）則是進度條自己 flex:1
+   * 撐滿剩餘空間，這條規則在那邊本來就不會有東西可以分散，不影響原本外觀。
+   */
+  .controls { gap: 8px; justify-content: space-between; }
+  .ctrl-play { width: 56px; height: 56px; border-radius: 20px; }
+  .ctrl-play svg { width: 28px; height: 28px; }
+
+  /*
+   * 播放速度按鈕的寬度會隨標籤長短變（1× 40px、0.75×／1.25× 要到 65px），如果拿最長的
+   * 當斷點基準，會讓最常見的 1× 狀態平白浪費快 25px 的可用寬度。改成固定寬度＋縮小字級，
+   * 讓最長的標籤也能塞進同一個固定寬度，斷點就能用同一個數字放心涵蓋所有速度檔位。
+   */
+  .ctrl-speed { width: 52px; }
+  .ctrl-speed .rate-label { font-size: 14px; letter-spacing: 0; }
+}
+
+/*
+ * 縮小尺寸後，手機直向這種寬度還是放不下整排（進度條會被擠到不能用）。實測過：進度條
+ * 靠 flex:1 自動縮小，620px 左右滑桿還有約 96px 堪用，560px 只剩 36px，520px 以下直接
+ * 縮到 0（完全看不到、按不到）——所以斷點要抓在還沒明顯壞掉的 620px，不能等到肉眼看到
+ * 進度條消失才處理。進度條在這層先獨立成一整排；按鈕再縮小一點之後，實測全部擠在
+ * 「同一排」其實還放得下（不用分頁），見下面 420px 那層才是真的要分頁的斷點。
+ */
+@media (max-width: 620px) {
+  .controls {
+    flex-wrap: wrap;
+    padding-bottom: 14px;
+    gap: 6px;
+  }
+
+  .ctrl-btn { min-width: 40px; padding: 0 4px; }
+
+  .seek-wrap { order: 1; flex-basis: 100%; }
+  .ctrl-page-a, .ctrl-page-b { order: 2; }
+}
+
+/*
+ * 370px 這個斷點也是實測出來的：播放速度按鈕改成固定寬度＋縮小字級之後（見上面），
+ * 全部按鈕（不含進度條，進度條已經獨立一整排）擠在同一排只需要約 348px，用瀏覽器
+ * 實際的 scrollWidth／clientWidth 量過，350px 還放得下、340px 才會真的溢出，370px
+ * 已經留了緩衝——只有比這更窄的螢幕才需要仿 YouTube 用左右箭頭分頁：常用的（返回、
+ * 上/下一首、全螢幕）一頁，較少用的（倒退10秒、速度、重複）另一頁，而不是往下展開
+ * 新的一排。
+ */
+@media (max-width: 370px) {
+  .ctrl-page-nav {
+    display: flex;
+    min-width: 36px;
+    padding: 0;
+  }
+
+  .ctrl-page-a, .ctrl-page-prev { order: 2; }
+  .ctrl-page-next, .ctrl-page-b { order: 3; }
+
+  .controls.page-b .ctrl-page-a,
+  .controls.page-b .ctrl-page-next {
+    display: none;
+  }
+
+  .controls:not(.page-b) .ctrl-page-b,
+  .controls:not(.page-b) .ctrl-page-prev {
+    display: none;
+  }
 }
 </style>

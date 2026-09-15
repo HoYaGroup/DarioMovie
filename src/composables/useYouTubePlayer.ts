@@ -11,6 +11,8 @@ interface YTPlayer {
   getDuration: () => number
   getPlayerState: () => number
   setPlaybackRate: (rate: number) => void
+  /** 沒有官方文件、但實測可靠的 runtime 模組設定 API；用來強制關閉字幕（見 forceCaptionsOff） */
+  setOption: (module: string, option: string, value: unknown) => void
   destroy: () => void
 }
 declare global {
@@ -72,12 +74,9 @@ export function useYouTubePlayer(options: {
   let tickTimer: ReturnType<typeof setInterval> | null = null
   let lastTickAt = 0
   let finished = false
-  /** 目前載入的影片 ID；切字幕要整個重建播放器時要知道重建誰 */
-  let currentVideoId = ''
 
-  /** 播放速度、字幕開關、單片重複，三者都要在每次換片後重新套用到新的播放器實例 */
+  /** 播放速度、單片重複，都要在每次換片後重新套用到新的播放器實例 */
   const playbackRate = ref(1)
-  const captionsOn = ref(false)
   const repeat = ref(false)
 
   const isPlaying = computed(() => status.value === 'playing')
@@ -145,28 +144,23 @@ export function useYouTubePlayer(options: {
     }
   }
 
-  /**
-   * 字幕開關。
-   *
-   * YouTube 那組沒有官方文件的 loadModule/setOption('captions',...) 實測完全失效
-   * （tracklist 永遠是空的，設什麼語言都沒用）——唯一真的有效的是建立播放器當下的
-   * cc_load_policy 參數，但它只能在「新建」播放器時生效，播到一半改不了。
-   * 所以切字幕的唯一辦法是把播放器整個砍掉重建，重建時記住目前播到哪，蓋回去繼續播。
-   */
-  function setCaptionsOn(flag: boolean) {
-    if (captionsOn.value === flag) return
-    captionsOn.value = flag
-    if (!player || !currentVideoId) return
-    const resumeSec = player.getCurrentTime() || 0
-    try { player.destroy() } catch { /* 已經沒了就算了 */ }
-    player = null
-    ready = false
-    status.value = 'loading'
-    createPlayer(currentVideoId, resumeSec)
-  }
-
   function toggleRepeat() {
     repeat.value = !repeat.value
+  }
+
+  /**
+   * 強制關閉字幕（這個 App 完全不提供字幕開關）。
+   *
+   * cc_load_policy 只在「建立播放器當下」有效，而且只要使用者的瀏覽器曾經在任何地方看過
+   * 一次字幕，YouTube 就會把「這個瀏覽器要開字幕」記成偏好，之後不管 cc_load_policy 帶不帶、
+   * 帶 0 與否，字幕還是照樣蓋上去。真正能覆蓋掉那個偏好的只有 captions 模組的 runtime API：
+   * player.setOption('captions','track', {})。但它要等 onApiChange 事件真的 fire 過（字幕
+   * 模組掛上）才會生效，太早呼叫（例如 onReady 當下）會被靜靜吃掉沒反應，所以固定掛在
+   * onApiChange 上執行；換片用的 loadVideoById 也會讓模組重置，因此也在那之後補呼叫一次。
+   */
+  function forceCaptionsOff() {
+    if (!player || !ready) return
+    try { player.setOption('captions', 'track', {}) } catch { /* 模組可能還沒掛上，onApiChange 之後還會再套用一次 */ }
   }
 
   function onStateChange(e: { data: number }) {
@@ -184,8 +178,8 @@ export function useYouTubePlayer(options: {
     }
   }
 
-  /** 真正建立播放器實例；resumeSec > 0 表示是切字幕重建的，就緒後要先跳到原本播到的位置 */
-  function createPlayer(videoId: string, resumeSec: number) {
+  /** 真正建立播放器實例 */
+  function createPlayer(videoId: string) {
     if (!hostRef.value) return
 
     // 自建掛載點：YT 會把它整個換成 iframe，這樣 Vue 就不會去碰被換掉的節點
@@ -195,8 +189,7 @@ export function useYouTubePlayer(options: {
 
     player = new window.YT!.Player(mountPoint, {
       videoId,
-      // 走隱私加強模式網域：不讀寫 youtube.com 的任何 cookie，字幕開關才不會被
-      // 「這台裝置曾經在 youtube.com 打開過字幕」這種殘留偏好蓋過去
+      // 走隱私加強模式網域：不讀寫 youtube.com 的一般追蹤 cookie
       host: 'https://www.youtube-nocookie.com',
       playerVars: {
         autoplay: 1,
@@ -207,9 +200,6 @@ export function useYouTubePlayer(options: {
         modestbranding: 1,
         playsinline: 1,     // iOS 必須：不讓原生播放器接管畫面
         rel: 0,             // 相關影片限制在同頻道（2018 年後的語意，仍值得帶上）
-        // 字幕唯一真正有效的開關只有這個，而且只能在建立當下生效（見 setCaptionsOn 說明）
-        cc_load_policy: captionsOn.value ? 1 : 0,
-        cc_lang_pref: 'en',
         enablejsapi: 1,
         origin: window.location.origin,
       },
@@ -217,13 +207,12 @@ export function useYouTubePlayer(options: {
         onReady: () => {
           ready = true
           applySettings()
-          if (resumeSec > 0) {
-            try { player?.seekTo(resumeSec, true) } catch { /* 略過 */ }
-          }
           // iOS 可能擋掉自動播放；擋掉也無妨，小朋友點畫面就會開始
           try { player?.playVideo() } catch { /* 使用者手勢不足，等他點畫面 */ }
         },
         onStateChange,
+        // 字幕模組掛上（或換片後重新掛上）就會 fire，這是唯一能可靠強制關閉字幕的時機
+        onApiChange: forceCaptionsOff,
         onError: () => { status.value = 'error' },
       },
     })
@@ -231,7 +220,6 @@ export function useYouTubePlayer(options: {
 
   /** 建立播放器並開始播放指定影片 */
   async function load(videoId: string) {
-    currentVideoId = videoId
     finished = false
     status.value = 'loading'
     currentTime.value = 0
@@ -243,10 +231,12 @@ export function useYouTubePlayer(options: {
     if (player && ready) {
       player.loadVideoById(videoId)
       applySettings()
+      // loadVideoById 會讓字幕模組重置，onApiChange 之後也會再套用一次，這裡先套用讓它盡快生效
+      forceCaptionsOff()
       return
     }
 
-    createPlayer(videoId, 0)
+    createPlayer(videoId)
   }
 
   function play() {
@@ -301,6 +291,6 @@ export function useYouTubePlayer(options: {
   return {
     hostRef, status, isPlaying, currentTime, duration, progress,
     load, toggle, play, pause, seekBy, previewSeek, commitSeek, finish, teardown,
-    playbackRate, setPlaybackRate, captionsOn, setCaptionsOn, repeat, toggleRepeat,
+    playbackRate, setPlaybackRate, repeat, toggleRepeat,
   }
 }

@@ -13,15 +13,13 @@ export interface DisplaySettings {
   groupMode: GroupMode
   /** 播放速度，換一部影片後會沿用同一個設定，不用每次重調 */
   playbackRate: number
-  /** 字幕是否預設開啟 */
-  captionsOn: boolean
 }
 
 /**
  * 預設「記住上次看的」：
  * 小朋友這週在上第 3 課，打開 App 就直接是第 3 課，不用每次重點一遍。
  */
-const DEFAULTS: DisplaySettings = { groupMode: 'remember', playbackRate: 1, captionsOn: false }
+const DEFAULTS: DisplaySettings = { groupMode: 'remember', playbackRate: 1 }
 
 const MODES: GroupMode[] = ['all', 'accordion', 'remember']
 
@@ -52,7 +50,6 @@ export function useDisplay() {
           playbackRate: PLAYBACK_RATES.includes(parsed.playbackRate)
             ? parsed.playbackRate
             : DEFAULTS.playbackRate,
-          captionsOn: typeof parsed.captionsOn === 'boolean' ? parsed.captionsOn : DEFAULTS.captionsOn,
         }
       }
     } catch { /* 壞掉就用預設 */ }
@@ -66,11 +63,6 @@ export function useDisplay() {
 
   function setPlaybackRate(rate: number) {
     settings.value = { ...settings.value, playbackRate: rate }
-    try { localStorage.setItem(STORE_KEY, JSON.stringify(settings.value)) } catch { /* 略過 */ }
-  }
-
-  function setCaptionsOn(flag: boolean) {
-    settings.value = { ...settings.value, captionsOn: flag }
     try { localStorage.setItem(STORE_KEY, JSON.stringify(settings.value)) } catch { /* 略過 */ }
   }
 
@@ -99,5 +91,5 @@ export function useDisplay() {
     try { localStorage.setItem(LAST_GROUP_KEY, JSON.stringify(map)) } catch { /* 略過 */ }
   }
 
-  return { settings, init, setGroupMode, setPlaybackRate, setCaptionsOn, lastGroupOf, rememberGroup }
+  return { settings, init, setGroupMode, setPlaybackRate, lastGroupOf, rememberGroup }
 }
