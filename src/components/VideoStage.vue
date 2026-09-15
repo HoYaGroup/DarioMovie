@@ -248,15 +248,31 @@ function onSeekBack() {
   seekBy(-10)
 }
 
-function toggleFullscreen() {
+/** Safari 沒有實作，型別庫也不一定有，用寬鬆型別直接呼叫，失敗就當作裝置不支援 */
+type OrientationLock = { lock?: (o: string) => Promise<void>; unlock?: () => void }
+
+async function toggleFullscreen() {
   // iOS Safari 不支援對一般元素用 Fullscreen API，所以主力是 CSS 假全螢幕。
   // 裝到主畫面之後本來就沒有網址列，視覺上已經等同全螢幕。
-  isFullscreen.value = !isFullscreen.value
+  const entering = !isFullscreen.value
+  isFullscreen.value = entering
 
   const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent)
-  if (!isIos && document.documentElement.requestFullscreen) {
-    if (document.fullscreenElement) document.exitFullscreen().catch(() => {})
-    else document.documentElement.requestFullscreen().catch(() => {})
+  // iOS 沒有 Screen Orientation API 也鎖不了橫向，只能請小朋友自己轉裝置
+  if (isIos || !document.documentElement.requestFullscreen) return
+
+  const orientation = screen.orientation as unknown as OrientationLock | undefined
+
+  if (entering) {
+    try {
+      await document.documentElement.requestFullscreen()
+      // 大多數瀏覽器規定要先進入全螢幕才准鎖定方向，所以順序不能顛倒；
+      // 直向手機點全螢幕直接轉橫向看，不用再手動轉裝置
+      await orientation?.lock?.('landscape')
+    } catch { /* 瀏覽器或裝置不支援鎖定方向，退回讓使用者自己轉 */ }
+  } else {
+    try { orientation?.unlock?.() } catch { /* 略過 */ }
+    try { await document.exitFullscreen() } catch { /* 略過 */ }
   }
 }
 </script>
