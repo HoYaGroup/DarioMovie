@@ -10,6 +10,8 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+# build 的輸出：dist 是指向 .output/public 的捷徑
+.output
 *.local
 
 # Editor directories and files
@@ -25,5 +27,4 @@ dist-ssr
 
 # App 讀的片單是自動產生的：playlists/library.txt ＋ playlists/videos.txt 合併而成
 # （npm run dev／build 之前會跑 scripts/build-playlist.mjs），要改請改 playlists/ 底下的檔案
-# （沒設定 secret 時 CI 會照常用本機這份檔案，本機開發也照樣讀得到）
 public/playlist.txt
