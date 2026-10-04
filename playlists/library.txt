@@ -1,0 +1,337 @@
+// ╔════════════════════════════════════════════════════════════╗
+// ║  學習庫：數字、英文單字的字卡和相關兒歌                         ║
+// ╚════════════════════════════════════════════════════════════╝
+//
+// 家長自己的影片請放 playlists/videos.txt，兩個檔案部署時會合併。
+// 數字卡的影片片段是示範用：Count & Move 的 0:05～0:20，換成老師教學影片的秒數效果最好
+//
+// 數字底下分中文、英文：一本卡只有一種語言，小朋友比較不會搞混
+// 「# 」開頭是最上層的大分類，【】是大分類底下的分區；「字卡本:」開一本新的字卡，同一區的排在同一個畫面
+
+# 數字 🔢
+
+【中文】🀄
+
+字卡本: 數字像什麼
+// 口訣：1、1、鉛筆1（說明照這個格式寫，就會照口訣唸，考考我答對之後也會唸一遍）
+卡: 1 | 1、1、鉛筆1 | cards/shapes/1-q.webp | cards/shapes/1.webp
+卡: 2 | 2、2、鴨子2 | cards/shapes/2-q.webp | cards/shapes/2.webp
+卡: 3 | 3、3、蝴蝶3 | cards/shapes/3-q.webp | cards/shapes/3.webp
+卡: 4 | 4、4、帆船4 | cards/shapes/4-q.webp | cards/shapes/4.webp
+卡: 5 | 5、5、勾勾5 | cards/shapes/5-q.webp | cards/shapes/5.webp
+卡: 6 | 6、6、大肚6 | cards/shapes/6-q.webp | cards/shapes/6.webp
+卡: 7 | 7、7、拐杖7 | cards/shapes/7-q.webp | cards/shapes/7.webp
+卡: 8 | 8、8、雪人8 | cards/shapes/8-q.webp | cards/shapes/8.webp
+卡: 9 | 9、9、氣球9 | cards/shapes/9-q.webp | cards/shapes/9.webp
+卡: 10 | 10、10、一個棍子打棒球10 | cards/shapes/10-q.webp | cards/shapes/10.webp
+
+字卡本: 11～20
+// 沒放 emoji：正面直接顯示數字，讓小朋友認數字的樣子；說明只是中文唸法，畫面上只顯示數字，「十三」用聽的
+卡: 11 | 十一
+卡: 12 | 十二
+卡: 13 | 十三
+卡: 14 | 十四
+卡: 15 | 十五
+卡: 16 | 十六
+卡: 17 | 十七
+卡: 18 | 十八
+卡: 19 | 十九
+卡: 20 | 二十
+
+字卡本: 整十 10～100
+// 正面、背面都只顯示數字，「三十」用聽的
+卡: 10 | 十
+卡: 20 | 二十
+卡: 30 | 三十
+卡: 40 | 四十
+卡: 50 | 五十
+卡: 60 | 六十
+卡: 70 | 七十
+卡: 80 | 八十
+卡: 90 | 九十
+卡: 100 | 一百
+
+字卡本: 0～100
+// 一行就產生 0～100 的數字卡（零、三十一、一百），正面直接顯示數字；
+// 考考我會挑容易搞混的當選項：31 配 13、30
+數字卡: 0～100 | 中文
+
+【英文】🔤
+
+字卡本: 1～10
+卡: 1 | one | 🍎 | https://youtu.be/g9EgE_JtEAw 0:05-0:20
+卡: 2 | two | 🐶 | https://youtu.be/g9EgE_JtEAw 0:05-0:20
+卡: 3 | three | 🚗 | https://youtu.be/g9EgE_JtEAw 0:05-0:20
+卡: 4 | four | 🎈 | https://youtu.be/g9EgE_JtEAw 0:05-0:20
+卡: 5 | five | 🐟 | https://youtu.be/g9EgE_JtEAw 0:05-0:20
+卡: 6 | six | 🍓 | https://youtu.be/g9EgE_JtEAw 0:05-0:20
+卡: 7 | seven | ⭐ | https://youtu.be/g9EgE_JtEAw 0:05-0:20
+卡: 8 | eight | 🐥 | https://youtu.be/g9EgE_JtEAw 0:05-0:20
+卡: 9 | nine | 🌸 | https://youtu.be/g9EgE_JtEAw 0:05-0:20
+卡: 10 | ten | 🍪 | https://youtu.be/g9EgE_JtEAw 0:05-0:20
+
+字卡本: 11～20
+// 放了 emoji：正面畫出那麼多個東西點著數，前 10 個排成兩排，看得出 13 是 10 再加 3
+卡: 11 | eleven | 🍎
+卡: 12 | twelve | 🥚
+卡: 13 | thirteen | 🍪
+卡: 14 | fourteen | 🌸
+卡: 15 | fifteen | 🐟
+卡: 16 | sixteen | 🎈
+卡: 17 | seventeen | ⭐
+卡: 18 | eighteen | 🍓
+卡: 19 | nineteen | 🐞
+卡: 20 | twenty | 🐥
+
+字卡本: 整十 10～100
+// 正面直接顯示數字，背面是英文拼法
+卡: 10 | ten
+卡: 20 | twenty
+卡: 30 | thirty
+卡: 40 | forty
+卡: 50 | fifty
+卡: 60 | sixty
+卡: 70 | seventy
+卡: 80 | eighty
+卡: 90 | ninety
+卡: 100 | one hundred
+
+字卡本: 0～100
+// 一行就產生 0～100 的數字卡（zero、thirty-one、one hundred）
+數字卡: 0～100 | 英文
+
+【影片】🎬
+// 數字的影片放在數字底下自己一區，不跟字卡混在一起，小朋友練字卡時才不會分心
+https://youtu.be/-tpTosF4dN8 | 從 1 數到 10（中文）
+https://youtu.be/g9EgE_JtEAw | Count & Move 數到 20（英文）
+
+# 英文單字 🔤
+
+【ABC】🔠
+
+// ABC 圖卡：正面是插圖（字母已經擦掉），背面是完整的原卡
+// 原圖的 Q 畫成孔雀（peacock 是 P 開頭），所以孔雀放到 P；Q 另外補了 queen 皇后
+// （原卡右上角寫錯成 (x)，背面已換成正確的 (q)）
+// 犛牛原卡上是異體字「氂牛」，只用插圖，名字用這裡寫的
+字卡本: ABC 圖卡
+卡: apple | 蘋果 | cards/abc/apple-q.webp | cards/abc/apple.webp
+卡: banana | 香蕉 | cards/abc/banana-q.webp | cards/abc/banana.webp
+卡: cat | 貓 | cards/abc/cat-q.webp | cards/abc/cat.webp
+卡: duck | 鴨子 | cards/abc/duck-q.webp | cards/abc/duck.webp
+卡: elephant | 大象 | cards/abc/elephant-q.webp | cards/abc/elephant.webp
+卡: fox | 狐狸 | cards/abc/fox-q.webp | cards/abc/fox.webp
+卡: giraffe | /dʒ/ 長頸鹿 | cards/abc/giraffe-q.webp | cards/abc/giraffe.webp
+卡: house | 房子 | cards/abc/house-q.webp | cards/abc/house.webp
+卡: ice cream | /aɪ/ 冰淇淋 | cards/abc/ice-cream-q.webp | cards/abc/ice-cream.webp
+卡: jet | 噴射機 | cards/abc/jet-q.webp | cards/abc/jet.webp
+卡: kangaroo | 袋鼠 | cards/abc/kangaroo-q.webp | cards/abc/kangaroo.webp
+卡: lion | 獅子 | cards/abc/lion-q.webp | cards/abc/lion.webp
+卡: monkey | 猴子 | cards/abc/monkey-q.webp | cards/abc/monkey.webp
+卡: nest | 鳥巢 | cards/abc/nest-q.webp | cards/abc/nest.webp
+卡: owl | /aʊ/ 貓頭鷹 | cards/abc/owl-q.webp | cards/abc/owl.webp
+卡: penguin | 企鵝 | cards/abc/penguin-q.webp | cards/abc/penguin.webp
+卡: peacock | 孔雀 | cards/abc/peacock-q.webp
+卡: queen | 皇后 | cards/abc/queen-q.webp | cards/abc/queen.webp
+卡: rabbit | 兔子 | cards/abc/rabbit-q.webp | cards/abc/rabbit.webp
+卡: snake | 蛇 | cards/abc/snake-q.webp | cards/abc/snake.webp
+卡: turtle | 烏龜 | cards/abc/turtle-q.webp | cards/abc/turtle.webp
+卡: unicorn | /ju/ 獨角獸 | cards/abc/unicorn-q.webp | cards/abc/unicorn.webp
+卡: volcano | 火山 | cards/abc/volcano-q.webp | cards/abc/volcano.webp
+卡: whale | 鯨魚 | cards/abc/whale-q.webp | cards/abc/whale.webp
+卡: x-ray fish | X光魚 | cards/abc/x-ray-fish-q.webp | cards/abc/x-ray-fish.webp
+卡: yak | 犛牛 | cards/abc/yak-q.webp
+卡: zebra | 斑馬 | cards/abc/zebra-q.webp | cards/abc/zebra.webp
+
+// 單元名稱裡有 ABC，就會照 A～Z 排好、卡片上標出開頭字母
+// 同一個字母可以放好幾張；新加的寫在哪裡都可以，App 會自己排到對的字母
+
+字卡本: 動物 ABC
+// 口訣「P、P、puh、puh、panda」：開頭的音跟字母平常的音不一樣時，在說明前面用 KK 音標指定，例如 unicorn 寫「/ju/ 獨角獸」
+// jaguar、newt、quail、vulture、x-ray fish、yak 沒有一模一樣的 emoji，先用長得像的代替（花豹、蜥蜴、小鳥、老鷹、熱帶魚、水牛），有照片可以換掉
+卡: ant | 螞蟻 | 🐜
+卡: alligator | 鱷魚 | 🐊
+卡: bear | 熊 | 🐻
+卡: bee | 蜜蜂 | 🐝
+卡: butterfly | 蝴蝶 | 🦋
+卡: cat | 貓 | 🐱
+卡: cow | 牛 | 🐮
+卡: dog | 狗 | 🐶
+卡: duck | 鴨子 | 🦆
+卡: dolphin | 海豚 | 🐬
+卡: elephant | 大象 | 🐘
+卡: fish | 魚 | 🐟
+卡: frog | 青蛙 | 🐸
+卡: fox | 狐狸 | 🦊
+卡: gorilla | 大猩猩 | 🦍
+卡: goat | 山羊 | 🐐
+卡: horse | 馬 | 🐴
+卡: hippo | 河馬 | 🦛
+卡: insect | 昆蟲 | 🪲
+卡: jaguar | 美洲豹 | 🐆
+卡: kangaroo | 袋鼠 | 🦘
+卡: koala | 無尾熊 | 🐨
+卡: lion | 獅子 | 🦁
+卡: ladybug | 瓢蟲 | 🐞
+卡: monkey | 猴子 | 🐵
+卡: mouse | 老鼠 | 🐭
+卡: newt | 蠑螈 | 🦎
+卡: octopus | 章魚 | 🐙
+卡: otter | 水獺 | 🦦
+卡: pig | 豬 | 🐷
+卡: panda | 熊貓 | 🐼
+卡: penguin | 企鵝 | 🐧
+卡: quail | 鵪鶉 | 🐦
+卡: rabbit | 兔子 | 🐰
+卡: rooster | 公雞 | 🐓
+卡: snake | 蛇 | 🐍
+卡: squirrel | 松鼠 | 🐿️
+卡: seal | 海豹 | 🦭
+卡: tiger | 老虎 | 🐯
+卡: turtle | 烏龜 | 🐢
+卡: unicorn | /ju/ 獨角獸 | 🦄
+卡: vulture | 禿鷹 | 🦅
+卡: whale | 鯨魚 | 🐳
+卡: wolf | 狼 | 🐺
+卡: x-ray fish | X光魚 | 🐠
+卡: yak | 犛牛 | 🐃
+卡: zebra | 斑馬 | 🦓
+
+字卡本: 水果 ABC
+卡: apple | 蘋果 | 🍎
+卡: avocado | 酪梨 | 🥑
+卡: banana | 香蕉 | 🍌
+卡: blueberry | 藍莓 | 🫐
+卡: coconut | 椰子 | 🥥
+卡: grape | 葡萄 | 🍇
+卡: kiwi | 奇異果 | 🥝
+卡: lemon | 檸檬 | 🍋
+卡: mango | 芒果 | 🥭
+卡: melon | 哈密瓜 | 🍈
+卡: orange | 柳橙 | 🍊
+卡: peach | 水蜜桃 | 🍑
+卡: pear | 梨子 | 🍐
+卡: pineapple | 鳳梨 | 🍍
+卡: strawberry | 草莓 | 🍓
+卡: tomato | 番茄 | 🍅
+卡: watermelon | 西瓜 | 🍉
+// 台灣常見、但沒有 emoji 的水果：照片放進 public/cards/fruits/，把前面的 // 拿掉就會出現
+// 卡: dragon fruit | 火龍果 | cards/fruits/dragon-fruit.jpg
+// 卡: durian | 榴槤 | cards/fruits/durian.jpg
+// 卡: guava | 芭樂 | cards/fruits/guava.jpg
+// 卡: lychee | 荔枝 | cards/fruits/lychee.jpg
+// 卡: papaya | 木瓜 | cards/fruits/papaya.jpg
+// 卡: starfruit | 楊桃 | cards/fruits/starfruit.jpg
+// 卡: wax apple | 蓮霧 | cards/fruits/wax-apple.jpg
+
+字卡本: 生活用品 ABC
+卡: ambulance | 救護車 | 🚑
+卡: ball | 球 | ⚽
+卡: bag | 書包 | 🎒
+卡: bed | 床 | 🛏️
+卡: book | 書 | 📕
+卡: car | 汽車 | 🚗
+卡: cup | 杯子 | 🥤
+卡: clock | 時鐘 | ⏰
+卡: door | 門 | 🚪
+卡: drum | 鼓 | 🥁
+卡: egg | 雞蛋 | 🥚
+卡: envelope | 信封 | ✉️
+卡: fork | 叉子 | 🍴
+卡: flashlight | 手電筒 | 🔦
+卡: glasses | 眼鏡 | 👓
+卡: gift | 禮物 | 🎁
+卡: hat | 帽子 | 🧢
+卡: house | 房子 | 🏠
+卡: ice cream | /aɪ/ 冰淇淋 | 🍦
+卡: ice | /aɪ/ 冰塊 | 🧊
+卡: jacket | 外套 | 🧥
+卡: jeans | 牛仔褲 | 👖
+卡: key | 鑰匙 | 🔑
+卡: kite | 風箏 | 🪁
+卡: light bulb | 燈泡 | 💡
+卡: lock | 鎖 | 🔒
+卡: mirror | 鏡子 | 🪞
+卡: milk | 牛奶 | 🥛
+卡: notebook | 筆記本 | 📓
+卡: newspaper | 報紙 | 📰
+卡: orange juice | 柳橙汁 | 🧃
+卡: pencil | 鉛筆 | ✏️
+卡: pen | 原子筆 | 🖊️
+卡: ruler | 尺 | 📏
+卡: radio | 收音機 | 📻
+卡: sock | 襪子 | 🧦
+卡: spoon | 湯匙 | 🥄
+卡: scissors | 剪刀 | ✂️
+卡: toothbrush | 牙刷 | 🪥
+卡: teddy bear | 泰迪熊 | 🧸
+卡: TV | 電視 | 📺
+卡: umbrella | 雨傘 | ☂️
+卡: violin | 小提琴 | 🎻
+卡: van | 廂型車 | 🚐
+卡: watch | 手錶 | ⌚
+卡: window | 窗戶 | 🪟
+卡: yo-yo | 溜溜球 | 🪀
+卡: yarn | 毛線 | 🧶
+
+【其他】🌈
+
+字卡本: 顏色 Colors
+卡: red | 紅色 | 🔴
+卡: orange | 橘色 | 🟠
+卡: yellow | 黃色 | 🟡
+卡: green | 綠色 | 🟢
+卡: blue | 藍色 | 🔵
+卡: purple | 紫色 | 🟣
+卡: brown | 咖啡色 | 🟤
+卡: black | 黑色 | ⚫
+卡: white | 白色 | ⚪
+
+字卡本: 形狀 Shapes
+卡: circle | 圓形 | ⭕
+卡: square | 正方形 | 🟦
+卡: triangle | 三角形 | 🔺
+卡: star | 星形 | ⭐
+卡: heart | 愛心 | ❤️
+卡: diamond | 菱形 | 🔶
+卡: moon | 月亮 | 🌙
+
+字卡本: 身體 Body
+卡: eye | 眼睛 | 👁️
+卡: ear | 耳朵 | 👂
+卡: nose | 鼻子 | 👃
+卡: mouth | 嘴巴 | 👄
+卡: tooth | 牙齒 | 🦷
+卡: tongue | 舌頭 | 👅
+卡: hand | 手 | ✋
+卡: arm | 手臂 | 💪
+卡: leg | 腿 | 🦵
+卡: foot | 腳 | 🦶
+
+字卡本: 交通工具 Vehicles
+卡: car | 汽車 | 🚗
+卡: bus | 公車 | 🚌
+卡: taxi | 計程車 | 🚕
+卡: scooter | 機車 | 🛵
+卡: bike | 腳踏車 | 🚲
+卡: train | 火車 | 🚆
+卡: truck | 卡車 | 🚚
+卡: fire truck | 消防車 | 🚒
+卡: police car | 警車 | 🚓
+卡: ambulance | 救護車 | 🚑
+卡: tractor | 拖拉機 | 🚜
+卡: boat | 船 | 🚤
+卡: ship | 輪船 | 🚢
+卡: airplane | 飛機 | ✈️
+卡: helicopter | 直升機 | 🚁
+卡: rocket | 火箭 | 🚀
+
+【影片】🎬
+// 英文單字的相關兒歌，一樣自己一區
+https://youtu.be/vD98OvvDNEs | 字母歌 The Alphabet Song
+https://youtu.be/ffeZXPtTGC4 | 字母發音 Phonics Song 2
+https://youtu.be/GoSq-yZcJ-4 | 動物 Walking In The Jungle
+https://youtu.be/r5WLXZspD1M | 水果 Apples & Bananas
+https://youtu.be/jYAWf8Y91hA | 顏色 I See Something Blue
+https://youtu.be/WTeqUejf3D0 | 形狀 Shapes Song 2
+https://youtu.be/ZanHgPprl-0 | 身體 Head Shoulders Knees & Toes
+https://youtu.be/GzrjwOQpAl0 | 交通工具 The Wheels On The Bus

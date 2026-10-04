@@ -1,0 +1,307 @@
+// ╔════════════════════════════════════════════════════════════╗
+// ║  你的影片（家長自己加的影片都在這裡）                          ║
+// ╚════════════════════════════════════════════════════════════╝
+//
+// 兩種加法：
+//   1. GitHub 的 Actions → 「新增影片」→ Run workflow，填網址、分區，按執行就好（手機 GitHub App 也可以）
+//   2. 直接在 GitHub 網頁上編輯這個檔案，存檔後會自動部署
+//
+// 部署時會跟 playlists/library.txt（數字、英文單字的學習庫）合併成 App 讀的片單。
+//
+
+//
+// ╔════════════════════════════════════════════════════════════╗
+// ║  小朋友的影片清單                                            ║
+// ║  用記事本改這個檔案就好，改完存檔、上傳，所有 iPad 會自動更新   ║
+// ╚════════════════════════════════════════════════════════════╝
+//
+// 寫法（三層，由大到小）：
+//   # 學習 🎓                 大分類，小朋友端最上面那排；只有一個時整排會隱藏
+//   【分區名】🏫              分區，第二排標籤
+//   《冊或單元名》             影片上方的小標題，可省略
+//   影片網址 | 標題            標題可省略，App 會自動去 YouTube 抓
+//   site: 網址 | 標題          網站，會在 App 裡面開，小朋友不會跳出去
+//   網址 | 標題         音樂檔案（mp3/m4a/ogg…），會用內建播放器播放
+//   // 開頭的行是註解         想暫時停掉某部影片，前面加 // 就好
+//   PLAYLIST		
+
+# 學習 🎓
+
+【Little Kids (上)】🐰
+
+
+《第 1 課》
+https://www.youtube.com/watch?v=bOx1NrfSjts | LK01 1-1 主本
+https://www.youtube.com/watch?v=629kzdEaPq8 | LK01 1-2 複習+習作
+https://www.youtube.com/watch?v=HmnCaOFFEpI | LK01 1-3 字母
+
+《第 2 課》
+https://www.youtube.com/watch?v=3eAgKoPcBSk | LK01 2-1主本
+https://www.youtube.com/watch?v=PxnrZxuGM6I | LK01 2-2 複習+習作
+https://www.youtube.com/watch?v=4Irv1cIGBsE | LK01 2-3字母
+
+《第 3 課》
+https://www.youtube.com/watch?v=lfnqANTtKdo | LK01 3-1 主本
+https://www.youtube.com/watch?v=5xt6m-lccyA | LK01 3-2 複習+習作
+https://www.youtube.com/watch?v=BJL-Vqkceno | LK01 3-3 字母
+
+《第 4 課》
+https://www.youtube.com/watch?v=WtlhJ_SNkkI | LK01 4-1 主本
+https://www.youtube.com/watch?v=Q_53GjaFXqw | LK01 4-2 複習+習作
+https://www.youtube.com/watch?v=UviM1taB2Ko | LK01 4-3 字母
+
+《第 5 課》
+https://www.youtube.com/watch?v=5-l3uzyKDVc | LK01 5-1主本
+https://www.youtube.com/watch?v=lCkjB_dkf-o | LK01 5-2 複習+習作
+https://www.youtube.com/watch?v=uxD6c9nHCvc | LK01 5-3字母
+
+《第 6 課》
+https://www.youtube.com/watch?v=fzdju7Ao23A | LK01 6-1 主本
+https://www.youtube.com/watch?v=zLrU4WcigmM | LK01 6-2 複習+習作
+https://www.youtube.com/watch?v=p_SS7YI2OV8 | LK01 6-3 字母
+
+《第 7 課》
+https://www.youtube.com/watch?v=OT9salCPiq4 | LK01 7-1 主本
+https://www.youtube.com/watch?v=usPWTtzDw8w | LK01 7-2 複習+習作
+https://www.youtube.com/watch?v=wODrx7dB-3k | LK01 7-3 字母
+
+
+【Just say it】🧸
+
+https://www.youtube.com/watch?v=rA6trE_vcE8 | Just say it - Week 1
+https://www.youtube.com/watch?v=dBZ6YQI8sds | Just say it - Week 2
+https://www.youtube.com/watch?v=rbfUScGjHio | Just say it - Week 3
+https://www.youtube.com/watch?v=D0rePBoi448 | Just say it - Week 4
+
+
+【Kiddy (上)】🐶
+
+
+《第 1 課》
+https://www.youtube.com/watch?v=kdD15ObEFEI | KD 01 1-1 主本
+https://www.youtube.com/watch?v=iaouYgAEf2w | KD 01 1-2 複習+習作
+https://www.youtube.com/watch?v=5mWW1gNgLFE | KD 01 1-3 字母
+
+《第 2 課》
+https://www.youtube.com/watch?v=Rj-Py64EreA | KD 01 2-1 主本
+https://www.youtube.com/watch?v=qrTG0T_FuqI | KD 01 2-2 複習+習作
+https://www.youtube.com/watch?v=sC4DJwJkN_E | KD 01 2-3 字母
+
+《第 3 課》
+https://www.youtube.com/watch?v=kYB2iz_fURY | KD 01 3-1 主本
+https://www.youtube.com/watch?v=W2jLIXLIEn0 | KD 01 3-2 複習+習作
+https://www.youtube.com/watch?v=06gfNs6CaV8 | KD 01 3-3 字母
+
+《第 4 課》
+https://www.youtube.com/watch?v=aKLhBPSChJI | KD 01 4-1 主本
+https://www.youtube.com/watch?v=-zoR9N5UWvM | KD 01 4-2 複習+習作
+https://www.youtube.com/watch?v=9hpPSwNH2y4 | KD 01 4-3 字母
+
+《第 5 課》
+https://www.youtube.com/watch?v=glJ2KKxIj6Y | KD 01 5-1 主本
+https://www.youtube.com/watch?v=7Ohiqi1aljA | KD 01 5-2 複習+習作
+https://www.youtube.com/watch?v=VJcNcNyAckc | KD 01 5-3 字母
+
+《第 6 課》
+https://www.youtube.com/watch?v=sv2m6LOU8H0 | KD 01 6-1 主本
+https://www.youtube.com/watch?v=AN00T11_Iak | KD 01 6-2 複習+習作
+https://www.youtube.com/watch?v=YbdiB74K_bM | KD 01 6-3 字母
+
+《第 7 課》
+https://www.youtube.com/watch?v=n8Z9VWgqB_M | KD 01 7-1 主本
+https://www.youtube.com/watch?v=KEyb8UyGgy4 | KD 01 7-2 複習+習作
+https://www.youtube.com/watch?v=TSrbB1MZzp4 | KD 01 7-3 字母
+
+
+【生活美語】💬
+
+// 這一區沒有分冊，26 課直接照順序排。要分冊的話，
+// 在想分開的地方插一行《第一單元》之類的就好。
+https://www.youtube.com/watch?v=yrzdPfnXusc | B上 就醬說英文 1-1
+https://www.youtube.com/watch?v=eMhuNXZcK8A | B上 就醬說英文 1-2
+https://www.youtube.com/watch?v=hodNrU-_TPU | B上 就醬說英文 2
+https://www.youtube.com/watch?v=FkqrQ432SCw | B上 就醬說英文 3
+https://www.youtube.com/watch?v=rD7kZONpB3g | B上 就醬說英文 4
+https://www.youtube.com/watch?v=064L7znMIC0 | B上 就醬說英文 5
+https://www.youtube.com/watch?v=LGHAScnO6V8 | B上 就醬說英文 6
+https://www.youtube.com/watch?v=4H6FQOLImyY | B上 就醬說英文 7
+https://www.youtube.com/watch?v=yY_ICZa3UBU | B上 就醬說英文 8
+https://www.youtube.com/watch?v=DXRXHM1lxiM | B上 就醬說英文 9
+https://www.youtube.com/watch?v=kdc5vAhPiHs | B上 就醬說英文 10
+https://www.youtube.com/watch?v=KBEEeeet4e0 | B上 就醬說英文 11
+https://www.youtube.com/watch?v=5orbcmUvVq8 | B上 就醬說英文 12
+https://www.youtube.com/watch?v=C6XuUUJVD6o | B上 就醬說英文 13
+https://www.youtube.com/watch?v=bzOPvpoPdU0 | B上 就醬說英文 14
+https://www.youtube.com/watch?v=BapqEvi5H7k | B上 就醬說英文 15
+https://www.youtube.com/watch?v=CowkHAqJjEI | B上 就醬說英文 16
+https://www.youtube.com/watch?v=yIkFDACs2Rk | B上 就醬說英文 17
+https://www.youtube.com/watch?v=VhdoagmtbpU | B上 就醬說英文 18
+https://www.youtube.com/watch?v=687fUmlCrek | B上 就醬說英文 19
+https://www.youtube.com/watch?v=Z78P8IBY1hE | B上 就醬說英文 20
+https://www.youtube.com/watch?v=srF0y944j_Y | B上 就醬說英文 21
+https://www.youtube.com/watch?v=pqh67NSHk4c | B上 就醬說英文 22
+https://www.youtube.com/watch?v=8qS0rBGM9Og | B上 就醬說英文 23
+https://www.youtube.com/watch?v=fhn3schQxXE | B上 就醬說英文 24
+https://www.youtube.com/watch?v=_0xtEZMg3Ag | B上 就醬說英文 25
+https://www.youtube.com/watch?v=ypDHAg5MX4I | B上 就醬說英文 26
+
+
+【節慶好好玩】🎉
+
+// 學校教材裡 SF01～SF06 有些節慶影片是同一支重複用的，
+// 所以下面會看到相同的網址出現好幾次 —— 這是正常的，App 支援。
+
+《SF01》
+https://www.youtube.com/watch?v=h4xJyVyBdFg | SF01 8 感恩節
+https://www.youtube.com/watch?v=NMIiGnWIR9Q | SF01 8 聖誕節
+https://www.youtube.com/watch?v=I18J0voYug4 | SF01 8 中秋節
+https://www.youtube.com/watch?v=KF4tVitOh2w | SF01 8萬聖節
+https://www.youtube.com/watch?v=EJuD5OCuYtM | SF01 8 新年
+https://www.youtube.com/watch?v=DaIrNxYjOF0 | SF01 8 元宵
+
+《SF02》
+https://www.youtube.com/watch?v=8vDGs5mxrN0 | SF02 8 Children's Day
+https://www.youtube.com/watch?v=n7lswV4cPtw | SF02 8 情人節
+https://www.youtube.com/watch?v=3UFO668O_mM | SF02 8 Easter
+https://www.youtube.com/watch?v=al1dQn_WKeI | SF02 8 Mother's day
+https://www.youtube.com/watch?v=_Gi0CEn2FBM | SF02 8 Dragon boat
+https://www.youtube.com/watch?v=X7c_DCLJhDo | SF02 8 Father's Day
+
+《SF03》
+https://www.youtube.com/watch?v=h4xJyVyBdFg | SF03 8 感恩節
+https://www.youtube.com/watch?v=I18J0voYug4 | SF03 8 中秋節
+https://www.youtube.com/watch?v=KF4tVitOh2w | SF03 8 萬聖節
+https://www.youtube.com/watch?v=NMIiGnWIR9Q | SF03 8 聖誕節
+https://www.youtube.com/watch?v=EJuD5OCuYtM | SF03 8 新年
+https://www.youtube.com/watch?v=DaIrNxYjOF0 | SF03 8 元宵
+
+《SF04》
+https://www.youtube.com/watch?v=8vDGs5mxrN0 | SF04 8 Children's Day
+https://www.youtube.com/watch?v=n7lswV4cPtw | SF04 8 情人節
+https://www.youtube.com/watch?v=3UFO668O_mM | SF04 8 Easter
+https://www.youtube.com/watch?v=al1dQn_WKeI | SF04 8 Mother's day
+https://www.youtube.com/watch?v=_Gi0CEn2FBM | SF04 8 Dragon boat
+https://www.youtube.com/watch?v=X7c_DCLJhDo | SF04 8 Father's Day
+
+《SF05》
+https://www.youtube.com/watch?v=h4xJyVyBdFg | SF05 8 感恩節
+https://www.youtube.com/watch?v=I18J0voYug4 | SF05 8 中秋節
+https://www.youtube.com/watch?v=KF4tVitOh2w | SF05 8 萬聖節
+https://www.youtube.com/watch?v=NMIiGnWIR9Q | SF05 8 聖誕節
+https://www.youtube.com/watch?v=EJuD5OCuYtM | SF05 8 新年
+https://www.youtube.com/watch?v=DaIrNxYjOF0 | SF05 8 元宵
+
+《SF06》
+https://www.youtube.com/watch?v=8vDGs5mxrN0 | SF06 8 Children's Day 兒童節
+https://www.youtube.com/watch?v=n7lswV4cPtw | SF06 8 情人節
+https://www.youtube.com/watch?v=3UFO668O_mM | SF06 8 Easter
+https://www.youtube.com/watch?v=al1dQn_WKeI | SF06 8 Mother's day
+https://www.youtube.com/watch?v=_Gi0CEn2FBM | SF06 8 Dragon boat
+https://www.youtube.com/watch?v=X7c_DCLJhDo | SF06 8 Father's Day
+
+【每日英文】🔤
+
+// site: 開頭的是網站，會在 App 裡面開，小朋友不會跳出去
+site: https://embrs.github.io/learn-en/ | 每日英文・家庭生活
+
+# 娛樂 🎮
+
+【英文故事】📖
+
+《動物故事1》
+https://www.youtube.com/watch?v=qfngKB3ZyOc | Maisy’s Morning on the Farm🐄
+https://www.youtube.com/watch?v=ZqGYWRHOV6E | Dear Zoo 🦁
+https://www.youtube.com/watch?v=VoKQ0HZ8ks0 | Where’s Spot? 🐶
+https://www.youtube.com/watch?v=5TGqpi0oF0w | The Very Busy Spider 🕷️
+https://www.youtube.com/watch?v=EC4uololjPI | Spot Goes to School 🎒
+https://www.youtube.com/watch?v=PKIiJGvCofs | Eric Carle Books 📚
+https://www.youtube.com/watch?v=XO1kkIka9rs | Owl Babies 🦉
+https://www.youtube.com/watch?v=CwQKH_rV6T4 | Guess How Much I Love You 🐰❤️
+https://www.youtube.com/watch?v=2NSH4ce_M7c | The Going to Bed Book 🛁🌙
+https://www.youtube.com/watch?v=XvmpNOJOy7k | Maisy Goes to Bed 🛏️🌙
+
+《動物故事2》
+https://www.youtube.com/watch?v=QpCebCxrPVk | From Head to Toe  🙆 
+https://www.youtube.com/watch?v=VaqXuri170s | Animal Sounds for Kids 🐮🐷
+https://www.youtube.com/watch?v=gVeO940dpmo | What's That Animal? 🦁
+https://www.youtube.com/watch?v=l7R_y-XXEIo | We're Going on a Bear Hunt 🐻
+https://www.youtube.com/watch?v=E7tvOtt1itA | Brown Bear, Brown Bear, What Do You See? 🐻
+https://www.youtube.com/watch?v=FIe-YWFDfnQ | The Very Hungry Caterpillar 🐛
+https://www.youtube.com/watch?v=mu78cOHECy8 | Dear Santa 🎅
+https://www.youtube.com/watch?v=H3tmpVTqy2A | The Snowy Day ❄️
+https://www.youtube.com/watch?v=VoKQ0HZ8ks0 | Where’s Spot? 🐶
+https://www.youtube.com/watch?v=Rj3j9nXF9Wc | Goodnight, Gorilla  🦍🌙
+
+《生活故事》
+https://www.youtube.com/watch?v=gfm1iEGL5VY | Go Away, Big Green Monster!👹
+https://www.youtube.com/watch?v=-GSnmRZlgc4 | Pete the Cat: I Love My White Shoes 🐱👟
+https://www.youtube.com/watch?v=5zGyVkL1vOg | Little Blue Truck 🚚
+https://www.youtube.com/watch?v=G6FWfjfvrNQ | The Tale of Peter Rabbit Full Story 🐰
+https://www.youtube.com/watch?v=jgXBfkaNw5A | The Very Cranky Bear 🐻
+https://www.youtube.com/watch?v=OxNUrjEGUS0 | Little Rubber Ducks by Eric Carle 🦆
+https://www.youtube.com/watch?v=xYjRaijE6ZA | Where Is the Green Sheep? 🐑
+https://www.youtube.com/watch?v=K7evZs9iRoU | Llama Llama Red Pajama 🦙🛏️
+https://www.youtube.com/watch?v=H2k57kpbYYQ | Time for Bed 🌙
+https://www.youtube.com/watch?v=uU1sX_Yg3JU | Goodnight Moon 🌙
+
+
+【音樂時間】🎶
+
+《音樂兒歌》
+https://www.youtube.com/watch?v=0lf0eX4zzUo | Polar Bear, Polar Bear, What Do You Hear?
+https://www.youtube.com/watch?v=N5YSbaUl9Y4 | Five Little Ducks 🦆
+https://www.youtube.com/watch?v=RobT920n0qA | Old MacDonald Had A Farm 🐮
+https://www.youtube.com/watch?v=e_04ZrNroTo | Wheels on the Bus 🚌
+https://www.youtube.com/watch?v=wqvQAcloTRQ | If You're Happy and You Know It 👏
+https://www.youtube.com/watch?v=8ov4mKvQtxE | Five Little Monkeys Jumping on the Bed
+https://www.youtube.com/watch?v=XqZsoesa55w | Baby Shark 🦈
+https://www.youtube.com/watch?v=fPMjnlTEZwU | Walking Walking ⭐
+https://www.youtube.com/watch?v=WX8HmogNyCY | Head, Shoulders, Knees & Toes 🙆
+https://www.youtube.com/watch?v=yCjJyiqpAuU | Twinkle Twinkle Little Star ⭐
+https://www.youtube.com/watch?v=iNDE6NGs0OI | Animal Song
+
+《幼兒園神曲歌》
+https://www.youtube.com/watch?v=M6zhXla6iC8 | 我的朋友在哪裡 👋
+https://www.youtube.com/watch?v=1B85zVzmLkc | 手指歌
+https://www.youtube.com/watch?v=usCputd1Wu0 | 一根小手指
+https://www.youtube.com/watch?v=4lCiZgiaCpQ | 十個小手指 🖐️
+https://www.youtube.com/watch?v=18l2A8V_qOo | 小花朵
+https://www.youtube.com/watch?v=LNqm4qNEjtk | 小手小手拍拍 👏
+https://www.youtube.com/watch?v=d_ui-174LxU | 小兔子乖乖 🐰
+https://www.youtube.com/watch?v=785sGm7K85g | 身體音階歌
+https://www.youtube.com/watch?v=jkRiPeeLOFQ | 交通安全紅綠燈
+https://www.youtube.com/watch?v=8JqTMsTWngM | 聽我說謝謝
+
+《我會 🔤》
+https://www.youtube.com/watch?v=ezmsrB59mj8 | ABC Son
+https://www.youtube.com/watch?v=rnPumGebUTc | ABC Song 字母歌
+https://www.youtube.com/watch?v=jzfGt4uiqDE | ABC Ocean
+https://www.youtube.com/watch?v=opz6ahju7h8 | A to Z Alphabet
+https://www.youtube.com/watch?v=DR-cfDsHCGA | Counting 1-10 Song
+https://www.youtube.com/watch?v=Yt8GFgxlITs | Counting 1 to 10 | Number Songs
+https://www.youtube.com/watch?v=BVwsc92K2l4 | 開心的形狀旅行
+https://www.youtube.com/watch?v=HWfIECJcJo8 | 形狀遊戲
+https://www.youtube.com/watch?v=ALcL3MuU4xQ | Make A Circle
+https://www.youtube.com/watch?v=TJhfl5vdxp4 | Make Circle
+https://www.youtube.com/watch?v=03pyY9C2Pm8 | Make triangle
+https://www.youtube.com/watch?v=AxmFV4MEDpw | ABCs & Fruits for Toddlers 🍓
+
+《喵喵歡樂唱 1️⃣》
+https://www.youtube.com/watch?v=G5JHXLTNG_0 | 上學去
+https://www.youtube.com/watch?v=IJ_9YYDrY7o | 好朋友
+https://www.youtube.com/watch?v=y6EnWEkIb3E | 美味午餐
+https://www.youtube.com/watch?v=ChZa8QySRAA | 水果派對
+https://www.youtube.com/watch?v=j8WZ_R1bQN0 | 可愛寶貝
+https://www.youtube.com/watch?v=5E35_LtLtrY | 愛的抱抱
+https://www.youtube.com/watch?v=-aHiRVCLkt0 | 動動體操
+https://www.youtube.com/watch?v=K39B8gsS-pE | 節奏好好玩
+https://www.youtube.com/watch?v=9FUvo0x66BU | 蝸牛
+https://www.youtube.com/watch?v=fv-78S3HxNI | 小花貓
+https://www.youtube.com/watch?v=RqoHL66Wx5o | 新年
+
+《卡通最愛》
+
+
+【恐龍 & 挖土機】🦒
+
+

@@ -286,9 +286,11 @@ export function useLibrary() {
     try { localStorage.setItem(SYNC_KEY, hash) } catch { /* 略過 */ }
 
     const secPart = parsed.sections.length > 1 ? `${parsed.sections.length} 個大分類、` : ''
+    const deckCount = parsed.videos.filter((v) => v.kind === 'deck').length
+    const deckPart = deckCount ? `、${deckCount} 本字卡` : ''
     syncStatus.value = {
       state: 'updated',
-      message: `已從片單檔案更新：${secPart}${parsed.categories.length} 個分區、${parsed.videos.length} 部影片。`,
+      message: `已從片單檔案更新：${secPart}${parsed.categories.length} 個分區、${parsed.videos.length - deckCount} 部影片${deckPart}。`,
       warnings: parsed.warnings,
     }
     backfillTitles()

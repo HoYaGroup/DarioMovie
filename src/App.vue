@@ -11,10 +11,11 @@ import { warmUpYouTubeApi } from '~/composables/useYouTubePlayer'
 import VideoLibrary from '~/components/VideoLibrary.vue'
 import VideoStage from '~/components/VideoStage.vue'
 import SiteStage from '~/components/SiteStage.vue'
+import CardDeck from '~/components/CardDeck.vue'
 import ParentPanel from '~/components/ParentPanel.vue'
 import PinLock from '~/components/PinLock.vue'
 
-type Screen = 'library' | 'watch' | 'site' | 'parent'
+type Screen = 'library' | 'watch' | 'site' | 'cards' | 'parent'
 
 const { appTitle, init } = useLibrary()
 const { init: initWatchTime, resetSession } = useWatchTime()
@@ -69,8 +70,8 @@ function play(video: VideoItem, list: VideoItem[] = [video]) {
   resumeAt.value = 0
   // 網站沒有「播完」這件事，清單循環只對真的影片有意義，混在同一冊裡也要濾掉
   queue.value = list.filter((v) => (v.kind ?? 'video') === 'video')
-  // 網站在 App 裡面開，小朋友不會跳出去回不來
-  pushScreen(video.kind === 'site' ? 'site' : 'watch')
+  // 網站在 App 裡面開，小朋友不會跳出去回不來；字卡有自己的畫面
+  pushScreen(video.kind === 'site' ? 'site' : video.kind === 'deck' ? 'cards' : 'watch')
 }
 
 /** 從片單畫面的「接續播放」點進來，額外帶一個要跳到的秒數 */
@@ -136,6 +137,12 @@ function onPopState() {
     <SiteStage
       v-else-if="screen === 'site' && playing"
       :item="playing"
+      @close="backToLibrary"
+    />
+
+    <CardDeck
+      v-else-if="screen === 'cards' && playing"
+      :deck="playing"
       @close="backToLibrary"
     />
 

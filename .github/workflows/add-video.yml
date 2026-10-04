@@ -1,0 +1,97 @@
+# 新增影片：在 GitHub 網頁或手機 App 的 Actions 頁面按「Run workflow」，
+# 貼網址、從選單選分區，按執行就會加進 playlists/videos.txt，接著自動重新部署。
+# 分區選單由 scripts/sync-video-form.mjs 跟片單同步（npm run dev 之前會自動跑）。
+name: 新增影片
+
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: 'YouTube 網址'
+        required: true
+        type: string
+      place:
+        description: '要放在哪個分區'
+        required: true
+        type: choice
+        # >>> 分區選單：scripts/sync-video-form.mjs 自動產生，不要手動改
+        default: '學習 › Little Kids (上)'
+        options:
+          - '學習 › Little Kids (上)'
+          - '學習 › Just say it'
+          - '學習 › Kiddy (上)'
+          - '學習 › 生活美語'
+          - '學習 › 節慶好好玩'
+          - '學習 › 每日英文'
+          - '娛樂 › 英文故事'
+          - '娛樂 › 音樂時間'
+          - '娛樂 › 恐龍 & 挖土機'
+          - '數字 › 影片'
+          - '英文單字 › 影片'
+          - '（新的分區，名稱填在下面）'
+        # <<< 分區選單
+      unit:
+        description: '單元（可以不填，例如：動物故事1）'
+        required: false
+        type: string
+      title:
+        description: '標題（可以不填，會自動抓 YouTube 的片名）'
+        required: false
+        type: string
+      new_section:
+        description: '選「新的分區」才要填：大分類（例如：學習、娛樂）'
+        required: false
+        type: string
+      new_category:
+        description: '選「新的分區」才要填：分區名稱（例如：恐龍故事）'
+        required: false
+        type: string
+
+permissions:
+  contents: write   # 把改好的片單 commit 回 repo
+  actions: write    # 觸發部署
+
+# 同時有兩個人在加影片時，一個一個來，不會互相蓋掉
+concurrency:
+  group: add-video
+  cancel-in-progress: false
+
+jobs:
+  add:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      # 輸入一律透過環境變數交給腳本，不直接塞進指令，標題裡有引號、分號也不會出事
+      - name: 加進片單
+        env:
+          VIDEO_URL: ${{ inputs.url }}
+          VIDEO_PLACE: ${{ inputs.place }}
+          VIDEO_NEW_SECTION: ${{ inputs.new_section }}
+          VIDEO_NEW_CATEGORY: ${{ inputs.new_category }}
+          VIDEO_UNIT: ${{ inputs.unit }}
+          VIDEO_TITLE: ${{ inputs.title }}
+        run: node scripts/add-video.mjs
+
+      - name: 存回 repo
+        env:
+          VIDEO_URL: ${{ inputs.url }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          git add playlists/videos.txt
+          git commit -m "新增影片：$VIDEO_URL"
+          git pull --rebase
+          git push
+
+      # 用 GITHUB_TOKEN 推上去的 commit 不會自動觸發部署（GitHub 的防呆設計），
+      # 所以這裡直接叫部署流程跑一次
+      - name: 重新部署
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BRANCH: ${{ github.ref_name }}
+        run: gh workflow run deploy.yml --ref "$BRANCH"

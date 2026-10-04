@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, watch, onMounted, onBeforeUnmount, nextTick, ref } from 'vue'
-import { thumbUrl, categoryColor, formatTime, type VideoItem } from '~/utils/youtube'
+import { thumbUrl, categoryColor, formatTime, type Card, type VideoItem } from '~/utils/youtube'
+import { countOf, isPicture, imageSrc, cardsOf } from '~/utils/cards'
 import { humanMinutes, countdown, useWatchTime } from '~/composables/useWatchTime'
 import { useLibrary } from '~/composables/useLibrary'
 import { useDisplay } from '~/composables/useDisplay'
@@ -8,6 +9,7 @@ import { useContinueWatching } from '~/composables/useContinueWatching'
 import { useTheme } from '~/composables/useTheme'
 import { useTvMode } from '~/composables/useTvMode'
 import { useState } from '~/composables/useState'
+import { useCardStars } from '~/composables/useCardStars'
 
 const emit = defineEmits<{
   play: [video: VideoItem, queue: VideoItem[]]
@@ -24,6 +26,17 @@ const { settings: display, lastGroupOf, rememberGroup } = useDisplay()
 const { entry: continueEntry, isResumable, clear: clearContinue } = useContinueWatching()
 const { resolved: themeResolved, setTheme } = useTheme()
 const { isTv } = useTvMode()
+const { starsOf } = useCardStars()
+
+/** 字卡本的封面：前三張卡攤開成扇形，數字卡露出數字、其他卡露出圖 */
+function deckPeek(video: VideoItem): Card[] {
+  return cardsOf(video).slice(0, 3)
+}
+
+/** 封面小卡上寫的字（沒有圖的卡） */
+function peekText(c: Card): string {
+  return countOf(c) !== null ? c.word : (c.image || c.word)
+}
 
 /** 上次看到一半、值得問要不要接續的那支影片；找不到（可能被刪了）或已經快看完就不問 */
 const continueVideo = computed(() => {
@@ -428,10 +441,27 @@ onBeforeUnmount(cancelHold)
             >
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm6.9 6h-2.9a15.6 15.6 0 0 0-1.3-3.4A8 8 0 0 1 18.9 8ZM12 4c.8 1.2 1.4 2.5 1.8 4h-3.6c.4-1.5 1-2.8 1.8-4ZM4.3 14a8 8 0 0 1 0-4h3.3a16.6 16.6 0 0 0 0 4Zm.8 2h2.9c.3 1.2.7 2.3 1.3 3.4A8 8 0 0 1 5.1 16Zm2.9-8H5.1a8 8 0 0 1 4.2-3.4A15.6 15.6 0 0 0 8 8Zm4 12c-.8-1.2-1.4-2.5-1.8-4h3.6c-.4 1.5-1 2.8-1.8 4Zm2.2-6H9.8a14.6 14.6 0 0 1 0-4h4.4a14.6 14.6 0 0 1 0 4Zm.5 5.4c.6-1.1 1-2.2 1.3-3.4h2.9a8 8 0 0 1-4.2 3.4ZM16.4 14a16.6 16.6 0 0 0 0-4h3.3a8 8 0 0 1 0 4Z" /></svg>
             </div>
+            <div
+              v-else-if="video.kind === 'deck'"
+              class="card-thumb card-deck"
+              :style="{ background: activeColor }"
+            >
+              <span
+                v-for="(c, ci) in deckPeek(video)"
+                :key="ci"
+                class="deck-peek"
+                :style="{ '--o': ci - (deckPeek(video).length - 1) / 2, '--plen': [...peekText(c)].length }"
+              >
+                <img v-if="isPicture(c)" :src="imageSrc(c.image)" alt="">
+                <template v-else>{{ peekText(c) }}</template>
+              </span>
+              <span v-if="starsOf(video.uid)" class="deck-stars">⭐ {{ starsOf(video.uid) }}</span>
+            </div>
             <div v-else class="card-thumb" :style="{ backgroundImage: `url(${thumbUrl(video.id)})` }" />
 
             <div class="card-title">
-              <span v-if="video.kind === 'site'" class="site-tag">網站</span>{{ video.title || '影片' }}
+              <span v-if="video.kind === 'site'" class="site-tag">網站</span>
+              <span v-else-if="video.kind === 'deck'" class="site-tag">字卡 {{ video.cards?.length ?? 0 }} 張</span>{{ video.title || '影片' }}
             </div>
           </button>
         </div>
@@ -840,6 +870,51 @@ onBeforeUnmount(cancelHold)
   height: 64px;
   fill: var(--on-accent);
   opacity: .85;
+}
+
+/* 字卡本：分區色鋪底，前三張卡攤成扇形，一眼看得出是「卡片」不是影片 */
+.card-deck {
+  display: block;
+  overflow: hidden;
+}
+.card-deck::after { content: none; }
+
+.deck-peek {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 24%;
+  aspect-ratio: 3 / 4;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: #fffdf7;
+  color: #221d45;
+  /* 兩、三位數（10、100）字要縮小，小卡才擺得下 */
+  font-size: calc(clamp(26px, 3.4vw, 46px) * min(1, 1.5 / var(--plen, 1)));
+  font-weight: 900;
+  line-height: 1;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, .22);
+  translate: calc(-50% + var(--o) * 92%) -46%;
+  rotate: calc(var(--o) * 9deg);
+}
+.deck-peek img {
+  width: 90%;
+  height: 90%;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.deck-stars {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(20, 18, 46, .72);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 800;
 }
 
 .site-tag {

@@ -1,12 +1,41 @@
-/** 片單裡的一筆可以是 YouTube 影片，也可以是一個網站 */
-export type ItemKind = 'video' | 'site'
+/** 片單裡的一筆可以是 YouTube 影片、一個網站，或是一本字卡 */
+export type ItemKind = 'video' | 'site' | 'deck'
+
+/** 影片裡教某個字的那一段 */
+export interface CardClip {
+  /** YouTube 影片 ID */
+  id: string
+  /** 從第幾秒開始播 */
+  start: number
+  /** 播到第幾秒停；0 表示一路播到影片結束 */
+  end: number
+}
+
+/** 字卡本裡的一張卡 */
+export interface Card {
+  /** 卡片上最大的那個字，例如「3」「cat」 */
+  word: string
+  /** 補充說明，例如「three 三」「貓」，可以空白 */
+  meaning: string
+  /** emoji，或圖片網址／public 底下的相對路徑，可以空白 */
+  image: string
+  /** 翻到背面時換成這張圖（例如正面遮住數字、背面是完整的卡），可以空白 */
+  backImage: string
+  /** 老師在影片裡教這個字的那一段，沒有就是 null */
+  clip: CardClip | null
+}
 
 /** 影片在片單中的資料形狀 */
 export interface VideoItem {
-  /** 'site' 表示這是一個網站連結，會在 App 內開啟，小朋友不會跳出去 */
+  /**
+   * 'site' 表示這是一個網站連結，會在 App 內開啟，小朋友不會跳出去；
+   * 'deck' 表示這是一本字卡，卡片內容在 cards 裡
+   */
   kind?: ItemKind
   /** kind 為 'site' 時的網址 */
   url?: string
+  /** kind 為 'deck' 時的卡片，順序就是 playlist.txt 裡寫的順序 */
+  cards?: Card[]
   /**
    * 這一筆在片單裡的唯一識別。
    * 用 id 當識別的話，同一支影片就沒辦法同時出現在好幾個單元 ——

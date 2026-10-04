@@ -2,7 +2,7 @@ import { ref, computed, onBeforeUnmount, type Ref } from 'vue'
 
 /* ── YouTube IFrame API 的最小型別（不必額外安裝 @types/youtube） ── */
 interface YTPlayer {
-  loadVideoById: (id: string) => void
+  loadVideoById: (idOrOptions: string | { videoId: string; startSeconds?: number }) => void
   playVideo: () => void
   pauseVideo: () => void
   stopVideo: () => void
@@ -74,6 +74,9 @@ export function useYouTubePlayer(options: {
   let tickTimer: ReturnType<typeof setInterval> | null = null
   let lastTickAt = 0
   let finished = false
+  /** 只播一段（字卡的影片片段）時的起訖秒數；clipEnd 為 0 表示播到影片結束 */
+  let clipStart = 0
+  let clipEnd = 0
 
   /** 播放速度、單片重複，都要在每次換片後重新套用到新的播放器實例 */
   const playbackRate = ref(1)
@@ -107,6 +110,13 @@ export function useYouTubePlayer(options: {
         return
       }
 
+      // 只播一段：播到指定的秒數就收手。
+      // 刻意不用 YouTube 的 end 參數 —— 那會讓播放器進入「已結束」狀態，推薦網格跟著跳出來
+      if (clipEnd && cur >= clipEnd) {
+        finish()
+        return
+      }
+
       if (!isSeeking.value) currentTime.value = cur
     }, 250)
   }
@@ -122,7 +132,7 @@ export function useYouTubePlayer(options: {
     if (finished) return
     // 重複播放：跳回開頭繼續放，不當成「真的播完」，也就不會觸發關閉或換下一部
     if (repeat.value) {
-      try { player?.seekTo(0, true) } catch { /* 播放器可能已被卸載 */ }
+      try { player?.seekTo(clipStart, true) } catch { /* 播放器可能已被卸載 */ }
       return
     }
     finished = true
@@ -200,6 +210,7 @@ export function useYouTubePlayer(options: {
         modestbranding: 1,
         playsinline: 1,     // iOS 必須：不讓原生播放器接管畫面
         rel: 0,             // 相關影片限制在同頻道（2018 年後的語意，仍值得帶上）
+        start: Math.floor(clipStart),
         enablejsapi: 1,
         origin: window.location.origin,
       },
@@ -218,18 +229,23 @@ export function useYouTubePlayer(options: {
     })
   }
 
-  /** 建立播放器並開始播放指定影片 */
-  async function load(videoId: string) {
+  /**
+   * 建立播放器並開始播放指定影片。
+   * 給 range 的話只播那一段（字卡用），end 為 0 表示播到影片結束。
+   */
+  async function load(videoId: string, range: { start?: number; end?: number } = {}) {
     finished = false
     status.value = 'loading'
     currentTime.value = 0
     duration.value = 0
+    clipStart = range.start ?? 0
+    clipEnd = range.end ?? 0
 
     await loadIframeApi()
     if (!hostRef.value) return
 
     if (player && ready) {
-      player.loadVideoById(videoId)
+      player.loadVideoById({ videoId, startSeconds: clipStart })
       applySettings()
       // loadVideoById 會讓字幕模組重置，onApiChange 之後也會再套用一次，這裡先套用讓它盡快生效
       forceCaptionsOff()

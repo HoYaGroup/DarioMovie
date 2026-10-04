@@ -23,6 +23,7 @@ dist-ssr
 *.sln
 *.sw?
 
-# 真正的片單內容不進 repo，改由 GitHub Actions 從 PLAYLIST secret 寫入
+# App 讀的片單是自動產生的：playlists/library.txt ＋ playlists/videos.txt 合併而成
+# （npm run dev／build 之前會跑 scripts/build-playlist.mjs），要改請改 playlists/ 底下的檔案
 # （沒設定 secret 時 CI 會照常用本機這份檔案，本機開發也照樣讀得到）
 public/playlist.txt

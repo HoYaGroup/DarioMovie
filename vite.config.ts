@@ -44,6 +44,15 @@ export default defineConfig({
         navigateFallback: 'index.html',
         runtimeCaching: [
           {
+            // 字卡用的照片（public/cards/）：看過一次就存起來，之後沒網路也翻得到
+            urlPattern: /\/cards\/.+\.(?:jpe?g|webp|gif|avif)$/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'card-images',
+              expiration: { maxEntries: 300, maxAgeSeconds: 60 * 60 * 24 * 90 },
+            },
+          },
+          {
             // 影片縮圖快取起來，清單頁第二次開啟就不用重新下載
             urlPattern: /^https:\/\/i\.ytimg\.com\/.*/i,
             handler: 'CacheFirst',

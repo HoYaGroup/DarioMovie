@@ -5,7 +5,11 @@
   "type": "module",
   "description": "給小朋友的無干擾 YouTube 觀影 PWA（Vue 3 + Vite 版）",
   "scripts": {
+    "playlist": "node scripts/build-playlist.mjs",
+    "sync-form": "node scripts/sync-video-form.mjs",
+    "predev": "npm run playlist && npm run sync-form",
     "dev": "vite",
+    "prebuild": "npm run playlist",
     "build": "vue-tsc -b && vite build",
     "preview": "vite preview"
   },

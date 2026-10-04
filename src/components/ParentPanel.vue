@@ -747,8 +747,9 @@ function onImport() {
                     <svg viewBox="0 0 10 16"><circle cx="3" cy="3" r="1.3" /><circle cx="7" cy="3" r="1.3" /><circle cx="3" cy="8" r="1.3" /><circle cx="7" cy="8" r="1.3" /><circle cx="3" cy="13" r="1.3" /><circle cx="7" cy="13" r="1.3" /></svg>
                   </button>
 
-                  <!-- 網站沒有 YouTube 縮圖，別去抓空網址 -->
+                  <!-- 網站與字卡沒有 YouTube 縮圖，別去抓空網址 -->
                   <div v-if="video.kind === 'site'" class="row-site-icon" aria-hidden="true">🔗</div>
+                  <div v-else-if="video.kind === 'deck'" class="row-site-icon" aria-hidden="true">🃏</div>
                   <img v-else :src="thumbUrl(video.id)" alt="">
 
                   <input
@@ -1013,19 +1014,24 @@ function onImport() {
 https://youtu.be/xxxxxxxxxxx | 第一課
 https://youtu.be/yyyyyyyyyyy | 第二課
 
-site: https://example.com | 某個學習網站</pre>
+site: https://example.com | 某個學習網站
+
+卡: cat | 貓 | 🐱
+卡: 3 | three 三 | 🍎 | https://youtu.be/xxxxxxxxxxx 0:35-0:42</pre>
 
             <ul class="use-cases">
               <li><strong># 　</strong>後面是大分類（學習／娛樂），可以不寫</li>
               <li><strong>【　】</strong>裡面是分區，後面可以加 emoji</li>
               <li><strong>《　》</strong>裡面是冊或單元，可以不寫</li>
               <li><strong>site:</strong> 開頭是網站，會在 App 裡面開，小朋友不會跳出去</li>
+              <li><strong>卡:</strong> 開頭是字卡：字｜說明｜圖（emoji 或圖片）｜影片片段，同一個單元的卡會集成一本</li>
               <li>網址後面加 <strong>|</strong> 可以自己寫標題，不寫就自動抓</li>
               <li>行首加 <strong>//</strong> 就是註解，可以暫時停掉某一項</li>
             </ul>
 
             <p class="hint">
-              檔案位置：<code>public/playlist.txt</code>（線上位置 <code>{{ playlistUrl() }}</code>）。
+              檔案在 repo 的 <code>playlists/videos.txt</code>（你自己的影片）和 <code>playlists/library.txt</code>（學習庫），
+              部署時合併成 <code>{{ playlistUrl() }}</code>。要加影片也可以用 GitHub Actions 的「新增影片」，不用電腦。
               檔案內容沒變動時會保留你在這台 iPad 上的調整；一旦檔案改過，就以檔案為準覆蓋掉。
             </p>
 

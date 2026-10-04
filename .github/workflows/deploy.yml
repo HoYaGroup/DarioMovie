@@ -29,21 +29,13 @@ jobs:
 
       - run: npm ci
 
-      # 不想讓片單出現在 repo 裡的話：
-      #   1. 把 public/playlist.txt 加進 .gitignore
-      #   2. 到 Settings → Secrets and variables → Actions 建一個叫 PLAYLIST 的 secret，
-      #      內容就是整份片單
-      # 沒設定這個 secret 時，會照常用 repo 裡的 public/playlist.txt
-      - name: 從 Secret 寫入片單（有設定才會執行）
-        env:
-          PLAYLIST: ${{ secrets.PLAYLIST }}
-        run: |
-          if [ -n "$PLAYLIST" ]; then
-            printf '%s\n' "$PLAYLIST" > public/playlist.txt
-            echo "已從 Secret 寫入片單（$(wc -l < public/playlist.txt) 行）"
-          else
-            echo "沒有 PLAYLIST secret，使用 repo 裡的 public/playlist.txt"
-          fi
+      # 片單放在 playlists/：library.txt（學習庫）＋ videos.txt（家長自己的影片），
+      # npm run build 之前會自動合併成 public/playlist.txt（scripts/build-playlist.mjs）。
+      # 以前放在 PLAYLIST secret 的做法已經不用了，那個 secret 可以刪掉。
+
+      # 「新增影片」表單的分區選單有沒有跟上片單（只提醒，不擋部署）
+      - name: 檢查分區選單
+        run: node scripts/sync-video-form.mjs --check
 
       # GitHub Pages 的網址分兩種：
       #   <帳號>.github.io          → 網站在根目錄
