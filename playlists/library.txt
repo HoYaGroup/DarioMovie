@@ -10,24 +10,24 @@
 
 # 數字 🔢
 
-【認數字】🔢
+【認數字】💯
 // 正面問「What number is this?」，翻面中文、英文一起說，不再分成中文版、英文版
 // 上面有一排數字可以直接跳，一天教幾個都可以
 
 字卡本: 數字像什麼 1～10
 // 翻面說：One. 一支鉛筆. One pencil. —— 說明寫「中文 英文」，兩種都會唸
-卡: 1 | 一支鉛筆 one pencil | cards/shapes/1-q.webp | cards/shapes/1.webp
-卡: 2 | 一隻鴨子 a duck | cards/shapes/2-q.webp | cards/shapes/2.webp
-卡: 3 | 一隻蝴蝶 a butterfly | cards/shapes/3-q.webp | cards/shapes/3.webp
-卡: 4 | 一艘帆船 a sailboat | cards/shapes/4-q.webp | cards/shapes/4.webp
-卡: 5 | 一個勾勾 a hook | cards/shapes/5-q.webp | cards/shapes/5.webp
-卡: 6 | 一個大肚子 a big tummy | cards/shapes/6-q.webp | cards/shapes/6.webp
-卡: 7 | 一根拐杖 a cane | cards/shapes/7-q.webp | cards/shapes/7.webp
-卡: 8 | 一個雪人 a snowman | cards/shapes/8-q.webp | cards/shapes/8.webp
-卡: 9 | 一顆氣球 a balloon | cards/shapes/9-q.webp | cards/shapes/9.webp
-卡: 10 | 球棒和棒球 a bat and a ball | cards/shapes/10-q.webp | cards/shapes/10.webp
+卡: 1 | 鉛筆1 one pencil | cards/shapes/1-q.webp | cards/shapes/1.webp
+卡: 2 | 鴨子2 three duck | cards/shapes/2-q.webp | cards/shapes/2.webp
+卡: 3 | 蝴蝶3 a butterfly | cards/shapes/3-q.webp | cards/shapes/3.webp
+卡: 4 | 帆船4 a sailboat | cards/shapes/4-q.webp | cards/shapes/4.webp
+卡: 5 | 勾勾5 a hook | cards/shapes/5-q.webp | cards/shapes/5.webp
+卡: 6 | 大肚子6 big tummy | cards/shapes/6-q.webp | cards/shapes/6.webp
+卡: 7 | 拐杖7 a cane | cards/shapes/7-q.webp | cards/shapes/7.webp
+卡: 8 | 雪人8 a snowman | cards/shapes/8-q.webp | cards/shapes/8.webp
+卡: 9 | 氣球9 a balloon | cards/shapes/9-q.webp | cards/shapes/9.webp
+卡: 10 | 球棒和棒球10 a bat and a ball | cards/shapes/10-q.webp | cards/shapes/10.webp
 
-字卡本: 整十 10～100
+字卡本: 10～100
 // 只寫數字就好：翻面說 Thirty. 三十.
 卡: 10
 卡: 20
@@ -49,30 +49,29 @@
 // 放 emoji 的數字卡：正面畫出那麼多個東西，「Let's count! Touch the apples.」小朋友一個一個點著數
 // 數完問「How many apples are there?」三個數字選一個，答對翻面：Eleven. 十一顆蘋果. Eleven apples.
 // 會說 apples、十一顆蘋果 的 emoji 列在 src/utils/cards.ts 的 COUNT_NOUNS（常見的動物、水果都有）
-
 字卡本: 數一數 1～10
-卡: 1 | 🍎 | https://youtu.be/g9EgE_JtEAw 0:05-0:20
-卡: 2 | 🐶 | https://youtu.be/g9EgE_JtEAw 0:05-0:20
-卡: 3 | 🐸 | https://youtu.be/g9EgE_JtEAw 0:05-0:20
-卡: 4 | 🍌 | https://youtu.be/g9EgE_JtEAw 0:05-0:20
-卡: 5 | 🐟 | https://youtu.be/g9EgE_JtEAw 0:05-0:20
-卡: 6 | 🍓 | https://youtu.be/g9EgE_JtEAw 0:05-0:20
-卡: 7 | 🐞 | https://youtu.be/g9EgE_JtEAw 0:05-0:20
-卡: 8 | 🐥 | https://youtu.be/g9EgE_JtEAw 0:05-0:20
-卡: 9 | 🍊 | https://youtu.be/g9EgE_JtEAw 0:05-0:20
-卡: 10 | 🐝 | https://youtu.be/g9EgE_JtEAw 0:05-0:20
+卡: 1 | 🍎
+卡: 2 | 🐶
+卡: 3 | 🐸
+卡: 4 | 🍌
+卡: 5 | 🐟
+卡: 6 | 🍓
+卡: 7 | 🐞
+卡: 8 | 🐥
+卡: 9 | 🍊
+卡: 10 | 🐝 | https://youtu.be/g9EgE_JtEAw 0:20-0:50
 
 字卡本: 數一數 11～20
 // 前 10 個排成兩排，看得出 13 是 10 再加 3
-卡: 11 | 🍎
-卡: 12 | 🐟
-卡: 13 | 🍓
-卡: 14 | 🐸
-卡: 15 | 🍌
-卡: 16 | 🐞
-卡: 17 | 🍊
-卡: 18 | 🐥
-卡: 19 | 🐱
+卡: 11 | 🐱
+卡: 12 | 🐘
+卡: 13 | 🐝
+卡: 14 | 🦒
+卡: 15 | 🦛
+卡: 16 | 🐜
+卡: 17 | 🐵
+卡: 18 | 🐷
+卡: 19 | 🦁
 卡: 20 | 🐢
 
 【影片】🎬
@@ -81,6 +80,97 @@ https://youtu.be/-tpTosF4dN8 | 從 1 數到 10（中文）
 https://youtu.be/g9EgE_JtEAw | Count & Move 數到 20（英文）
 
 # 英文單字 🔤
+
+【ABC 形狀字母】🔤
+// 字母本身就是那個東西：A 是一隻鱷魚、B 是一隻熊……圖在 public/cards/letters/
+// 原圖重複或標錯的格子沒有放：動物的「I is for WHALE」和第二張 YAK、生活用品只有字母的 V 和 Y 形的拉鍊、
+// 食物標成 NOODLE 的第二個 M 和茶壺（T 用 T 字形的那張）
+
+字卡本: 動物篇 ABC
+卡: alligator | 鱷魚 | cards/letters/animals/alligator.webp | Snap, snap! I am an alligator.
+卡: bear | 熊 | cards/letters/animals/bear.webp | The bear is big.
+卡: cat | 貓 | cards/letters/animals/cat.webp | Shh! The cat is sleeping.
+卡: duck | 鴨子 | cards/letters/animals/duck.webp | Quack, quack! I am a duck.
+卡: elephant | 大象 | cards/letters/animals/elephant.webp | The elephant has a long nose.
+卡: fox | 狐狸 | cards/letters/animals/fox.webp | Look, a red fox!
+卡: giraffe | 長頸鹿 | cards/letters/animals/giraffe.webp | The giraffe is tall.
+卡: hippo | 河馬 | cards/letters/animals/hippo.webp | The hippo likes water.
+卡: iguana | 鬣蜥 | cards/letters/animals/iguana.webp | The iguana is green.
+卡: jellyfish | 水母 | cards/letters/animals/jellyfish.webp | The jellyfish can swim.
+卡: kangaroo | 袋鼠 | cards/letters/animals/kangaroo.webp | Jump, jump, kangaroo!
+卡: lion | 獅子 | cards/letters/animals/lion.webp | Roar! I am a lion.
+卡: monkey | 猴子 | cards/letters/animals/monkey.webp | The monkey likes bananas.
+卡: narwhal | 獨角鯨 | cards/letters/animals/narwhal.webp | The narwhal has a long horn.
+卡: owl | 貓頭鷹 | cards/letters/animals/owl.webp | Hoot, hoot! I am an owl.
+卡: penguin | 企鵝 | cards/letters/animals/penguin.webp | The penguin can swim.
+卡: quail | 鵪鶉 | cards/letters/animals/quail.webp | The quail is a little bird.
+卡: rabbit | 兔子 | cards/letters/animals/rabbit.webp | Hop, hop, little rabbit!
+卡: snake | 蛇 | cards/letters/animals/snake.webp | Hiss! I am a snake.
+卡: tiger | 老虎 | cards/letters/animals/tiger.webp | The tiger is orange and black.
+卡: unicorn | 獨角獸 | cards/letters/animals/unicorn.webp | The unicorn has one horn.
+卡: vulture | 禿鷹 | cards/letters/animals/vulture.webp | The vulture can fly.
+卡: whale | 鯨魚 | cards/letters/animals/whale.webp | The whale is very big.
+卡: x-ray fish | X光魚 | cards/letters/animals/x-ray-fish.webp | Look! I can see the bones.
+卡: yak | 犛牛 | cards/letters/animals/yak.webp | The yak has long hair.
+卡: zebra | 斑馬 | cards/letters/animals/zebra.webp | The zebra has stripes.
+
+字卡本: 美味食物篇 ABC
+卡: apple | 蘋果 | cards/letters/food/apple.webp | Yum, delicious apple!
+卡: bread | 麵包 | cards/letters/food/bread.webp | I like bread.
+卡: croissant | 可頌 | cards/letters/food/croissant.webp | I eat a croissant.
+卡: donut | 甜甜圈 | cards/letters/food/donut.webp | Yum, a sweet donut!
+卡: egg | 蛋 | cards/letters/food/egg.webp | I like eggs.
+卡: fries | 薯條 | cards/letters/food/fries.webp | I like French fries.
+卡: grapes | 葡萄 | cards/letters/food/grapes.webp | The grapes are purple.
+卡: hamburger | 漢堡 | cards/letters/food/hamburger.webp | I want a hamburger.
+卡: ice cream | 冰淇淋 | cards/letters/food/ice-cream.webp | Yum! I like ice cream.
+卡: jelly | 果凍 | cards/letters/food/jelly.webp | Wiggle, wiggle, jelly!
+卡: kiwi | 奇異果 | cards/letters/food/kiwi.webp | The kiwi is green.
+卡: lollipop | 棒棒糖 | cards/letters/food/lollipop.webp | I like lollipops.
+卡: marshmallow | 棉花糖 | cards/letters/food/marshmallow.webp | The marshmallow is soft.
+卡: noodles | 麵 | cards/letters/food/noodles.webp | Slurp! I like noodles.
+卡: orange | 柳橙 | cards/letters/food/orange.webp | The orange is juicy.
+卡: pizza | 披薩 | cards/letters/food/pizza.webp | I like pizza.
+卡: quiche | 鹹派 | cards/letters/food/quiche.webp | The quiche is yummy.
+卡: rice | 飯 | cards/letters/food/rice.webp | Eat your rice.
+卡: sushi | 壽司 | cards/letters/food/sushi.webp | I like sushi.
+卡: tea | 茶 | cards/letters/food/tea.webp | Daddy drinks tea.
+// 原圖的 U 寫「UMBRELLA CAKE」，英文沒有這種食物，先不放；想放的話把前面的 // 拿掉
+// 卡: umbrella cake | 雨傘蛋糕 | cards/letters/food/umbrella-cake.webp | Yum, a sweet cake!
+卡: vegetables | 蔬菜 | cards/letters/food/vegetables.webp | Eat your vegetables.
+卡: watermelon | 西瓜 | cards/letters/food/watermelon.webp | The watermelon is sweet.
+// X 開頭的食物很少，原圖用中文「西瓜」的拼音 xigua
+卡: xigua | 西瓜 | cards/letters/food/xigua.webp | Xigua means watermelon.
+卡: yogurt | 優格 | cards/letters/food/yogurt.webp | Yum! I like yogurt.
+卡: zucchini | 櫛瓜 | cards/letters/food/zucchini.webp | The zucchini is green.
+
+字卡本: 生活用品篇 ABC
+卡: airplane | 飛機 | cards/letters/things/airplane.webp | The airplane can fly.
+卡: balloon | 氣球 | cards/letters/things/balloon.webp | Look at my balloons!
+卡: clock | 時鐘 | cards/letters/things/clock.webp | Tick, tock! What time is it?
+卡: door | 門 | cards/letters/things/door.webp | Open the door, please.
+卡: engine | 火車頭 | cards/letters/things/engine.webp | Choo choo! Here comes the engine.
+卡: fan | 電風扇 | cards/letters/things/fan.webp | Turn on the fan.
+卡: guitar | 吉他 | cards/letters/things/guitar.webp | Play the guitar.
+卡: house | 房子 | cards/letters/things/house.webp | This is my house.
+卡: iron | 熨斗 | cards/letters/things/iron.webp | The iron is hot!
+卡: jar | 罐子 | cards/letters/things/jar.webp | Open the jar.
+卡: key | 鑰匙 | cards/letters/things/key.webp | Where is my key?
+卡: lamp | 檯燈 | cards/letters/things/lamp.webp | Turn on the lamp.
+卡: mirror | 鏡子 | cards/letters/things/mirror.webp | Look in the mirror.
+卡: nail | 釘子 | cards/letters/things/nail.webp | Bang, bang! Hit the nail.
+卡: ornament | 聖誕吊飾 | cards/letters/things/ornament.webp | Hang it on the Christmas tree.
+卡: pencil | 鉛筆 | cards/letters/things/pencil.webp | Draw with a pencil.
+卡: quilt | 棉被 | cards/letters/things/quilt.webp | The quilt is warm.
+卡: rocket | 火箭 | cards/letters/things/rocket.webp | Three, two, one, blast off!
+卡: socks | 襪子 | cards/letters/things/socks.webp | Put on your socks.
+卡: teapot | 茶壺 | cards/letters/things/teapot.webp | The teapot is hot.
+卡: umbrella | 雨傘 | cards/letters/things/umbrella.webp | Open your umbrella.
+卡: vase | 花瓶 | cards/letters/things/vase.webp | Put the flowers in the vase.
+卡: watch | 手錶 | cards/letters/things/watch.webp | Look at my watch.
+卡: xylophone | 木琴 | cards/letters/things/xylophone.webp | Play the xylophone.
+卡: yo-yo | 溜溜球 | cards/letters/things/yo-yo.webp | Let's play with the yo-yo.
+卡: zipper | 拉鍊 | cards/letters/things/zipper.webp | Zip up your jacket.
 
 【ABC】🔠
 
@@ -188,14 +278,13 @@ https://youtu.be/g9EgE_JtEAw | Count & Move 數到 20（英文）
 卡: strawberry | 草莓 | 🍓 | The strawberry is red.
 卡: tomato | 番茄 | 🍅 | I see a red tomato.
 卡: watermelon | 西瓜 | 🍉 | The watermelon is big.
-// 台灣常見、但沒有 emoji 的水果：照片放進 public/cards/fruits/，把前面的 // 拿掉就會出現
-// 卡: dragon fruit | 火龍果 | cards/fruits/dragon-fruit.jpg | The dragon fruit is pink.
-// 卡: durian | 榴槤 | cards/fruits/durian.jpg | The durian smells strong!
-// 卡: guava | 芭樂 | cards/fruits/guava.jpg | The guava is green.
-// 卡: lychee | 荔枝 | cards/fruits/lychee.jpg | The lychee is sweet.
-// 卡: papaya | 木瓜 | cards/fruits/papaya.jpg | The papaya is orange.
-// 卡: starfruit | 楊桃 | cards/fruits/starfruit.jpg | It looks like a star!
-// 卡: wax apple | 蓮霧 | cards/fruits/wax-apple.jpg | The wax apple is red.
+卡: dragon fruit | 火龍果 | cards/fruits/dragon-fruit.jpg | The dragon fruit is pink.
+卡: durian | 榴槤 | cards/fruits/durian.jpg | The durian smells strong!
+卡: guava | 芭樂 | cards/fruits/guava.jpg | The guava is green.
+卡: lychee | 荔枝 | cards/fruits/lychee.jpg | The lychee is sweet.
+卡: papaya | 木瓜 | cards/fruits/papaya.jpg | The papaya is orange.
+卡: starfruit | 楊桃 | cards/fruits/starfruit.jpg | It looks like a star!
+卡: wax apple | 蓮霧 | cards/fruits/wax-apple.jpg | The wax apple is red.
 
 字卡本: 生活用品 ABC
 卡: ambulance | 救護車 | 🚑 | The ambulance is fast.
@@ -246,97 +335,6 @@ https://youtu.be/g9EgE_JtEAw | Count & Move 數到 20（英文）
 卡: window | 窗戶 | 🪟 | Open the window.
 卡: yo-yo | 溜溜球 | 🪀 | Let's play with the yo-yo.
 卡: yarn | 毛線 | 🧶 | The cat likes yarn.
-
-【ABC 形狀字母】🔤
-// 字母本身就是那個東西：A 是一隻鱷魚、B 是一隻熊……圖在 public/cards/letters/
-// 原圖重複或標錯的格子沒有放：動物的「I is for WHALE」和第二張 YAK、生活用品只有字母的 V 和 Y 形的拉鍊、
-// 食物標成 NOODLE 的第二個 M 和茶壺（T 用 T 字形的那張）
-
-字卡本: 動物篇 ABC
-卡: alligator | 鱷魚 | cards/letters/animals/alligator.webp | Snap, snap! I am an alligator.
-卡: bear | 熊 | cards/letters/animals/bear.webp | The bear is big.
-卡: cat | 貓 | cards/letters/animals/cat.webp | Shh! The cat is sleeping.
-卡: duck | 鴨子 | cards/letters/animals/duck.webp | Quack, quack! I am a duck.
-卡: elephant | 大象 | cards/letters/animals/elephant.webp | The elephant has a long nose.
-卡: fox | 狐狸 | cards/letters/animals/fox.webp | Look, a red fox!
-卡: giraffe | 長頸鹿 | cards/letters/animals/giraffe.webp | The giraffe is tall.
-卡: hippo | 河馬 | cards/letters/animals/hippo.webp | The hippo likes water.
-卡: iguana | 鬣蜥 | cards/letters/animals/iguana.webp | The iguana is green.
-卡: jellyfish | 水母 | cards/letters/animals/jellyfish.webp | The jellyfish can swim.
-卡: kangaroo | 袋鼠 | cards/letters/animals/kangaroo.webp | Jump, jump, kangaroo!
-卡: lion | 獅子 | cards/letters/animals/lion.webp | Roar! I am a lion.
-卡: monkey | 猴子 | cards/letters/animals/monkey.webp | The monkey likes bananas.
-卡: narwhal | 獨角鯨 | cards/letters/animals/narwhal.webp | The narwhal has a long horn.
-卡: owl | 貓頭鷹 | cards/letters/animals/owl.webp | Hoot, hoot! I am an owl.
-卡: penguin | 企鵝 | cards/letters/animals/penguin.webp | The penguin can swim.
-卡: quail | 鵪鶉 | cards/letters/animals/quail.webp | The quail is a little bird.
-卡: rabbit | 兔子 | cards/letters/animals/rabbit.webp | Hop, hop, little rabbit!
-卡: snake | 蛇 | cards/letters/animals/snake.webp | Hiss! I am a snake.
-卡: tiger | 老虎 | cards/letters/animals/tiger.webp | The tiger is orange and black.
-卡: unicorn | 獨角獸 | cards/letters/animals/unicorn.webp | The unicorn has one horn.
-卡: vulture | 禿鷹 | cards/letters/animals/vulture.webp | The vulture can fly.
-卡: whale | 鯨魚 | cards/letters/animals/whale.webp | The whale is very big.
-卡: x-ray fish | X光魚 | cards/letters/animals/x-ray-fish.webp | Look! I can see the bones.
-卡: yak | 犛牛 | cards/letters/animals/yak.webp | The yak has long hair.
-卡: zebra | 斑馬 | cards/letters/animals/zebra.webp | The zebra has stripes.
-
-字卡本: 美味食物篇 ABC
-卡: apple | 蘋果 | cards/letters/food/apple.webp | Yum, delicious apple!
-卡: bread | 麵包 | cards/letters/food/bread.webp | I like bread.
-卡: croissant | 可頌 | cards/letters/food/croissant.webp | I eat a croissant.
-卡: donut | 甜甜圈 | cards/letters/food/donut.webp | Yum, a sweet donut!
-卡: egg | 蛋 | cards/letters/food/egg.webp | I like eggs.
-卡: fries | 薯條 | cards/letters/food/fries.webp | I like French fries.
-卡: grapes | 葡萄 | cards/letters/food/grapes.webp | The grapes are purple.
-卡: hamburger | 漢堡 | cards/letters/food/hamburger.webp | I want a hamburger.
-卡: ice cream | 冰淇淋 | cards/letters/food/ice-cream.webp | Yum! I like ice cream.
-卡: jelly | 果凍 | cards/letters/food/jelly.webp | Wiggle, wiggle, jelly!
-卡: kiwi | 奇異果 | cards/letters/food/kiwi.webp | The kiwi is green.
-卡: lollipop | 棒棒糖 | cards/letters/food/lollipop.webp | I like lollipops.
-卡: marshmallow | 棉花糖 | cards/letters/food/marshmallow.webp | The marshmallow is soft.
-卡: noodles | 麵 | cards/letters/food/noodles.webp | Slurp! I like noodles.
-卡: orange | 柳橙 | cards/letters/food/orange.webp | The orange is juicy.
-卡: pizza | 披薩 | cards/letters/food/pizza.webp | I like pizza.
-卡: quiche | 鹹派 | cards/letters/food/quiche.webp | The quiche is yummy.
-卡: rice | 飯 | cards/letters/food/rice.webp | Eat your rice.
-卡: sushi | 壽司 | cards/letters/food/sushi.webp | I like sushi.
-卡: tea | 茶 | cards/letters/food/tea.webp | Daddy drinks tea.
-// 原圖的 U 寫「UMBRELLA CAKE」，英文沒有這種食物，先不放；想放的話把前面的 // 拿掉
-// 卡: umbrella cake | 雨傘蛋糕 | cards/letters/food/umbrella-cake.webp | Yum, a sweet cake!
-卡: vegetables | 蔬菜 | cards/letters/food/vegetables.webp | Eat your vegetables.
-卡: watermelon | 西瓜 | cards/letters/food/watermelon.webp | The watermelon is sweet.
-// X 開頭的食物很少，原圖用中文「西瓜」的拼音 xigua
-卡: xigua | 西瓜 | cards/letters/food/xigua.webp | Xigua means watermelon.
-卡: yogurt | 優格 | cards/letters/food/yogurt.webp | Yum! I like yogurt.
-卡: zucchini | 櫛瓜 | cards/letters/food/zucchini.webp | The zucchini is green.
-
-字卡本: 生活用品篇 ABC
-卡: airplane | 飛機 | cards/letters/things/airplane.webp | The airplane can fly.
-卡: balloon | 氣球 | cards/letters/things/balloon.webp | Look at my balloons!
-卡: clock | 時鐘 | cards/letters/things/clock.webp | Tick, tock! What time is it?
-卡: door | 門 | cards/letters/things/door.webp | Open the door, please.
-卡: engine | 火車頭 | cards/letters/things/engine.webp | Choo choo! Here comes the engine.
-卡: fan | 電風扇 | cards/letters/things/fan.webp | Turn on the fan.
-卡: guitar | 吉他 | cards/letters/things/guitar.webp | Play the guitar.
-卡: house | 房子 | cards/letters/things/house.webp | This is my house.
-卡: iron | 熨斗 | cards/letters/things/iron.webp | The iron is hot!
-卡: jar | 罐子 | cards/letters/things/jar.webp | Open the jar.
-卡: key | 鑰匙 | cards/letters/things/key.webp | Where is my key?
-卡: lamp | 檯燈 | cards/letters/things/lamp.webp | Turn on the lamp.
-卡: mirror | 鏡子 | cards/letters/things/mirror.webp | Look in the mirror.
-卡: nail | 釘子 | cards/letters/things/nail.webp | Bang, bang! Hit the nail.
-卡: ornament | 聖誕吊飾 | cards/letters/things/ornament.webp | Hang it on the Christmas tree.
-卡: pencil | 鉛筆 | cards/letters/things/pencil.webp | Draw with a pencil.
-卡: quilt | 棉被 | cards/letters/things/quilt.webp | The quilt is warm.
-卡: rocket | 火箭 | cards/letters/things/rocket.webp | Three, two, one, blast off!
-卡: socks | 襪子 | cards/letters/things/socks.webp | Put on your socks.
-卡: teapot | 茶壺 | cards/letters/things/teapot.webp | The teapot is hot.
-卡: umbrella | 雨傘 | cards/letters/things/umbrella.webp | Open your umbrella.
-卡: vase | 花瓶 | cards/letters/things/vase.webp | Put the flowers in the vase.
-卡: watch | 手錶 | cards/letters/things/watch.webp | Look at my watch.
-卡: xylophone | 木琴 | cards/letters/things/xylophone.webp | Play the xylophone.
-卡: yo-yo | 溜溜球 | cards/letters/things/yo-yo.webp | Let's play with the yo-yo.
-卡: zipper | 拉鍊 | cards/letters/things/zipper.webp | Zip up your jacket.
 
 【其他】🌈
 
@@ -392,11 +390,27 @@ https://youtu.be/g9EgE_JtEAw | Count & Move 數到 20（英文）
 
 【影片】🎬
 // 英文單字的相關兒歌，一樣自己一區
+
+《ABC 形狀 🔠》 
+https://youtu.be/UCIVop2t224 | 字母變身動物 Where Letters Turn into Animals
+https://youtu.be/csbbViClPp0 | ABC 動物兒歌 ABC Animals Song
 https://youtu.be/vD98OvvDNEs | 字母歌 The Alphabet Song
 https://youtu.be/ffeZXPtTGC4 | 字母發音 Phonics Song 2
+
+
+《ABC 單字 🐶》 
 https://youtu.be/GoSq-yZcJ-4 | 動物 Walking In The Jungle
 https://youtu.be/r5WLXZspD1M | 水果 Apples & Bananas
+
+
+《其他 🌈》 
 https://youtu.be/jYAWf8Y91hA | 顏色 I See Something Blue
 https://youtu.be/WTeqUejf3D0 | 形狀 Shapes Song 2
 https://youtu.be/ZanHgPprl-0 | 身體 Head Shoulders Knees & Toes
 https://youtu.be/GzrjwOQpAl0 | 交通工具 The Wheels On The Bus
+
+
+【每日英文】🔤
+
+// site: 開頭的是網站，會在 App 裡面開，小朋友不會跳出去
+site: https://embrs.github.io/learn-en/ | 每日英文・家庭生活

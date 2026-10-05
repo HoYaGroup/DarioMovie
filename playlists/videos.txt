@@ -199,11 +199,6 @@ https://www.youtube.com/watch?v=al1dQn_WKeI | SF06 8 Mother's day
 https://www.youtube.com/watch?v=_Gi0CEn2FBM | SF06 8 Dragon boat
 https://www.youtube.com/watch?v=X7c_DCLJhDo | SF06 8 Father's Day
 
-【每日英文】🔤
-
-// site: 開頭的是網站，會在 App 裡面開，小朋友不會跳出去
-site: https://embrs.github.io/learn-en/ | 每日英文・家庭生活
-
 # 娛樂 🎮
 
 【英文故事】📖

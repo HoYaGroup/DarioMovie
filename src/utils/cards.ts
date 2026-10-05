@@ -234,6 +234,13 @@ const COUNT_NOUNS: Record<string, [string, string, string, string?]> = {
   '🥚': ['egg', '顆', '蛋'],
   '⚽': ['ball', '顆', '球'],
   '✏': ['pencil', '支', '鉛筆'],
+  '🐘': ['elephant', '隻', '大象', 'elephants'],
+  '🐓': ['chicken', '隻', '雞', 'chickens'],
+  '🦛': ['hippo', '隻', '河馬', 'hippo'],
+  '🦒': ['giraffe', '隻', '長頸鹿', 'giraffes'],
+  '🐜': ['ant', '隻', '螞蟻', 'ants'],
+  '🦁': ['lion', '隻', '獅子', 'lions'],
+
 }
 
 export interface CountNoun {
