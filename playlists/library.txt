@@ -6,7 +6,8 @@
 // 數字卡的影片片段是示範用：Count & Move 的 0:05～0:20，換成老師教學影片的秒數效果最好
 //
 // 「# 」開頭是最上層的大分類，【】是大分類底下的分區；「字卡本:」開一本新的字卡，同一區的排在同一個畫面
-// 卡片最後用 . ! ? 結尾的英文是句子，翻面時接在單字後面唸：蘋果。Apple. Yum, delicious apple!
+// 「字卡本: 中文名 | English name」的英文名稱是給全英文模式顯示的；名稱本來就有英文的（農場動物 Farm）不用另外寫
+// 卡片最後用 . ! ? 結尾的英文是句子，English 模式翻面時接在單字後面唸：Apple. Yum, delicious apple!
 // 一張卡可以寫好幾句（每句一欄，用 | 隔開），每次翻到這張卡就換下一句；同一個字在不同字卡本用同一組句子
 // 句型盡量錯開：叫聲（Moo!）、It can／has／is、問答（Do you like…?）、Let's…、打招呼（Hello, little duck!）
 //
@@ -16,23 +17,23 @@
 # 數字 🔢
 
 【認數字】💯
-// 正面問「What number is this?」，翻面中文、英文一起說，不再分成中文版、英文版
+// 正面問「What number is this?」（中文、中英模式問「這是數字幾？」），翻面照字卡上方選的語言唸
 // 上面有一排數字可以直接跳，一天教幾個都可以
 
-字卡本: 數字像什麼 1～10
-// 翻面說：One. 一支鉛筆. One pencil. —— 說明寫「中文 英文」，兩種都會唸
-卡: 1 | 鉛筆1 one pencil | cards/shapes/1-q.webp | cards/shapes/1.webp
-卡: 2 | 鴨子2 three duck | cards/shapes/2-q.webp | cards/shapes/2.webp
-卡: 3 | 蝴蝶3 a butterfly | cards/shapes/3-q.webp | cards/shapes/3.webp
-卡: 4 | 帆船4 a sailboat | cards/shapes/4-q.webp | cards/shapes/4.webp
-卡: 5 | 勾勾5 a hook | cards/shapes/5-q.webp | cards/shapes/5.webp
-卡: 6 | 大肚子6 big tummy | cards/shapes/6-q.webp | cards/shapes/6.webp
-卡: 7 | 拐杖7 a cane | cards/shapes/7-q.webp | cards/shapes/7.webp
-卡: 8 | 雪人8 a snowman | cards/shapes/8-q.webp | cards/shapes/8.webp
-卡: 9 | 氣球9 a balloon | cards/shapes/9-q.webp | cards/shapes/9.webp
-卡: 10 | 球棒和棒球10 a bat and a ball | cards/shapes/10-q.webp | cards/shapes/10.webp
+字卡本: 數字像什麼 1～10 | Number Shapes 1-10
+// 說明寫「中文 英文」：English 唸 One. Like a pencil.／中文 一。像一支鉛筆。／中英 一，one。像一支鉛筆，like a pencil。
+卡: 1 | 像一支鉛筆 like a pencil | cards/shapes/1-q.webp | cards/shapes/1.webp
+卡: 2 | 像一隻鴨子 like a duck | cards/shapes/2-q.webp | cards/shapes/2.webp
+卡: 3 | 像一隻蝴蝶 like a butterfly | cards/shapes/3-q.webp | cards/shapes/3.webp
+卡: 4 | 像一艘帆船 like a sailboat | cards/shapes/4-q.webp | cards/shapes/4.webp
+卡: 5 | 像一個勾勾 like a hook | cards/shapes/5-q.webp | cards/shapes/5.webp
+卡: 6 | 像大肚子 like a big tummy | cards/shapes/6-q.webp | cards/shapes/6.webp
+卡: 7 | 像一根拐杖 like a cane | cards/shapes/7-q.webp | cards/shapes/7.webp
+卡: 8 | 像一個雪人 like a snowman | cards/shapes/8-q.webp | cards/shapes/8.webp
+卡: 9 | 像一顆氣球 like a balloon | cards/shapes/9-q.webp | cards/shapes/9.webp
+卡: 10 | 像球棒和棒球 like a bat and a ball | cards/shapes/10-q.webp | cards/shapes/10.webp
 
-字卡本: 認數字 11～20
+字卡本: 認數字 11～20 | Numbers 11-20
 // 只寫數字就好：正面直接顯示數字，翻面說 Thirteen. 十三.
 // 11～19 長得很像，認熟了再去「數一數 11～20」點著數
 卡: 11
@@ -46,7 +47,7 @@
 卡: 19
 卡: 20
 
-字卡本: 兩個兩個數 2～20
+字卡本: 兩個兩個數 2～20 | Count by Twos
 // 句子是一路數上來的口訣：翻到 6 就說 Six. 六. Two, four, six!
 卡: 2 | Let's count by twos!
 卡: 4 | Two, four!
@@ -59,7 +60,7 @@
 卡: 18 | Ten, twelve, fourteen, sixteen, eighteen!
 卡: 20 | Ten, twelve, fourteen, sixteen, eighteen, twenty!
 
-字卡本: 10～100
+字卡本: 10～100 | Count by Tens
 // 翻面說 Thirty. 三十. 再接十個十個數的口訣
 卡: 10 | Let's count by tens!
 卡: 20 | Ten, twenty!
@@ -72,7 +73,7 @@
 卡: 90 | Fifty, sixty, seventy, eighty, ninety!
 卡: 100 | Ninety, one hundred! We did it!
 
-字卡本: 0～100
+字卡本: 0～100 | Numbers 0-100
 // 一行就產生 0～100 的數字卡；上面那排數字變成每十個一格（0、10、20…）
 // 考考我會挑容易搞混的當選項：31 配 13、30
 數字卡: 0～100
@@ -82,7 +83,7 @@
 // 數完問「How many apples are there?」三個數字選一個，答對翻面：Eleven. 十一顆蘋果. Eleven apples.
 // 會說 apples、十一顆蘋果 的 emoji 列在 src/utils/cards.ts 的 COUNT_NOUNS（常見的動物、水果、海裡的、小蟲都有）
 
-字卡本: 數一數 1～5
+字卡本: 數一數 1～5 | Let's Count 1-5
 // 最簡單的一本：東西少、又大顆，剛開始數數從這裡玩
 卡: 1 | 🍎
 卡: 2 | 🍌
@@ -90,7 +91,7 @@
 卡: 4 | 🍊
 卡: 5 | 🍐
 
-字卡本: 數一數 1～10
+字卡本: 數一數 1～10 | Let's Count 1-10
 卡: 1 | 🍎
 卡: 2 | 🐶
 卡: 3 | 🐸
@@ -102,7 +103,7 @@
 卡: 9 | 🍊
 卡: 10 | 🐝 | https://youtu.be/g9EgE_JtEAw 0:20-0:50
 
-字卡本: 數一數 海洋 1～10
+字卡本: 數一數 海洋 1～10 | Sea Count 1-10
 // 換一批海裡的動物再數一次，順便認識「第 2 級 海洋動物」的字
 卡: 1 | 🐳
 卡: 2 | 🐬
@@ -115,7 +116,7 @@
 卡: 9 | 🦐
 卡: 10 | 🦑
 
-字卡本: 數一數 11～20
+字卡本: 數一數 11～20 | Let's Count 11-20
 // 前 10 個排成兩排，看得出 13 是 10 再加 3
 卡: 11 | 🐱
 卡: 12 | 🐘
@@ -128,7 +129,7 @@
 卡: 19 | 🦁
 卡: 20 | 🐢
 
-字卡本: 數一數 蟲蟲 11～20
+字卡本: 數一數 蟲蟲 11～20 | Bug Count 11-20
 卡: 11 | 🐜
 卡: 12 | 🐞
 卡: 13 | 🦋
@@ -144,7 +145,7 @@
 // 有一點難度：數字在生活裡的哪裡？正面是數字，翻面說 Two. 我有兩隻眼睛. I have two eyes.
 // 說明寫中文，句子寫英文；邊說可以邊讓小朋友摸摸自己的眼睛、數數手指
 
-字卡本: 數字在身邊 1～10
+字卡本: 數字在身邊 1～10 | Numbers Around Me
 卡: 1 | 我有一個鼻子 | I have one nose.
 卡: 2 | 我有兩隻眼睛 | I have two eyes.
 卡: 3 | 三輪車有三個輪子 | A tricycle has three wheels.
@@ -169,7 +170,7 @@ https://youtu.be/g9EgE_JtEAw | Count & Move 數到 20（英文）
 // 原圖重複或標錯的格子沒有放：動物的「I is for WHALE」和第二張 YAK、生活用品只有字母的 V 和 Y 形的拉鍊、
 // 食物標成 NOODLE 的第二個 M 和茶壺（T 用 T 字形的那張）
 
-字卡本: 動物篇 ABC
+字卡本: 動物篇 ABC | Animal Letters ABC
 卡: alligator | 鱷魚 | cards/letters/animals/alligator.webp | Snap, snap! I am an alligator. | The alligator has big teeth. | The alligator swims in the river.
 卡: bear | 熊 | cards/letters/animals/bear.webp | The bear is big. | Growl! Here comes the bear. | The bear likes honey.
 卡: cat | 貓 | cards/letters/animals/cat.webp | Meow! I am a cat. | Shh! The cat is sleeping. | Pet the cat gently.
@@ -197,7 +198,7 @@ https://youtu.be/g9EgE_JtEAw | Count & Move 數到 20（英文）
 卡: yak | 犛牛 | cards/letters/animals/yak.webp | The yak has long hair. | The yak lives in the mountains. | The yak is big and strong.
 卡: zebra | 斑馬 | cards/letters/animals/zebra.webp | The zebra has stripes. | The zebra is black and white. | The zebra can run fast.
 
-字卡本: 美味食物篇 ABC
+字卡本: 美味食物篇 ABC | Yummy Food Letters ABC
 卡: apple | 蘋果 | cards/letters/food/apple.webp | Yum, delicious apple! | The apple is red. | Do you want an apple?
 卡: bread | 麵包 | cards/letters/food/bread.webp | I like bread. | I eat bread for breakfast. | The bread smells good!
 卡: croissant | 可頌 | cards/letters/food/croissant.webp | I eat a croissant. | The croissant is soft. | Yum! A warm croissant.
@@ -227,7 +228,7 @@ https://youtu.be/g9EgE_JtEAw | Count & Move 數到 20（英文）
 卡: yogurt | 優格 | cards/letters/food/yogurt.webp | Yum! I like yogurt. | The yogurt is cold. | I eat yogurt with a spoon.
 卡: zucchini | 櫛瓜 | cards/letters/food/zucchini.webp | The zucchini is green. | The zucchini is long. | Let's cook the zucchini.
 
-字卡本: 生活用品篇 ABC
+字卡本: 生活用品篇 ABC | Things Letters ABC
 卡: airplane | 飛機 | cards/letters/things/airplane.webp | The airplane can fly. | The airplane is in the sky. | Zoom! The airplane goes up.
 卡: balloon | 氣球 | cards/letters/things/balloon.webp | Look at my balloons! | My balloon is red. | Pop! Oh no, my balloon!
 卡: clock | 時鐘 | cards/letters/things/clock.webp | Tick, tock! What time is it? | The clock is on the wall. | Look at the clock.
@@ -261,7 +262,7 @@ https://youtu.be/g9EgE_JtEAw | Count & Move 數到 20（英文）
 // 原圖的 Q 畫成孔雀（peacock 是 P 開頭），所以孔雀放到 P；Q 另外補了 queen 皇后
 // （原卡右上角寫錯成 (x)，背面已換成正確的 (q)）
 // 犛牛原卡上是異體字「氂牛」，只用插圖，名字用這裡寫的
-字卡本: ABC 圖卡
+字卡本: ABC 圖卡 | ABC Picture Cards
 卡: apple | 蘋果 | cards/abc/apple-q.webp | cards/abc/apple.webp | Yum, delicious apple! | The apple is red. | Do you want an apple?
 卡: banana | 香蕉 | cards/abc/banana-q.webp | cards/abc/banana.webp | The banana is yellow. | The monkey likes bananas. | Peel the banana.
 卡: cat | 貓 | cards/abc/cat-q.webp | cards/abc/cat.webp | Meow! I am a cat. | Shh! The cat is sleeping. | Pet the cat gently.
@@ -293,7 +294,7 @@ https://youtu.be/g9EgE_JtEAw | Count & Move 數到 20（英文）
 // 單元名稱裡有 ABC，就會照 A～Z 排好、卡片上標出開頭字母
 // 同一個字母可以放好幾張；新加的寫在哪裡都可以，App 會自己排到對的字母
 
-字卡本: 動物 ABC
+字卡本: 動物 ABC | Animals ABC
 // jaguar、newt、quail、vulture、x-ray fish、yak 沒有一模一樣的 emoji，先用長得像的代替（花豹、蜥蜴、小鳥、老鷹、熱帶魚、水牛），有照片可以換掉
 卡: ant | 螞蟻 | 🐜 | The ant is small. | Look, an ant! | The ants work together.
 卡: alligator | 鱷魚 | 🐊 | Snap, snap! I am an alligator. | The alligator has big teeth. | The alligator swims in the river.
@@ -343,7 +344,7 @@ https://youtu.be/g9EgE_JtEAw | Count & Move 數到 20（英文）
 卡: yak | 犛牛 | 🐃 | The yak has long hair. | The yak lives in the mountains. | The yak is big and strong.
 卡: zebra | 斑馬 | 🦓 | The zebra has stripes. | The zebra is black and white. | The zebra can run fast.
 
-字卡本: 水果 ABC
+字卡本: 水果 ABC | Fruits ABC
 卡: apple | 蘋果 | 🍎 | Yum, delicious apple! | The apple is red. | Do you want an apple?
 卡: avocado | 酪梨 | 🥑 | The avocado is green. | The avocado is soft inside. | The avocado has a big seed.
 卡: banana | 香蕉 | 🍌 | The banana is yellow. | The monkey likes bananas. | Peel the banana.
@@ -369,7 +370,7 @@ https://youtu.be/g9EgE_JtEAw | Count & Move 數到 20（英文）
 卡: starfruit | 楊桃 | cards/fruits/starfruit.jpg | It looks like a star! | The starfruit is yellow. | Cut it and see a star!
 卡: wax apple | 蓮霧 | cards/fruits/wax-apple.jpg | The wax apple is red. | The wax apple is crunchy. | The wax apple looks like a bell.
 
-字卡本: 生活用品 ABC
+字卡本: 生活用品 ABC | Everyday Things ABC
 卡: ambulance | 救護車 | 🚑 | The ambulance is fast. | Wee-woo! Here comes the ambulance. | The ambulance helps sick people.
 卡: ball | 球 | ⚽ | Give me the ball. | Throw the ball to me. | Kick the ball!
 卡: bag | 書包 | 🎒 | Open your bag. | Put your book in your bag. | My bag is heavy.

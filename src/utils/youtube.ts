@@ -41,6 +41,8 @@ export interface VideoItem {
   url?: string
   /** kind 為 'deck' 時的卡片，順序就是 playlist.txt 裡寫的順序 */
   cards?: Card[]
+  /** 字卡本的英文名稱（字卡本: 數字像什麼 1～10 | Number Shapes），全英文模式顯示這個 */
+  titleEn?: string
   /**
    * 這一筆在片單裡的唯一識別。
    * 用 id 當識別的話，同一支影片就沒辦法同時出現在好幾個單元 ——

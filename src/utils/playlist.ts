@@ -19,6 +19,7 @@ import { parseCard, numberCards, NUMBER_MAX } from './cards'
  *   site: https://example.com | 每日英文   網站，會在 App 裡面開，小朋友不會跳出去
  *   卡: cat | 貓 | 🐱         字卡，同一個單元裡的卡會集成一本（寫法見 utils/cards.ts）
  *   字卡本: 數字像什麼          開一本新的字卡，不另外分一層，同一區的好幾本排在同一個畫面
+ *                              | 後面可以寫英文名稱（字卡本: 數字像什麼 | Number Shapes），全英文模式顯示
  *   // 這行是註解            也可以用 ; 開頭
  *
  * 每一筆都歸到它上面最近的那一層。大分類和冊都可以省略。
@@ -102,6 +103,8 @@ export function parsePlaylist(text: string): ParseResult {
   let currentDeck: VideoItem | null = null
   /** 「字卡本: 名稱」指定的下一本字卡名稱；沒指定就用單元或分區的名字 */
   let deckTitle: string | null = null
+  /** 「字卡本: 名稱 | English name」的英文名稱 */
+  let deckTitleEn = ''
   const takenUids = new Set<string>()
 
   /** 檔案沒寫大分類時，所有分區都歸到一個隱形的預設分類 */
@@ -212,6 +215,7 @@ export function parsePlaylist(text: string): ParseResult {
           uid: makeVideoUid(`deck:${cat.id}:${currentSub?.id ?? ''}:${deckTitle ?? ''}`, takenUids),
           id: '',
           title: deckTitle ?? currentSub?.name ?? cat.name,
+          ...(deckTitle !== null && deckTitleEn ? { titleEn: deckTitleEn } : {}),
           categoryId: cat.id,
           subId: currentSub?.id ?? null,
           cards: [],
@@ -228,8 +232,10 @@ export function parsePlaylist(text: string): ParseResult {
           warnings.push(`第 ${lineNo} 行：這本字卡上面還沒有分區，已略過。`)
           return
         }
-        // 接下來的卡放進一本新的字卡
-        deckTitle = stripEmoji(m[1]!) || m[1]!.trim()
+        // 接下來的卡放進一本新的字卡；| 後面是英文名稱，不算進識別碼，加上去星星也不會歸零
+        const [name = '', en = ''] = m[1]!.split('|').map((x) => x.trim())
+        deckTitle = stripEmoji(name) || name
+        deckTitleEn = en
         currentDeck = null
         return
       }

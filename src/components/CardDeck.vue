@@ -3,7 +3,8 @@ import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { categoryColor, type Card, type CardClip, type VideoItem } from '~/utils/youtube'
 import {
   countOf, countNounOf, isPicture, imageSrc, speechOf, isAbcDeck, initialOf, cardsOf, thisIs, isNumberCard,
-  numberLabels, sentencesOf, enNumber, zhNumber, englishOf, askOf, ASK_STYLES, isBareDeck,
+  numberLabels, sentencesOf, enNumber, zhNumber, englishOf, askOf, askZhOf, ASK_STYLES, isBareDeck, englishTitle,
+  chineseTitle,
 } from '~/utils/cards'
 import { canSpeak, speak, stopSpeaking, chimeRight, chimeWrong, type SpeechPart, type SpeechText } from '~/utils/speech'
 import { useLibrary } from '~/composables/useLibrary'
@@ -14,6 +15,7 @@ import { useTvMode } from '~/composables/useTvMode'
 import { useYouTubePlayer } from '~/composables/useYouTubePlayer'
 import { useOnline } from '~/composables/useOffline'
 import { useState } from '~/composables/useState'
+import { useCardLang } from '~/composables/useCardLang'
 
 const props = defineProps<{ deck: VideoItem }>()
 const emit = defineEmits<{ close: [] }>()
@@ -24,6 +26,34 @@ const { isTv } = useTvMode()
 const { addSeconds, flush, isLimitReached } = useWatchTime()
 const { starsOf, addStar } = useCardStars()
 const { online } = useOnline()
+const { lang: cardLang, setLang } = useCardLang()
+
+/** 全英文：卡片、語音、按鈕都不出現中文 */
+const englishOnly = computed(() => cardLang.value === 'en')
+/** 全中文：卡片、語音都不出現英文 */
+const chineseOnly = computed(() => cardLang.value === 'zh')
+/** 中英：中文說明＋英文單字（蘋果，apple），不唸英文句子 */
+const mixed = computed(() => cardLang.value === 'mix')
+/** 中文的部分：全英文時變成空字串，speak 會自動略過 */
+const zhPart = (text: string) => (englishOnly.value ? '' : text)
+/** 英文的部分：全中文時變成空字串 */
+const enPart = (text: string) => (chineseOnly.value ? '' : text)
+/** 畫面上的字：全中文、中英對照用中文（爸媽看得懂），全英文就換成英文 */
+const t = (zhText: string, enText: string) => (englishOnly.value ? enText : zhText)
+/** 指令、回饋這類的一句話：全英文用英文說，中文、中英都用中文說，小朋友才聽得懂要做什麼 */
+const line = (zhText: string, enText: string): SpeechText => (englishOnly.value ? en(enText) : zh(zhText))
+
+const LANGS = [
+  { id: 'zh', label: '中文' },
+  { id: 'mix', label: '中英' },
+  { id: 'en', label: 'English' },
+] as const
+
+function switchLang(next: 'zh' | 'mix' | 'en') {
+  if (cardLang.value === next) return
+  setLang(next)
+  stopSpeaking()
+}
 
 const cards = computed<Card[]>(() => cardsOf(props.deck))
 /** 這本是 ABC 字母卡（單元名稱裡有 ABC）：照 A～Z 排、卡片上標出開頭字母 */
@@ -47,19 +77,41 @@ const en = (text: string): SpeechText => ({ text, lang: 'en-US' })
 const zh = (text: string): SpeechText => ({ text, lang: 'zh-TW' })
 
 /**
- * 翻面看答案時唸的，不分英文版、中文版，一張卡兩種都學：
- *   單字卡：中文、英文，再接一句簡單的英文 —— 蘋果。Apple. Yum, delicious apple!
- *   數字卡：先說數字，再說中文、英文 —— One. 一支鉛筆. One pencil.／Eleven. 十一顆蘋果. Eleven apples.
+ * 翻面看答案時唸的：
+ *   English：Apple. Yum, delicious apple!／One. Like a pencil.／Eleven. Eleven cats.
+ *   中文：蘋果。／一。像一支鉛筆。／十一。十一隻貓。
+ *   中英：蘋果，apple。／一，one。像一支鉛筆，like a pencil。／十一，eleven。十一隻貓，eleven cats。
+ * 英文句子只有 English 唸；中英只唸單字，小朋友專心把中文和英文對起來。
  */
 function answerParts(c: Card, withSentence = true): SpeechText[] {
-  const sentence = withSentence ? sentenceFor(c) : ''
   if (isNumberCard(c)) {
-    const word = enNumber(Number(c.word))
+    const n = Number(c.word)
+    const num = zhNumber(n)
+    const word = enNumber(n)
     const label = numberLabels(c)
-    return [en(word), zh(label.zh), ...(label.en !== word ? [en(label.en)] : []), en(sentence)]
+    const zhExtra = label.zh !== num ? [zh(label.zh)] : []
+    const enExtra = label.en !== word ? [en(label.en)] : []
+    const sentence = withSentence ? numberSentence(c) : ''
+    if (chineseOnly.value) return [zh(num), ...zhExtra]
+    if (mixed.value) return [zh(num), en(word), ...zhExtra, ...enExtra, en(sentence)]
+    return [en(word), ...enExtra, en(sentence)]
   }
   const name = speechOf(c)
-  return [zh(name.zh), en(name.en), en(sentence)]
+  if (chineseOnly.value) return [zh(name.zh || c.word)]
+  if (mixed.value) return [zh(name.zh), en(name.en || c.word)]
+  return [en(name.en || c.word), en(withSentence ? sentenceFor(c) : '')]
+}
+
+/**
+ * 數字卡這一次要唸、要寫的英文句子：English 都唸；
+ * 中英只有在說明只寫中文時（數字在身邊：我有一個鼻子）唸，句子就是那句中文的英文。
+ */
+function numberSentence(c: Card): string {
+  if (englishOnly.value) return sentenceFor(c)
+  if (!mixed.value) return ''
+  const label = numberLabels(c)
+  const n = Number(c.word)
+  return label.en === enNumber(n) && label.zh !== zhNumber(n) ? sentenceFor(c) : ''
 }
 
 /**
@@ -87,28 +139,37 @@ function say(c: Card) {
   speak(answerParts(c))
 }
 
-/** 這張卡叫什麼，考考我答對時說：Cat. 貓。／Seven. 七。數字形狀卡連形狀一起說（Seven. 一根拐杖. A cane.） */
+/** 這張卡叫什麼，考考我答對時說：Cat.／貓。／貓，cat。數字形狀卡連形狀一起說 */
 function nameParts(c: Card): SpeechText[] {
   if (isNumberCard(c)) {
     const n = Number(c.word)
-    return isPicture(c) ? answerParts(c, false) : [en(enNumber(n)), zh(zhNumber(n))]
+    if (isPicture(c)) return answerParts(c, false)
+    if (chineseOnly.value) return [zh(zhNumber(n))]
+    if (mixed.value) return [zh(zhNumber(n)), en(enNumber(n))]
+    return [en(enNumber(n))]
   }
   const name = speechOf(c)
-  return [en(name.en), zh(name.zh)]
+  if (chineseOnly.value) return [zh(name.zh || c.word)]
+  if (mixed.value) return [zh(name.zh), en(name.en || c.word)]
+  return [en(name.en || c.word)]
 }
 
-/** 「這是…」：This is a horse. ／ This is four. 點錯時說一次；小朋友再點那張點錯的，也是唸這句 */
+/** 「這是…」：This is a horse.／這是馬。／這是馬，horse。點錯時說一次；小朋友再點那張點錯的，也是唸這句 */
 function thisIsParts(c: Card): SpeechText[] {
-  return englishOf(c) ? [en(thisIs(c, bareDeck.value))] : [en('This is'), zh(speechOf(c).zh || c.word)]
+  const zhName = isNumberCard(c) ? zhNumber(Number(c.word)) : (speechOf(c).zh || c.word)
+  const enName = englishOf(c)
+  if (chineseOnly.value || (mixed.value && !enName)) return [zh(`這是${zhName}。`)]
+  if (mixed.value) return [zh(`這是${zhName}，`), en(enName)]
+  return [en(enName ? thisIs(c, bareDeck.value) : `This is ${c.word}.`)]
 }
 
-/** 點錯的選項下面貼的小標籤：hippo 河馬、four 四 */
+/** 點錯的選項下面貼的小標籤：hippo／河馬／河馬 hippo；four／四／四 four */
 function captionOf(c: Card): string {
   if (isNumberCard(c)) {
     const n = Number(c.word)
-    return `${enNumber(n)} ${zhNumber(n)}`
+    return [zhPart(zhNumber(n)), enPart(enNumber(n))].filter(Boolean).join(' ')
   }
-  return [c.word, c.meaning].filter(Boolean).join(' ')
+  return [zhPart(c.meaning), enPart(c.word)].filter(Boolean).join(' ') || c.word
 }
 
 /** 字串看起來有多寬（中文字算 1、英文數字算 0.55），標籤用它決定字要縮多小才放得進一行 */
@@ -139,30 +200,63 @@ const showCount = computed(() => !!card.value && isCounting(card.value))
 const backPicture = computed(() => {
   const c = card.value
   if (!c) return ''
-  return c.backImage || (isPicture(c) ? c.image : '')
+  return backImageOf(c) || (isPicture(c) ? c.image : '')
 })
+
+/**
+ * 背面另外放的完整原卡（上面印著「蘋果」「鉛筆」這些中文字）：
+ * 全英文模式不用它，背面改放正面那張圖，卡片上才不會冒出中文
+ */
+function backImageOf(c: Card): string {
+  // 全中文時 ABC 原卡上印著英文字母，一樣不用
+  if (englishOnly.value || (chineseOnly.value && isAbc.value)) return ''
+  return c.backImage
+}
+
+/** 背面的大字：全中文時單字卡寫中文（蘋果），其他寫卡片上的字（apple、7） */
+function backWordOf(c: Card): string {
+  return chineseOnly.value && !isNumberCard(c) ? (speechOf(c).zh.replace(/，/g, '、') || c.word) : c.word
+}
 const isLast = computed(() => index.value === cards.value.length - 1)
 
 /**
- * 正面要小朋友做什麼：唸出來，也寫在卡片下面（中文那行是給爸媽看的）。
- *   數東西的卡：Let's count! Touch the apples.
- *   數字卡：What number is this?
- *   單字卡：What is this?
+ * 正面要小朋友做什麼：唸出來，也寫在卡片下面。全英文用英文說，中文、中英用中文說：
+ *   數東西的卡：Let's count! Touch the apples.／我們來數蘋果！一顆一顆點。
+ *   數字卡：What number is this?／這是數字幾？
+ *   單字卡：What is this?／這是什麼？
  */
-function frontAsk(c: Card): { say: string; en: string; zh: string } {
+function frontAsk(c: Card): { say: SpeechText; main: string; sub: string } {
   if (isCounting(c)) {
     const noun = countNounOf(c)
+    if (!englishOnly.value) {
+      // 用量詞說才順：一條一條點（魚）、一顆一顆點（蘋果）、一隻一隻點（貓）
+      const what = noun ? noun.zh : '一數'
+      const unit = noun ? noun.unit : '個'
+      return { say: zh(`我們來數${what}！一${unit}一${unit}點。`), main: `我們來數${what}`, sub: `一${unit}一${unit}點` }
+    }
     const touch = `Touch ${noun ? `the ${countOf(c) === 1 ? noun.en : noun.plural}` : 'them'}.`
-    return { say: `Let's count! ${touch}`, en: touch, zh: '點點看，一個一個數' }
+    return { say: en(`Let's count! ${touch}`), main: touch, sub: '' }
   }
-  if (isNumberCard(c)) return { say: 'What number is this?', en: 'What number is this?', zh: '這是數字幾？點一下翻面' }
-  return { say: 'What is this?', en: 'What is this?', zh: '這是什麼？點一下翻面' }
+  if (isNumberCard(c)) {
+    return englishOnly.value
+      ? { say: en('What number is this?'), main: 'What number is this?', sub: '' }
+      : { say: zh('這是數字幾？'), main: '這是數字幾？', sub: '點一下翻面' }
+  }
+  return englishOnly.value
+    ? { say: en('What is this?'), main: 'What is this?', sub: '' }
+    : { say: zh('這是什麼？'), main: '這是什麼？', sub: '點一下翻面' }
 }
 
-/** 數完之後的題目：How many apples are there? */
+/** 數完之後的題目：How many apples are there?／有幾顆蘋果？ */
 function countQuestion(c: Card): string {
   const noun = countNounOf(c)
+  if (!englishOnly.value) return noun ? `有幾${noun.unit}${noun.zh}？` : '有幾個？'
   return `How many ${noun ? `${noun.plural} ` : ''}are there?`
+}
+
+/** 數一個就唸一個：one、two、three（English、中英）／一、二、三（中文） */
+function countWord(n: number): SpeechText {
+  return chineseOnly.value ? zh(zhNumber(n)) : en(enNumber(n))
 }
 
 /** 數字卡上已經點過的東西，依點的順序排，數字徽章就是它的位置 */
@@ -241,7 +335,7 @@ function askCardLater() {
   promptTimer = setTimeout(() => {
     const c = card.value
     if (!c || index.value !== at || flipped.value || mode.value !== 'learn' || clip.value) return
-    speak([en(frontAsk(c).say)])
+    speak([frontAsk(c).say])
   }, 450)
 }
 
@@ -262,7 +356,7 @@ function nudge() {
   const c = card.value
   if (!c) return
   clearPrompt()
-  speak([en(countOptions.value.length ? countQuestion(c) : frontAsk(c).say)])
+  speak([countOptions.value.length ? line(countQuestion(c), countQuestion(c)) : frontAsk(c).say])
   // 先拿掉再加回去，連點好幾下動畫也會重新跳
   nudging.value = false
   if (nudgeTimer) clearTimeout(nudgeTimer)
@@ -318,14 +412,14 @@ function countTap(i: number) {
   clearPrompt()
   counted.value = [...counted.value, i]
   const n = counted.value.length
-  speak([en(enNumber(n))], 0.9)
+  speak([countWord(n)], 0.9)
 
   if (n === count.value) {
     const at = index.value
     flipTimer = setTimeout(() => {
       if (index.value !== at || flipped.value || mode.value !== 'learn' || !card.value) return
       countOptions.value = countChoices(n)
-      speak([en(countQuestion(card.value))])
+      speak([line(countQuestion(card.value), countQuestion(card.value))])
     }, 700)
   }
 }
@@ -344,13 +438,20 @@ function pickCount(opt: number) {
     chimeRight()
     countSolved.value = true
     flipped.value = true
-    speak([{ pause: 250 }, en('Yes!'), { pause: 300 }, ...answerParts(c)])
+    speak([{ pause: 250 }, line('對！', 'Yes!'), { pause: 300 }, ...answerParts(c)])
     return
   }
   if (countWrong.value.includes(opt)) return
   countWrong.value = [...countWrong.value, opt]
   chimeWrong()
-  speak([{ pause: 250 }, en('No!'), { pause: 300 }, en(`This is ${enNumber(opt)}.`), { pause: 500 }, en('Try again!')])
+  speak([
+    { pause: 250 },
+    line('不對！', 'No!'),
+    { pause: 300 },
+    line(`這是${zhNumber(opt)}。`, `This is ${enNumber(opt)}.`),
+    { pause: 500 },
+    line('再試一次！', 'Try again!'),
+  ])
 }
 
 /* 左右滑換卡；滑過之後瀏覽器還是會送一次 click，要把它吃掉，不然會順便翻面 */
@@ -428,6 +529,12 @@ const earned = ref(false)
 const roundStars = ref(0)
 const roundSize = ref(0)
 const quizDone = ref(false)
+/**
+ * 這一輪有沒有點錯過。點錯的字最後補考答對一樣給星星（鼓勵他再試），
+ * 所以星星可能拿滿；「全部答對」要看有沒有點錯過，不能只看星星數。
+ */
+const roundMissed = ref(false)
+const perfectRound = computed(() => !roundMissed.value && roundStars.value >= roundSize.value)
 
 let askTimer: ReturnType<typeof setTimeout> | null = null
 /** 每次答對換一個編號；換了模式、離開畫面就作廢，舊的「唸完換下一題」不會亂跳 */
@@ -521,6 +628,7 @@ function startQuiz() {
   roundSize.value = order.length
   qIndex.value = 0
   roundStars.value = 0
+  roundMissed.value = false
   wrongPicks.value = []
   rightPick.value = null
   quizDone.value = false
@@ -537,17 +645,28 @@ const pictureQuiz = computed(() => question.value?.kind === 'picture')
  * 看圖選數字問 What number is this? 卡片沒有英文的話，只好用中文問。
  */
 function promptParts(q: Question): SpeechText[] {
-  if (q.kind === 'picture') return [en('What number is this?')]
+  if (q.kind === 'picture') return [line('這是數字幾？', 'What number is this?')]
   const c = cards.value[q.answer]!
+  if (chineseOnly.value) return [zh(askZhOf(c, q.style))]
+  // 中英：中文問、英文單字——哪一個是… apple？／找找看… apple／apple… 在哪裡？
+  if (mixed.value) {
+    const enName = englishOf(c)
+    if (!enName) return [zh(askZhOf(c, q.style))]
+    const style = q.style % ASK_STYLES
+    if (style === 0) return [zh('哪一個是'), en(enName)]
+    if (style === 1) return [zh('找找看'), en(enName)]
+    return [en(enName), zh('在哪裡？')]
+  }
   const ask = askOf(c, q.style, bareDeck.value)
-  return ask ? [en(ask)] : [zh(`${speechOf(c).zh || c.word}在哪裡？`)]
+  if (ask) return [en(ask)]
+  return englishOnly.value ? [en(`Where is ${c.word}?`)] : [zh(`${speechOf(c).zh || c.word}在哪裡？`)]
 }
 
 /** 第一題前面先說一聲，小朋友知道要開始玩了 */
 function ask(intro = false) {
   const q = question.value
   if (!q) return
-  speak([...(intro ? [en("Let's play a game!"), { pause: 400 }] : []), ...promptParts(q)])
+  speak([...(intro ? [line('我們來玩遊戲！', "Let's play a game!"), { pause: 400 }] : []), ...promptParts(q)])
 }
 
 function askLater(ms = 450, intro = false) {
@@ -564,11 +683,11 @@ function askLater(ms = 450, intro = false) {
 function remindParts(wrong: Card, q: Question): SpeechPart[] {
   return [
     { pause: 250 },
-    en('No!'),
+    line('不對！', 'No!'),
     { pause: 300 },
     ...thisIsParts(wrong),
     { pause: 500 },
-    en(q.kind === 'listen' ? 'Listen again.' : 'Try again.'),
+    q.kind === 'listen' ? line('再聽一次。', 'Listen again.') : line('再試一次。', 'Try again.'),
     { pause: 900 },
     ...promptParts(q),
   ]
@@ -596,7 +715,7 @@ function pick(opt: number) {
     // 先說 Yes!，再把答案說一遍當複習；整串唸完才換下一題，不會被下一題的題目切掉
     speakThen([
       { pause: 250 },
-      en('Yes!'),
+      line('對！', 'Yes!'),
       { pause: 400 },
       ...nameParts(cards.value[q.answer]!),
     ], nextQuestion)
@@ -608,6 +727,7 @@ function pick(opt: number) {
   // 點錯的那個字，這一輪最後再考一次 —— 不會的字多碰一次，比答對的字更值得
   if (!q.missed && !q.retry) questions.value.push(makeQuestion(q.answer, true))
   q.missed = true
+  roundMissed.value = true
 
   // 點錯正好是教的時候：No!，告訴他點的是什麼，再把題目問一次（開頭停一下，讓答錯的音效先響完）
   if (askTimer) clearTimeout(askTimer)
@@ -617,7 +737,15 @@ function pick(opt: number) {
 /** 玩完一輪的鼓勵：Great job! You got five stars! */
 function doneParts(): SpeechPart[] {
   const s = roundStars.value
-  const cheer = s >= roundSize.value
+  if (!englishOnly.value) {
+    const zhCheer = perfectRound.value
+      ? '哇！全部答對了！好棒！'
+      : s === 0
+        ? '沒關係，我們再玩一次！'
+        : `好棒！你拿到${s === 2 ? '兩' : zhNumber(s)}顆星！`
+    return [{ pause: 500 }, zh(zhCheer)]
+  }
+  const cheer = perfectRound.value
     ? 'Wow! You got them all! Great job!'
     : s === 0
       ? "Good try! Let's play again!"
@@ -731,14 +859,28 @@ onBeforeUnmount(() => {
     <header class="deck-bar">
       <button class="bar-back" aria-label="回到清單" @click="emit('close')">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.4 7.4 14 6l-6 6 6 6 1.4-1.4-4.6-4.6z" /></svg>
-        <span>返回</span>
+        <span>{{ t('返回', 'Back') }}</span>
       </button>
 
-      <h2 class="deck-title">{{ deck.title }}</h2>
+      <h2 class="deck-title">{{ englishOnly ? englishTitle(deck) : chineseOnly ? chineseTitle(deck) : deck.title }}</h2>
 
       <span class="star-pill" :aria-label="`已經拿到 ${stars} 顆星`">
         <span aria-hidden="true">⭐</span>{{ stars }}
       </span>
+
+      <!-- 中文／中英／English：記在這台裝置上，每一本字卡都照這個設定 -->
+      <div class="lang-toggle" role="group" aria-label="字卡語言">
+        <button
+          v-for="l in LANGS"
+          :key="l.id"
+          class="lang-btn"
+          :class="{ 'is-active': cardLang === l.id }"
+          :aria-pressed="cardLang === l.id"
+          @click="switchLang(l.id)"
+        >
+          {{ l.label }}
+        </button>
+      </div>
 
       <nav class="mode-tabs" aria-label="模式">
         <button
@@ -747,7 +889,7 @@ onBeforeUnmount(() => {
           :aria-current="mode === 'learn' ? 'true' : undefined"
           @click="toLearn"
         >
-          <span aria-hidden="true">📖</span>看卡片
+          <span aria-hidden="true">📖</span>{{ t('看卡片', 'Cards') }}
         </button>
         <button
           v-if="canQuiz"
@@ -756,7 +898,7 @@ onBeforeUnmount(() => {
           :aria-current="mode === 'quiz' ? 'true' : undefined"
           @click="startQuiz"
         >
-          <span aria-hidden="true">🎯</span>考考我
+          <span aria-hidden="true">🎯</span>{{ t('考考我', 'Quiz') }}
         </button>
       </nav>
     </header>
@@ -809,7 +951,7 @@ onBeforeUnmount(() => {
           <div class="flip-inner">
             <!-- 正面只有圖：先讓小朋友自己猜、自己數 -->
             <div class="face face-front" :class="{ 'is-asking': countOptions.length, 'is-nudging': nudging }" :aria-hidden="flipped">
-              <span v-if="currentLetter" class="abc-badge">{{ badgeOf(card) }}</span>
+              <span v-if="currentLetter && !chineseOnly" class="abc-badge">{{ badgeOf(card) }}</span>
               <div
                 v-if="showCount"
                 class="count-grid"
@@ -850,37 +992,37 @@ onBeforeUnmount(() => {
               </div>
               <!-- 現在要做什麼：英文那行是說給小朋友聽的，中文那行給爸媽看 -->
               <span v-else class="face-hint">
-                <span class="hint-en">{{ frontAsk(card).en }}</span>
-                <span class="hint-zh">{{ frontAsk(card).zh }}</span>
+                <span class="hint-en">{{ frontAsk(card).main }}</span>
+                <span v-if="frontAsk(card).sub" class="hint-zh">{{ frontAsk(card).sub }}</span>
               </span>
             </div>
 
             <!-- 背面是答案：大字＋說明，翻過來的同時唸出來 -->
             <div
               class="face face-back"
-              :class="{ 'has-back-image': card.backImage, 'has-number-sentence': isNumberCard(card) && sentenceFor(card) }"
+              :class="{ 'has-back-image': backImageOf(card), 'has-number-sentence': isNumberCard(card) && numberSentence(card) }"
               :aria-hidden="!flipped"
             >
               <!-- 背面放了原卡的話，原卡上本來就印著字母，不再疊一個標籤 -->
-              <span v-if="currentLetter && !card.backImage" class="abc-badge">{{ badgeOf(card) }}</span>
+              <span v-if="currentLetter && !backImageOf(card) && !chineseOnly" class="abc-badge">{{ badgeOf(card) }}</span>
               <img v-if="backPicture" class="back-img" :src="imageSrc(backPicture)" alt="" draggable="false">
               <span v-else-if="card.image && count === null" class="back-emoji">{{ card.image }}</span>
               <!-- 數字卡背面也排一排小小的實物，數量跟數字放在一起看 -->
               <span v-if="showCount" class="back-count">{{ (card.image || '⭐').repeat(count ?? 0) }}</span>
-              <span class="back-word" :class="{ 'is-number': isNumberCard(card) }" :style="{ '--len': card.word.length }">
-                <!-- 字母卡把開頭字母上色：A is for ant 的那個 a -->
-                <template v-if="currentLetter"><span class="back-initial">{{ card.word.charAt(0) }}</span>{{ card.word.slice(1) }}</template>
-                <template v-else>{{ card.word }}</template>
+              <span class="back-word" :class="{ 'is-number': isNumberCard(card) }" :style="{ '--len': visualLength(backWordOf(card)) / 0.55 }">
+                <!-- 字母卡把開頭字母上色：A is for ant 的那個 a（全中文寫的是「螞蟻」，就不上色） -->
+                <template v-if="currentLetter && !chineseOnly"><span class="back-initial">{{ card.word.charAt(0) }}</span>{{ card.word.slice(1) }}</template>
+                <template v-else>{{ backWordOf(card) }}</template>
               </span>
               <!-- 數字卡：one pencil／一支鉛筆；單字卡：說明，再加上翻面時唸的那句英文 -->
               <template v-if="isNumberCard(card)">
-                <span class="back-meaning">{{ numberLabels(card).en }}</span>
-                <span class="back-sub">{{ numberLabels(card).zh }}</span>
-                <span v-if="sentenceFor(card)" class="back-sub back-sentence">{{ sentenceFor(card) }}</span>
+                <span class="back-meaning">{{ chineseOnly ? numberLabels(card).zh : numberLabels(card).en }}</span>
+                <span v-if="mixed" class="back-sub">{{ numberLabels(card).zh }}</span>
+                <span v-if="numberSentence(card)" class="back-sub back-sentence">{{ numberSentence(card) }}</span>
               </template>
               <template v-else>
-                <span v-if="card.meaning" class="back-meaning">{{ card.meaning }}</span>
-                <span v-if="sentenceFor(card)" class="back-sub">{{ sentenceFor(card) }}</span>
+                <span v-if="card.meaning && mixed" class="back-meaning">{{ card.meaning }}</span>
+                <span v-if="englishOnly && sentenceFor(card)" class="back-sub">{{ sentenceFor(card) }}</span>
               </template>
             </div>
           </div>
@@ -906,17 +1048,17 @@ onBeforeUnmount(() => {
         </button>
 
         <button v-if="canSpeak" class="ctl ctl-wide" @click="listen">
-          <span aria-hidden="true">🔊</span>聽
+          <span aria-hidden="true">🔊</span>{{ t('聽', 'Listen') }}
         </button>
 
         <!-- 影片片段要有網路才放得出來，沒網路時先藏起來，字卡本身照常玩 -->
         <button v-if="card.clip && online" class="ctl ctl-wide ctl-video" @click="openClip(card.clip)">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>看影片
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>{{ t('看影片', 'Video') }}
         </button>
 
         <!-- 看到最後一張，下一步順勢接到考考我 -->
         <button v-if="isLast && canQuiz" class="ctl ctl-wide ctl-quiz" @click="startQuiz">
-          <span aria-hidden="true">🎯</span>考考我
+          <span aria-hidden="true">🎯</span>{{ t('考考我', 'Quiz') }}
         </button>
         <button v-else class="ctl ctl-nav" aria-label="下一張" @click="go(1)">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.6 16.6 10 18l6-6-6-6-1.4 1.4 4.6 4.6z" /></svg>
@@ -927,22 +1069,22 @@ onBeforeUnmount(() => {
     <!-- ===== 考考我 ===== -->
     <main v-else-if="mode === 'quiz'" class="quiz" :class="{ 'is-picture': pictureQuiz && !quizDone }">
       <template v-if="!quizDone && question">
-        <p class="quiz-progress">第 {{ qIndex + 1 }} 題／共 {{ questions.length }} 題</p>
+        <p class="quiz-progress">
+          {{ t(`第 ${qIndex + 1} 題／共 ${questions.length} 題`, `Question ${qIndex + 1} of ${questions.length}`) }}
+        </p>
 
         <!-- 看圖選數字：題目就是那張形狀圖 -->
         <template v-if="pictureQuiz">
           <img class="prompt-img" :src="imageSrc(cards[question.answer]!.image)" alt="" draggable="false">
           <p class="prompt-text">
-            What number is this?
-            <span class="prompt-zh">這是數字幾？</span>
+            {{ englishOnly ? 'What number is this?' : '這是數字幾？' }}
           </p>
         </template>
         <!-- 題目不寫出來（寫了就等於把答案給他看），用聽的；沒有語音的裝置才把題目寫出來 -->
         <button v-else class="ask-btn" @click="ask()">
           <span class="ask-icon" aria-hidden="true">🔊</span>
           <span v-if="canSpeak" class="ask-label">
-            Listen and touch!
-            <span class="ask-zh">聽聽看，點出對的那一張</span>
+            {{ englishOnly ? 'Listen and touch!' : '聽聽看，點出對的那一張' }}
           </span>
           <span v-else>{{ promptText }}</span>
         </button>
@@ -976,19 +1118,21 @@ onBeforeUnmount(() => {
       </template>
 
       <div v-else class="quiz-done">
-        <span class="done-emoji" aria-hidden="true">{{ roundStars >= roundSize ? '🏆' : '🎉' }}</span>
+        <span class="done-emoji" aria-hidden="true">{{ perfectRound ? '🏆' : '🎉' }}</span>
         <p class="done-title">
-          {{ roundStars >= roundSize ? '全部答對！' : '玩完一輪了！' }}
+          <template v-if="perfectRound">{{ t('全部答對！', 'All correct!') }}</template>
+          <template v-else>{{ t('玩完一輪了！', 'Great job!') }}</template>
         </p>
         <p class="done-stars">
-          拿到 <strong>{{ roundStars }}</strong> 顆星
+          <template v-if="englishOnly">You got <strong>{{ roundStars }}</strong> {{ roundStars === 1 ? 'star' : 'stars' }}</template>
+          <template v-else>拿到 <strong>{{ roundStars }}</strong> 顆星</template>
         </p>
         <div class="done-row" aria-hidden="true">
           <span v-for="i in roundSize" :key="i" class="done-star" :class="{ 'is-on': i <= roundStars }">⭐</span>
         </div>
         <div class="done-actions">
-          <button class="ctl ctl-wide ctl-quiz" @click="startQuiz">再玩一次</button>
-          <button class="ctl ctl-wide" @click="toLearn">回去看卡片</button>
+          <button class="ctl ctl-wide ctl-quiz" @click="startQuiz">{{ t('再玩一次', 'Play again') }}</button>
+          <button class="ctl ctl-wide" @click="toLearn">{{ t('回去看卡片', 'Back to cards') }}</button>
         </div>
       </div>
     </main>
@@ -999,14 +1143,14 @@ onBeforeUnmount(() => {
         <div ref="hostRef" class="clip-player" />
         <!-- 蓋一層在影片上：點畫面就是暫停／播放，不會點到 YouTube 自己的東西 -->
         <button class="clip-shield" :aria-label="clipStatus === 'playing' ? '暫停' : '播放'" @click="toggleClip">
-          <span v-if="clipStatus === 'error'" class="clip-msg">😅 這段影片沒辦法播放</span>
+          <span v-if="clipStatus === 'error'" class="clip-msg">😅 {{ t('這段影片沒辦法播放', "This video can't play.") }}</span>
           <span v-else-if="clipStatus !== 'playing'" class="clip-play" aria-hidden="true">
             <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
           </span>
         </button>
       </div>
       <button ref="clipCloseRef" class="ctl ctl-wide" @click="closeClip">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.4 5 5 6.4 10.6 12 5 17.6 6.4 19l5.6-5.6 5.6 5.6 1.4-1.4-5.6-5.6L19 6.4 17.6 5 12 10.6z" /></svg>關掉影片
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.4 5 5 6.4 10.6 12 5 17.6 6.4 19l5.6-5.6 5.6 5.6 1.4-1.4-5.6-5.6L19 6.4 17.6 5 12 10.6z" /></svg>{{ t('關掉影片', 'Close') }}
       </button>
     </div>
   </section>
@@ -1078,6 +1222,29 @@ onBeforeUnmount(() => {
   font-weight: 800;
   font-variant-numeric: tabular-nums;
 }
+
+/* 中英對照／全英文：比模式切換小一號，放在旁邊不搶眼 */
+.lang-toggle {
+  flex: none;
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  background: var(--bg-card);
+}
+.lang-btn {
+  height: 36px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-dim);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.lang-btn.is-active { background: var(--text); color: var(--bg); }
 
 .mode-tabs {
   flex: none;
@@ -1543,21 +1710,6 @@ onBeforeUnmount(() => {
 }
 .ask-btn:active { transform: scale(.96); }
 
-/* 英文是說給小朋友聽的，底下一行小小的中文給爸媽看 */
-.ask-label,
-.prompt-text {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  line-height: 1.2;
-}
-.ask-label { align-items: flex-start; }
-.ask-zh,
-.prompt-zh {
-  font-size: .62em;
-  font-weight: 700;
-  opacity: .75;
-}
 
 .ask-icon {
   display: grid;
@@ -1766,11 +1918,19 @@ onBeforeUnmount(() => {
 
 /* ---------- 窄螢幕與手機橫向 ---------- */
 @media (max-width: 560px) {
-  .mode-tabs { width: 100%; }
-  .mode-tab { flex: 1; justify-content: center; }
+  /* 名稱至少留一段寬度，語言切換才會換到第二排，跟看卡片／考考我並排 */
+  .deck-title { min-width: 40%; }
+  .mode-tabs { flex: 1; min-width: 0; }
+  .mode-tab { flex: 1; justify-content: center; padding: 0 10px; white-space: nowrap; }
+  .lang-btn { padding: 0 8px; font-size: 13px; }
   .ctl { height: 58px; padding: 0 16px; font-size: 17px; }
   .ctl-nav { width: 60px; }
   .ask-btn { font-size: 18px; }
+}
+
+/* 很窄的手機：模式按鈕上的小圖示先藏起來，字才放得下一行 */
+@media (max-width: 380px) {
+  .mode-tab span[aria-hidden] { display: none; }
 }
 
 @media (max-height: 520px) {

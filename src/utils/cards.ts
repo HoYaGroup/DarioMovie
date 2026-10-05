@@ -399,6 +399,38 @@ export function askOf(card: Card, style: number, bareDeck = false): string {
 
 /* ---------- ABC 字母卡 ---------- */
 
+/**
+ * 全英文模式顯示的字卡本名稱：片單上有寫英文名稱（字卡本: 中文 | English）就用它；
+ * 名稱本來就中英都有的（農場動物 Farm），把中文拿掉；都沒有英文就只好照原本的名稱。
+ */
+export function englishTitle(deck: VideoItem): string {
+  if (deck.titleEn) return deck.titleEn
+  const stripped = deck.title.replace(/[\p{Script=Han}，、（）《》「」]+/gu, ' ').replace(/\s+/g, ' ').trim()
+  return /[A-Za-z]{2}/.test(stripped) ? stripped : deck.title
+}
+
+/**
+ * 全中文模式顯示的字卡本名稱：把英文的部分拿掉（農場動物 Farm → 農場動物）；
+ * ABC 是這本的名字，留著（動物篇 ABC）。
+ */
+export function chineseTitle(deck: VideoItem): string {
+  const kept = deck.title.split(/\s+/).filter((w) => w === 'ABC' || !/^[A-Za-z'-]+$/.test(w)).join(' ')
+  return kept || deck.title
+}
+
+/**
+ * 全中文模式的題目，跟英文一樣三種問法輪流：蘋果在哪裡？／你找得到蘋果嗎？／哪一個是蘋果？
+ * 數字說「數字七」。
+ */
+export function askZhOf(card: Card, style: number): string {
+  const name = isNumberCard(card) ? `數字${zhNumber(Number(card.word))}` : (zhOf(card.meaning) || card.word)
+  switch (style % ASK_STYLES) {
+    case 0: return `${name}在哪裡？`
+    case 1: return `你找得到${name}嗎？`
+    default: return `哪一個是${name}？`
+  }
+}
+
 /** 單元名稱裡有 ABC（半形、全形都算）就是字母卡：照 A～Z 排好，卡片上標出開頭字母 */
 export function isAbcDeck(title: string): boolean {
   return /ABC|ＡＢＣ/i.test(title)
