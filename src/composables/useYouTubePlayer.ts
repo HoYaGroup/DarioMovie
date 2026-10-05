@@ -37,12 +37,18 @@ const END_GUARD_SEC = 0.8
 let apiPromise: Promise<void> | null = null
 function loadIframeApi(): Promise<void> {
   if (apiPromise) return apiPromise
-  apiPromise = new Promise<void>((resolve) => {
+  apiPromise = new Promise<void>((resolve, reject) => {
     if (window.YT?.Player) return resolve()
     window.onYouTubeIframeAPIReady = () => resolve()
     const s = document.createElement('script')
     s.src = 'https://www.youtube.com/iframe_api'
     s.async = true
+    // 沒網路載不到：不要讓畫面一直轉圈，也要能在網路恢復後重新載入，不必把 App 關掉重開
+    s.onerror = () => {
+      s.remove()
+      apiPromise = null
+      reject(new Error('YouTube 載入失敗'))
+    }
     document.head.appendChild(s)
   })
   return apiPromise
@@ -241,7 +247,12 @@ export function useYouTubePlayer(options: {
     clipStart = range.start ?? 0
     clipEnd = range.end ?? 0
 
-    await loadIframeApi()
+    try {
+      await loadIframeApi()
+    } catch {
+      status.value = 'error'
+      return
+    }
     if (!hostRef.value) return
 
     if (player && ready) {

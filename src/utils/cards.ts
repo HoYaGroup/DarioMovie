@@ -236,7 +236,7 @@ const COUNT_NOUNS: Record<string, [string, string, string, string?]> = {
   '✏': ['pencil', '支', '鉛筆'],
   '🐘': ['elephant', '隻', '大象', 'elephants'],
   '🐓': ['chicken', '隻', '雞', 'chickens'],
-  '🦛': ['hippo', '隻', '河馬', 'hippo'],
+  '🦛': ['hippo', '隻', '河馬', 'hippos'],
   '🦒': ['giraffe', '隻', '長頸鹿', 'giraffes'],
   '🐜': ['ant', '隻', '螞蟻', 'ants'],
   '🦁': ['lion', '隻', '獅子', 'lions'],

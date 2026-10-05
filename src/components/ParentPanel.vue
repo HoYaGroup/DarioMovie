@@ -9,6 +9,8 @@ import { useParentGate } from '~/composables/useParentGate'
 import { useDisplay } from '~/composables/useDisplay'
 import { useTheme } from '~/composables/useTheme'
 import PanelSection from '~/components/PanelSection.vue'
+import { isPicture, isEmojiOnly, imageSrc } from '~/utils/cards'
+import { useOnline, isOfflineCapable, countCached, downloadForOffline } from '~/composables/useOffline'
 
 const emit = defineEmits<{ close: [] }>()
 
@@ -368,6 +370,55 @@ function onSavePin() {
   pinMsg.value = { text: result.message, kind: result.ok ? 'ok' : 'err' }
   if (result.ok) pinInput.value = ''
 }
+
+/* ============ 離線使用：出門沒網路也能玩字卡 ============ */
+
+const { online } = useOnline()
+
+/** 片單上所有字卡用到的圖片；emoji 是裝置自己的字型，本來就不用網路 */
+const cardImages = computed(() => {
+  const urls = new Set<string>()
+  for (const v of videos.value) {
+    for (const c of v.cards ?? []) {
+      if (isPicture(c)) urls.add(imageSrc(c.image))
+      if (c.backImage && !isEmojiOnly(c.backImage)) urls.add(imageSrc(c.backImage))
+    }
+  }
+  return [...urls]
+})
+
+/** App 已經由 Service Worker 接管：斷網時畫面才打得開 */
+const appOffline = ref(false)
+/** 已經存在這台裝置上的字卡圖片張數；null 表示還在檢查 */
+const cachedCount = ref<number | null>(null)
+const downloading = ref(false)
+const downloadDone = ref(0)
+
+const missingImages = computed(() =>
+  cachedCount.value === null ? 0 : Math.max(0, cardImages.value.length - cachedCount.value),
+)
+
+const offlineSummary = computed(() => {
+  if (!appOffline.value) return '還沒準備好離線'
+  if (cachedCount.value === null) return '檢查中…'
+  return missingImages.value ? `字卡圖片還差 ${missingImages.value} 張` : '沒網路也能玩字卡'
+})
+
+async function checkOffline() {
+  appOffline.value = isOfflineCapable()
+  cachedCount.value = await countCached(cardImages.value)
+}
+
+async function onDownloadOffline() {
+  if (downloading.value) return
+  downloading.value = true
+  downloadDone.value = 0
+  await downloadForOffline(cardImages.value, (n) => { downloadDone.value = n })
+  downloading.value = false
+  await checkOffline()
+}
+
+onMounted(checkOffline)
 
 /* ============ 片單檔案同步 ============ */
 
@@ -994,6 +1045,52 @@ function onImport() {
         <p class="msg" :class="pinMsg.kind" role="status">{{ pinMsg.text }}</p>
       </PanelSection>
 
+      <!-- ══════ 離線使用 ══════ -->
+      <PanelSection id="offline" title="離線使用" :summary="offlineSummary">
+        <ul class="offline-status">
+          <li>
+            <span>網路</span>
+            <strong>{{ online ? '連線中' : '📴 沒有網路' }}</strong>
+          </li>
+          <li>
+            <span>App 本身</span>
+            <strong :class="appOffline ? 'ok' : 'warn'">{{ appOffline ? '✅ 沒網路也打得開' : '⚠️ 還沒準備好' }}</strong>
+          </li>
+          <li>
+            <span>字卡圖片</span>
+            <strong v-if="cachedCount === null">檢查中…</strong>
+            <strong v-else :class="missingImages ? 'warn' : 'ok'">
+              {{ missingImages ? '⚠️' : '✅' }} {{ cachedCount }} / {{ cardImages.length }} 張存在這台裝置
+            </strong>
+          </li>
+        </ul>
+
+        <p v-if="!appOffline" class="hint warn">
+          請在有網路的地方把 App 完全關掉、再打開一次，讓它把離線要用的東西裝好，再回來這裡看。
+        </p>
+
+        <button
+          class="ghost-btn wide"
+          :disabled="downloading || (missingImages > 0 && !online)"
+          @click="missingImages ? onDownloadOffline() : checkOffline()"
+        >
+          <template v-if="downloading">下載中… {{ downloadDone }} / {{ cardImages.length }}</template>
+          <template v-else-if="missingImages">把字卡圖片全部存到這台裝置</template>
+          <template v-else>重新檢查</template>
+        </button>
+
+        <p class="hint">
+          <strong>出門前</strong>在有網路的地方打開 App 一次，這裡三項都打勾就可以帶出門。
+          沒網路時字卡、數一數、考考我都照常；影片和網站要網路，片單上會變淡。
+          想確認的話，開飛航模式再打開 App 試一次。
+        </p>
+        <p class="hint">
+          <strong>語音</strong>：Android 平板請到「設定 → 系統 → 語言 → 文字轉語音輸出」，
+          按 Google 語音服務旁的齒輪 →「安裝語音資料」，下載<strong>英文（美國）</strong>和<strong>中文（台灣）</strong>，
+          沒網路時才唸得出來（各家平板的選單名稱略有不同）。iPad 的語音本來就在裝置上，不用設定。
+        </p>
+      </PanelSection>
+
       <!-- ══════ 片單來源 ══════ -->
       <PanelSection id="source" title="片單來源" span="all" :summary="sourceSummary">
         <div class="source-grid">
@@ -1016,15 +1113,15 @@ https://youtu.be/yyyyyyyyyyy | 第二課
 
 site: https://example.com | 某個學習網站
 
-卡: cat | 貓 | 🐱
-卡: 3 | three 三 | 🍎 | https://youtu.be/xxxxxxxxxxx 0:35-0:42</pre>
+卡: apple | 蘋果 | 🍎 | Yum, delicious apple!
+卡: 11 | 🍎 | https://youtu.be/xxxxxxxxxxx 0:35-0:42</pre>
 
             <ul class="use-cases">
               <li><strong># 　</strong>後面是大分類（學習／娛樂），可以不寫</li>
               <li><strong>【　】</strong>裡面是分區，後面可以加 emoji</li>
               <li><strong>《　》</strong>裡面是冊或單元，可以不寫</li>
               <li><strong>site:</strong> 開頭是網站，會在 App 裡面開，小朋友不會跳出去</li>
-              <li><strong>卡:</strong> 開頭是字卡：字｜說明｜圖（emoji 或圖片）｜影片片段，同一個單元的卡會集成一本</li>
+              <li><strong>卡:</strong> 開頭是字卡：字｜說明｜圖（emoji 或圖片）｜一句英文（. ! ? 結尾）｜影片片段，同一個單元的卡會集成一本</li>
               <li>網址後面加 <strong>|</strong> 可以自己寫標題，不寫就自動抓</li>
               <li>行首加 <strong>//</strong> 就是註解，可以暫時停掉某一項</li>
             </ul>
@@ -1543,6 +1640,25 @@ code {
 
 .ghost-btn.small { padding: 10px 16px; font-size: 15px; white-space: nowrap; }
 .ghost-btn.wide { width: 100%; margin-top: 12px; }
+
+/* 離線使用：三項狀態一行一項 */
+.offline-status {
+  margin: 0 0 4px;
+  padding: 0;
+  list-style: none;
+}
+.offline-status li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 15px;
+}
+.offline-status li span { color: var(--text-dim); }
+.offline-status .ok { color: var(--ok); }
+.offline-status .warn { color: var(--accent); }
+.ghost-btn.wide + .hint { margin-top: 14px; }
 
 /* ---------- 片單 ---------- */
 .lists {

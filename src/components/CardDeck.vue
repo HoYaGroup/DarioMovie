@@ -12,6 +12,7 @@ import { useWatchTime } from '~/composables/useWatchTime'
 import { useCardStars } from '~/composables/useCardStars'
 import { useTvMode } from '~/composables/useTvMode'
 import { useYouTubePlayer } from '~/composables/useYouTubePlayer'
+import { useOnline } from '~/composables/useOffline'
 
 const props = defineProps<{ deck: VideoItem }>()
 const emit = defineEmits<{ close: [] }>()
@@ -21,6 +22,7 @@ const { resolved: themeResolved } = useTheme()
 const { isTv } = useTvMode()
 const { addSeconds, flush, isLimitReached } = useWatchTime()
 const { starsOf, addStar } = useCardStars()
+const { online } = useOnline()
 
 const cards = computed<Card[]>(() => cardsOf(props.deck))
 /** 這本是 ABC 字母卡（單元名稱裡有 ABC）：照 A～Z 排、卡片上標出開頭字母 */
@@ -876,7 +878,8 @@ onBeforeUnmount(() => {
           <span aria-hidden="true">🔊</span>聽
         </button>
 
-        <button v-if="card.clip" class="ctl ctl-wide ctl-video" @click="openClip(card.clip)">
+        <!-- 影片片段要有網路才放得出來，沒網路時先藏起來，字卡本身照常玩 -->
+        <button v-if="card.clip && online" class="ctl ctl-wide ctl-video" @click="openClip(card.clip)">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>看影片
         </button>
 

@@ -6,11 +6,13 @@ import { useYouTubePlayer } from '~/composables/useYouTubePlayer'
 import { useDisplay, PLAYBACK_RATES } from '~/composables/useDisplay'
 import { useContinueWatching } from '~/composables/useContinueWatching'
 import { useTvMode } from '~/composables/useTvMode'
+import { useOnline } from '~/composables/useOffline'
 
 const props = defineProps<{ video: VideoItem; queue: VideoItem[]; resumeAt?: number }>()
 const emit = defineEmits<{ close: []; advance: [video: VideoItem] }>()
 
 const { isTv } = useTvMode()
+const { online } = useOnline()
 const playBtnRef = ref<HTMLButtonElement | null>(null)
 
 const { settings: display, setPlaybackRate: persistRate } = useDisplay()
@@ -339,7 +341,7 @@ async function toggleFullscreen() {
       </div>
 
       <div v-else-if="status === 'error'" class="veil">
-        <p>這部影片沒辦法播放</p>
+        <p>{{ online ? '這部影片沒辦法播放' : '沒有網路，影片要連上網路才能看' }}</p>
         <button class="ghost-btn" @click="emit('close')">回到清單</button>
       </div>
     </div>

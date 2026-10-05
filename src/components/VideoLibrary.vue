@@ -10,6 +10,8 @@ import { useTheme } from '~/composables/useTheme'
 import { useTvMode } from '~/composables/useTvMode'
 import { useState } from '~/composables/useState'
 import { useCardStars } from '~/composables/useCardStars'
+import { useOnline } from '~/composables/useOffline'
+import { speak } from '~/utils/speech'
 
 const emit = defineEmits<{
   play: [video: VideoItem, queue: VideoItem[]]
@@ -27,6 +29,29 @@ const { entry: continueEntry, isResumable, clear: clearContinue } = useContinueW
 const { resolved: themeResolved, setTheme } = useTheme()
 const { isTv } = useTvMode()
 const { starsOf } = useCardStars()
+const { online } = useOnline()
+
+/* ---------- 沒網路的時候：字卡照玩，影片、網站先等等 ---------- */
+
+/** 要網路才能開的：影片和網站（字卡的圖已經存在裝置上了） */
+function needsNet(video: VideoItem): boolean {
+  return video.kind !== 'deck'
+}
+
+/** 點了沒網路打不開的東西：跳一個提示，也唸出來（小朋友還不太會看字） */
+const offlineNotice = ref(false)
+let noticeTimer: ReturnType<typeof setTimeout> | null = null
+
+function open(video: VideoItem, list: VideoItem[]) {
+  if (!online.value && needsNet(video)) {
+    offlineNotice.value = true
+    if (noticeTimer) clearTimeout(noticeTimer)
+    noticeTimer = setTimeout(() => { offlineNotice.value = false }, 3500)
+    speak([{ text: '現在沒有網路，影片不能看。先玩字卡吧！', lang: 'zh-TW' }], 0.95)
+    return
+  }
+  emit('play', video, list)
+}
 
 /** 字卡本的封面：前三張卡攤開成扇形，數字卡露出數字、其他卡露出圖 */
 function deckPeek(video: VideoItem): Card[] {
@@ -107,7 +132,10 @@ onMounted(() => {
   }
 })
 
-onBeforeUnmount(() => mq?.removeEventListener('change', onMqChange))
+onBeforeUnmount(() => {
+  mq?.removeEventListener('change', onMqChange)
+  if (noticeTimer) clearTimeout(noticeTimer)
+})
 
 /** 剩餘額度說成小朋友聽得懂的話 */
 const remainText = computed(() => humanMinutes(remainingSeconds.value))
@@ -277,8 +305,13 @@ onBeforeUnmount(cancelHold)
       </button>
     </header>
 
-    <!-- 接續播放：小朋友自己點才會跳回去繼續看，不會一開 App 就自動跳進播放畫面 -->
-    <div v-if="continueVideo && !isBlocked" class="continue-bar">
+    <!-- 沒網路：給家長看的一行說明，字卡照玩，影片和網站要等有網路 -->
+    <p v-if="!online && !isBlocked" class="offline-bar" role="status">
+      <span aria-hidden="true">📴</span> 沒有網路：字卡可以玩，影片和網站要連上網路才能看
+    </p>
+
+    <!-- 接續播放：小朋友自己點才會跳回去繼續看，不會一開 App 就自動跳進播放畫面；沒網路時播不了，先不問 -->
+    <div v-if="continueVideo && !isBlocked && online" class="continue-bar">
       <button class="continue-main" type="button" @click="resumeContinueWatching">
         <span class="continue-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
@@ -430,8 +463,9 @@ onBeforeUnmount(cancelHold)
             v-for="video in group.videos"
             :key="video.uid"
             class="card"
+            :class="{ 'is-offline': !online && needsNet(video) }"
             type="button"
-            @click="emit('play', video, group.videos)"
+            @click="open(video, group.videos)"
           >
             <!-- 網站沒有縮圖，用一個看得懂的圖示，也順便跟影片區分開 -->
             <div
@@ -479,6 +513,13 @@ onBeforeUnmount(cancelHold)
         {{ isTv ? '請用手機或電腦開同一個網址，進入家長設定建立。' : '長按右上角的齒輪，進入家長設定建立。' }}
       </template>
     </p>
+
+    <!-- 點了沒網路打不開的影片 -->
+    <div v-if="offlineNotice" class="offline-toast" role="alert" @click="offlineNotice = false">
+      <span class="offline-toast-icon" aria-hidden="true">📴</span>
+      <strong>現在沒有網路</strong>
+      <span>影片要有網路才能看，先玩字卡吧！</span>
+    </div>
 
     <!-- 底部細線用當前分區的顏色，小朋友一眼知道自己在哪一區 -->
     <div class="active-bar" :style="{ background: activeColor }" />
@@ -837,6 +878,60 @@ onBeforeUnmount(cancelHold)
   transition: transform .18s ease;
 }
 .card:active { transform: scale(.96); }
+
+/* 沒網路打不開的影片、網站：淡掉，右上角貼一個「要網路」 */
+.card.is-offline { opacity: .45; filter: grayscale(.7); }
+.card.is-offline .card-thumb::before {
+  content: '📴';
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 1;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, .55);
+  font-size: 16px;
+}
+.card.is-offline .card-thumb::after { display: none; }
+
+.offline-bar {
+  flex: none;
+  margin: 0 calc(var(--safe-r) + 22px) 14px calc(var(--safe-l) + 22px);
+  padding: 10px 16px;
+  border-radius: 14px;
+  background: var(--bg-card);
+  color: var(--text-dim);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.offline-toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--safe-b) + 28px);
+  z-index: 30;
+  translate: -50% 0;
+  width: min(92vw, 420px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 18px 22px;
+  border-radius: 22px;
+  background: var(--bg-card);
+  color: var(--text);
+  font-size: 17px;
+  text-align: center;
+  box-shadow: 0 16px 40px var(--shadow);
+  animation: toast-in .25s ease-out;
+}
+.offline-toast strong { font-size: 21px; }
+.offline-toast-icon { font-size: 40px; line-height: 1.2; }
+
+@keyframes toast-in {
+  from { opacity: 0; translate: -50% 20px; }
+  to { opacity: 1; translate: -50% 0; }
+}
 
 .card-thumb {
   position: relative;
