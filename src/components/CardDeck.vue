@@ -3,7 +3,7 @@ import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { categoryColor, type Card, type CardClip, type VideoItem } from '~/utils/youtube'
 import {
   countOf, countNounOf, isPicture, imageSrc, speechOf, isAbcDeck, initialOf, cardsOf, thisIs, isNumberCard,
-  numberLabels, sentenceOf, enNumber, zhNumber, englishOf, askOf, ASK_STYLES,
+  numberLabels, sentencesOf, enNumber, zhNumber, englishOf, askOf, ASK_STYLES, isBareDeck,
 } from '~/utils/cards'
 import { canSpeak, speak, stopSpeaking, chimeRight, chimeWrong, type SpeechPart, type SpeechText } from '~/utils/speech'
 import { useLibrary } from '~/composables/useLibrary'
@@ -13,6 +13,7 @@ import { useCardStars } from '~/composables/useCardStars'
 import { useTvMode } from '~/composables/useTvMode'
 import { useYouTubePlayer } from '~/composables/useYouTubePlayer'
 import { useOnline } from '~/composables/useOffline'
+import { useState } from '~/composables/useState'
 
 const props = defineProps<{ deck: VideoItem }>()
 const emit = defineEmits<{ close: [] }>()
@@ -27,6 +28,8 @@ const { online } = useOnline()
 const cards = computed<Card[]>(() => cardsOf(props.deck))
 /** 這本是 ABC 字母卡（單元名稱裡有 ABC）：照 A～Z 排、卡片上標出開頭字母 */
 const isAbc = computed(() => isAbcDeck(props.deck.title))
+/** 動作、心情這類字卡本：問的時候不加 the（Where is happy?） */
+const bareDeck = computed(() => isBareDeck(props.deck.title))
 /** 整本都是數字卡：上面放一排數字，今天教到哪裡就直接跳過去 */
 const isNumberDeck = computed(() => cards.value.length > 0 && cards.value.every(isNumberCard))
 const stars = computed(() => starsOf(props.deck.uid))
@@ -48,14 +51,35 @@ const zh = (text: string): SpeechText => ({ text, lang: 'zh-TW' })
  *   單字卡：中文、英文，再接一句簡單的英文 —— 蘋果。Apple. Yum, delicious apple!
  *   數字卡：先說數字，再說中文、英文 —— One. 一支鉛筆. One pencil.／Eleven. 十一顆蘋果. Eleven apples.
  */
-function answerParts(c: Card): SpeechText[] {
+function answerParts(c: Card, withSentence = true): SpeechText[] {
+  const sentence = withSentence ? sentenceFor(c) : ''
   if (isNumberCard(c)) {
     const word = enNumber(Number(c.word))
     const label = numberLabels(c)
-    return [en(word), zh(label.zh), ...(label.en !== word ? [en(label.en)] : [])]
+    return [en(word), zh(label.zh), ...(label.en !== word ? [en(label.en)] : []), en(sentence)]
   }
   const name = speechOf(c)
-  return [zh(name.zh), en(name.en), en(sentenceOf(c))]
+  return [zh(name.zh), en(name.en), en(sentence)]
+}
+
+/**
+ * 一張卡寫了好幾句的話，每次翻到這張卡就輪到下一句（第一次從隨便一句開始），
+ * 同一本卡今天聽、明天聽，句子都不太一樣。關掉字卡再打開也接著輪，不會又從同一句開始。
+ */
+const sentenceTurns = useState<Record<string, number>>('cards.sentenceTurns', () => ({}))
+const sentenceTurn = ref(0)
+
+function nextSentence() {
+  const key = `${props.deck.uid}:${index.value}`
+  const prev = sentenceTurns.value[key]
+  sentenceTurn.value = prev === undefined ? Math.floor(Math.random() * 12) : prev + 1
+  sentenceTurns.value[key] = sentenceTurn.value
+}
+
+/** 這張卡這一次要唸、要寫在背面的那一句 */
+function sentenceFor(c: Card): string {
+  const list = sentencesOf(c, bareDeck.value)
+  return list.length ? list[sentenceTurn.value % list.length]! : ''
 }
 
 function say(c: Card) {
@@ -67,7 +91,7 @@ function say(c: Card) {
 function nameParts(c: Card): SpeechText[] {
   if (isNumberCard(c)) {
     const n = Number(c.word)
-    return isPicture(c) ? answerParts(c) : [en(enNumber(n)), zh(zhNumber(n))]
+    return isPicture(c) ? answerParts(c, false) : [en(enNumber(n)), zh(zhNumber(n))]
   }
   const name = speechOf(c)
   return [en(name.en), zh(name.zh)]
@@ -75,7 +99,7 @@ function nameParts(c: Card): SpeechText[] {
 
 /** 「這是…」：This is a horse. ／ This is four. 點錯時說一次；小朋友再點那張點錯的，也是唸這句 */
 function thisIsParts(c: Card): SpeechText[] {
-  return englishOf(c) ? [en(thisIs(c))] : [en('This is'), zh(speechOf(c).zh || c.word)]
+  return englishOf(c) ? [en(thisIs(c, bareDeck.value))] : [en('This is'), zh(speechOf(c).zh || c.word)]
 }
 
 /** 點錯的選項下面貼的小標籤：hippo 河馬、four 四 */
@@ -267,6 +291,7 @@ function resetCard() {
   countOptions.value = []
   countWrong.value = []
   countSolved.value = false
+  nextSentence()
 }
 
 function go(step: number) {
@@ -514,7 +539,7 @@ const pictureQuiz = computed(() => question.value?.kind === 'picture')
 function promptParts(q: Question): SpeechText[] {
   if (q.kind === 'picture') return [en('What number is this?')]
   const c = cards.value[q.answer]!
-  const ask = askOf(c, q.style)
+  const ask = askOf(c, q.style, bareDeck.value)
   return ask ? [en(ask)] : [zh(`${speechOf(c).zh || c.word}在哪裡？`)]
 }
 
@@ -685,6 +710,7 @@ onMounted(() => {
   }, 1000)
 
   window.addEventListener('keydown', onKey)
+  nextSentence()
   askCardLater()
   if (isTv) nextTick(() => cardRef.value?.focus())
 })
@@ -830,7 +856,11 @@ onBeforeUnmount(() => {
             </div>
 
             <!-- 背面是答案：大字＋說明，翻過來的同時唸出來 -->
-            <div class="face face-back" :class="{ 'has-back-image': card.backImage }" :aria-hidden="!flipped">
+            <div
+              class="face face-back"
+              :class="{ 'has-back-image': card.backImage, 'has-number-sentence': isNumberCard(card) && sentenceFor(card) }"
+              :aria-hidden="!flipped"
+            >
               <!-- 背面放了原卡的話，原卡上本來就印著字母，不再疊一個標籤 -->
               <span v-if="currentLetter && !card.backImage" class="abc-badge">{{ badgeOf(card) }}</span>
               <img v-if="backPicture" class="back-img" :src="imageSrc(backPicture)" alt="" draggable="false">
@@ -846,10 +876,11 @@ onBeforeUnmount(() => {
               <template v-if="isNumberCard(card)">
                 <span class="back-meaning">{{ numberLabels(card).en }}</span>
                 <span class="back-sub">{{ numberLabels(card).zh }}</span>
+                <span v-if="sentenceFor(card)" class="back-sub back-sentence">{{ sentenceFor(card) }}</span>
               </template>
               <template v-else>
                 <span v-if="card.meaning" class="back-meaning">{{ card.meaning }}</span>
-                <span v-if="sentenceOf(card)" class="back-sub">{{ sentenceOf(card) }}</span>
+                <span v-if="sentenceFor(card)" class="back-sub">{{ sentenceFor(card) }}</span>
               </template>
             </div>
           </div>
@@ -1224,6 +1255,10 @@ onBeforeUnmount(() => {
   color: var(--ink-dim);
   text-align: center;
 }
+
+/* 數字卡還有一句英文（I have two eyes.）：大數字縮小一點，句子才放得下 */
+.has-number-sentence .back-word.is-number { font-size: min(26cqh, calc(120cqw / max(var(--len), 2.4))); }
+.back-sub.back-sentence { color: var(--ink); }
 
 /* 翻面時唸的那句英文，或是數字卡的中文說法 */
 .back-sub {

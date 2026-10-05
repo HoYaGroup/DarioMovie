@@ -7,6 +7,11 @@
 //
 // 「# 」開頭是最上層的大分類，【】是大分類底下的分區；「字卡本:」開一本新的字卡，同一區的排在同一個畫面
 // 卡片最後用 . ! ? 結尾的英文是句子，翻面時接在單字後面唸：蘋果。Apple. Yum, delicious apple!
+// 一張卡可以寫好幾句（每句一欄，用 | 隔開），每次翻到這張卡就換下一句；同一個字在不同字卡本用同一組句子
+// 句型盡量錯開：叫聲（Moo!）、It can／has／is、問答（Do you like…?）、Let's…、打招呼（Hello, little duck!）
+//
+// 每一區裡的字卡本照「簡單 → 有一點難」排：小朋友從最前面那本開始，熟了再往後
+// 英文單字分成第 1～3 級：第 1 級是每天都看得到的東西，第 3 級是心情、動作這種摸不到的字
 
 # 數字 🔢
 
@@ -27,18 +32,45 @@
 卡: 9 | 氣球9 a balloon | cards/shapes/9-q.webp | cards/shapes/9.webp
 卡: 10 | 球棒和棒球10 a bat and a ball | cards/shapes/10-q.webp | cards/shapes/10.webp
 
-字卡本: 10～100
-// 只寫數字就好：翻面說 Thirty. 三十.
-卡: 10
+字卡本: 認數字 11～20
+// 只寫數字就好：正面直接顯示數字，翻面說 Thirteen. 十三.
+// 11～19 長得很像，認熟了再去「數一數 11～20」點著數
+卡: 11
+卡: 12
+卡: 13
+卡: 14
+卡: 15
+卡: 16
+卡: 17
+卡: 18
+卡: 19
 卡: 20
-卡: 30
-卡: 40
-卡: 50
-卡: 60
-卡: 70
-卡: 80
-卡: 90
-卡: 100
+
+字卡本: 兩個兩個數 2～20
+// 句子是一路數上來的口訣：翻到 6 就說 Six. 六. Two, four, six!
+卡: 2 | Let's count by twos!
+卡: 4 | Two, four!
+卡: 6 | Two, four, six!
+卡: 8 | Two, four, six, eight!
+卡: 10 | Two, four, six, eight, ten!
+卡: 12 | Ten, twelve!
+卡: 14 | Ten, twelve, fourteen!
+卡: 16 | Ten, twelve, fourteen, sixteen!
+卡: 18 | Ten, twelve, fourteen, sixteen, eighteen!
+卡: 20 | Ten, twelve, fourteen, sixteen, eighteen, twenty!
+
+字卡本: 10～100
+// 翻面說 Thirty. 三十. 再接十個十個數的口訣
+卡: 10 | Let's count by tens!
+卡: 20 | Ten, twenty!
+卡: 30 | Ten, twenty, thirty!
+卡: 40 | Ten, twenty, thirty, forty!
+卡: 50 | Ten, twenty, thirty, forty, fifty!
+卡: 60 | Fifty, sixty!
+卡: 70 | Fifty, sixty, seventy!
+卡: 80 | Fifty, sixty, seventy, eighty!
+卡: 90 | Fifty, sixty, seventy, eighty, ninety!
+卡: 100 | Ninety, one hundred! We did it!
 
 字卡本: 0～100
 // 一行就產生 0～100 的數字卡；上面那排數字變成每十個一格（0、10、20…）
@@ -48,7 +80,16 @@
 【數一數】🍎
 // 放 emoji 的數字卡：正面畫出那麼多個東西，「Let's count! Touch the apples.」小朋友一個一個點著數
 // 數完問「How many apples are there?」三個數字選一個，答對翻面：Eleven. 十一顆蘋果. Eleven apples.
-// 會說 apples、十一顆蘋果 的 emoji 列在 src/utils/cards.ts 的 COUNT_NOUNS（常見的動物、水果都有）
+// 會說 apples、十一顆蘋果 的 emoji 列在 src/utils/cards.ts 的 COUNT_NOUNS（常見的動物、水果、海裡的、小蟲都有）
+
+字卡本: 數一數 1～5
+// 最簡單的一本：東西少、又大顆，剛開始數數從這裡玩
+卡: 1 | 🍎
+卡: 2 | 🍌
+卡: 3 | 🍓
+卡: 4 | 🍊
+卡: 5 | 🍐
+
 字卡本: 數一數 1～10
 卡: 1 | 🍎
 卡: 2 | 🐶
@@ -60,6 +101,19 @@
 卡: 8 | 🐥
 卡: 9 | 🍊
 卡: 10 | 🐝 | https://youtu.be/g9EgE_JtEAw 0:20-0:50
+
+字卡本: 數一數 海洋 1～10
+// 換一批海裡的動物再數一次，順便認識「第 2 級 海洋動物」的字
+卡: 1 | 🐳
+卡: 2 | 🐬
+卡: 3 | 🦈
+卡: 4 | 🐢
+卡: 5 | 🐙
+卡: 6 | 🦀
+卡: 7 | 🐠
+卡: 8 | 🐚
+卡: 9 | 🦐
+卡: 10 | 🦑
 
 字卡本: 數一數 11～20
 // 前 10 個排成兩排，看得出 13 是 10 再加 3
@@ -74,6 +128,35 @@
 卡: 19 | 🦁
 卡: 20 | 🐢
 
+字卡本: 數一數 蟲蟲 11～20
+卡: 11 | 🐜
+卡: 12 | 🐞
+卡: 13 | 🦋
+卡: 14 | 🐝
+卡: 15 | 🐛
+卡: 16 | 🐌
+卡: 17 | 🦗
+卡: 18 | 🕷️
+卡: 19 | 🪲
+卡: 20 | 🐞
+
+【數字在身邊】🧒
+// 有一點難度：數字在生活裡的哪裡？正面是數字，翻面說 Two. 我有兩隻眼睛. I have two eyes.
+// 說明寫中文，句子寫英文；邊說可以邊讓小朋友摸摸自己的眼睛、數數手指
+
+字卡本: 數字在身邊 1～10
+卡: 1 | 我有一個鼻子 | I have one nose.
+卡: 2 | 我有兩隻眼睛 | I have two eyes.
+卡: 3 | 三輪車有三個輪子 | A tricycle has three wheels.
+卡: 4 | 小狗有四條腿 | A dog has four legs.
+卡: 5 | 一隻手有五根手指 | I have five fingers.
+卡: 6 | 昆蟲有六隻腳 | An insect has six legs.
+卡: 7 | 一個星期有七天 | A week has seven days.
+卡: 8 | 蜘蛛有八隻腳 | A spider has eight legs.
+卡: 9 | 貓有九條命 | A cat has nine lives.
+卡: 10 | 我有十根腳趾 | I have ten toes.
+卡: 12 | 一年有十二個月 | A year has twelve months.
+
 【影片】🎬
 // 數字的影片放在數字底下自己一區，不跟字卡混在一起，小朋友練字卡時才不會分心
 https://youtu.be/-tpTosF4dN8 | 從 1 數到 10（中文）
@@ -87,90 +170,90 @@ https://youtu.be/g9EgE_JtEAw | Count & Move 數到 20（英文）
 // 食物標成 NOODLE 的第二個 M 和茶壺（T 用 T 字形的那張）
 
 字卡本: 動物篇 ABC
-卡: alligator | 鱷魚 | cards/letters/animals/alligator.webp | Snap, snap! I am an alligator.
-卡: bear | 熊 | cards/letters/animals/bear.webp | The bear is big.
-卡: cat | 貓 | cards/letters/animals/cat.webp | Shh! The cat is sleeping.
-卡: duck | 鴨子 | cards/letters/animals/duck.webp | Quack, quack! I am a duck.
-卡: elephant | 大象 | cards/letters/animals/elephant.webp | The elephant has a long nose.
-卡: fox | 狐狸 | cards/letters/animals/fox.webp | Look, a red fox!
-卡: giraffe | 長頸鹿 | cards/letters/animals/giraffe.webp | The giraffe is tall.
-卡: hippo | 河馬 | cards/letters/animals/hippo.webp | The hippo likes water.
-卡: iguana | 鬣蜥 | cards/letters/animals/iguana.webp | The iguana is green.
-卡: jellyfish | 水母 | cards/letters/animals/jellyfish.webp | The jellyfish can swim.
-卡: kangaroo | 袋鼠 | cards/letters/animals/kangaroo.webp | Jump, jump, kangaroo!
-卡: lion | 獅子 | cards/letters/animals/lion.webp | Roar! I am a lion.
-卡: monkey | 猴子 | cards/letters/animals/monkey.webp | The monkey likes bananas.
-卡: narwhal | 獨角鯨 | cards/letters/animals/narwhal.webp | The narwhal has a long horn.
-卡: owl | 貓頭鷹 | cards/letters/animals/owl.webp | Hoot, hoot! I am an owl.
-卡: penguin | 企鵝 | cards/letters/animals/penguin.webp | The penguin can swim.
-卡: quail | 鵪鶉 | cards/letters/animals/quail.webp | The quail is a little bird.
-卡: rabbit | 兔子 | cards/letters/animals/rabbit.webp | Hop, hop, little rabbit!
-卡: snake | 蛇 | cards/letters/animals/snake.webp | Hiss! I am a snake.
-卡: tiger | 老虎 | cards/letters/animals/tiger.webp | The tiger is orange and black.
-卡: unicorn | 獨角獸 | cards/letters/animals/unicorn.webp | The unicorn has one horn.
-卡: vulture | 禿鷹 | cards/letters/animals/vulture.webp | The vulture can fly.
-卡: whale | 鯨魚 | cards/letters/animals/whale.webp | The whale is very big.
-卡: x-ray fish | X光魚 | cards/letters/animals/x-ray-fish.webp | Look! I can see the bones.
-卡: yak | 犛牛 | cards/letters/animals/yak.webp | The yak has long hair.
-卡: zebra | 斑馬 | cards/letters/animals/zebra.webp | The zebra has stripes.
+卡: alligator | 鱷魚 | cards/letters/animals/alligator.webp | Snap, snap! I am an alligator. | The alligator has big teeth. | The alligator swims in the river.
+卡: bear | 熊 | cards/letters/animals/bear.webp | The bear is big. | Growl! Here comes the bear. | The bear likes honey.
+卡: cat | 貓 | cards/letters/animals/cat.webp | Meow! I am a cat. | Shh! The cat is sleeping. | Pet the cat gently.
+卡: duck | 鴨子 | cards/letters/animals/duck.webp | Quack, quack! I am a duck. | The duck can swim. | Hello, little duck!
+卡: elephant | 大象 | cards/letters/animals/elephant.webp | The elephant has a long nose. | The elephant is big and gray. | Stomp, stomp! Here comes the elephant.
+卡: fox | 狐狸 | cards/letters/animals/fox.webp | Look, a red fox! | The fox has a fluffy tail. | What does the fox say?
+卡: giraffe | 長頸鹿 | cards/letters/animals/giraffe.webp | The giraffe is tall. | The giraffe has a long neck. | The giraffe eats leaves.
+卡: hippo | 河馬 | cards/letters/animals/hippo.webp | The hippo likes water. | The hippo has a big mouth. | Open wide, hippo!
+卡: iguana | 鬣蜥 | cards/letters/animals/iguana.webp | The iguana is green. | The iguana likes the sun. | Look at its long tail!
+卡: jellyfish | 水母 | cards/letters/animals/jellyfish.webp | The jellyfish can swim. | Don't touch the jellyfish! | The jellyfish lives in the sea.
+卡: kangaroo | 袋鼠 | cards/letters/animals/kangaroo.webp | Jump, jump, kangaroo! | The kangaroo can jump high. | The baby is in the pocket.
+卡: lion | 獅子 | cards/letters/animals/lion.webp | Roar! I am a lion. | The lion is strong. | The lion is the king of animals.
+卡: monkey | 猴子 | cards/letters/animals/monkey.webp | The monkey likes bananas. | The monkey can climb trees. | Ooh, ooh, ah, ah! I am a monkey.
+卡: narwhal | 獨角鯨 | cards/letters/animals/narwhal.webp | The narwhal has a long horn. | The narwhal lives in the cold sea. | Hello, narwhal!
+卡: owl | 貓頭鷹 | cards/letters/animals/owl.webp | Hoot, hoot! I am an owl. | The owl has big eyes. | The owl is awake at night.
+卡: penguin | 企鵝 | cards/letters/animals/penguin.webp | The penguin can swim. | The penguin is black and white. | Waddle, waddle, little penguin!
+卡: quail | 鵪鶉 | cards/letters/animals/quail.webp | The quail is a little bird. | The quail is brown. | Look, a quail!
+卡: rabbit | 兔子 | cards/letters/animals/rabbit.webp | Hop, hop, little rabbit! | The rabbit has long ears. | The rabbit likes carrots.
+卡: snake | 蛇 | cards/letters/animals/snake.webp | Hiss! I am a snake. | The snake is long. | The snake has no legs.
+卡: tiger | 老虎 | cards/letters/animals/tiger.webp | The tiger is orange and black. | Roar! The tiger is strong. | The tiger has stripes.
+卡: unicorn | 獨角獸 | cards/letters/animals/unicorn.webp | The unicorn has one horn. | The unicorn is magic! | I want to ride a unicorn.
+卡: vulture | 禿鷹 | cards/letters/animals/vulture.webp | The vulture can fly. | The vulture flies high in the sky. | Look up! A vulture!
+卡: whale | 鯨魚 | cards/letters/animals/whale.webp | The whale is very big. | The whale lives in the sea. | Splash! The whale says hello.
+卡: x-ray fish | X光魚 | cards/letters/animals/x-ray-fish.webp | Look! I can see the bones. | The x-ray fish is small. | Swim, swim, little fish!
+卡: yak | 犛牛 | cards/letters/animals/yak.webp | The yak has long hair. | The yak lives in the mountains. | The yak is big and strong.
+卡: zebra | 斑馬 | cards/letters/animals/zebra.webp | The zebra has stripes. | The zebra is black and white. | The zebra can run fast.
 
 字卡本: 美味食物篇 ABC
-卡: apple | 蘋果 | cards/letters/food/apple.webp | Yum, delicious apple!
-卡: bread | 麵包 | cards/letters/food/bread.webp | I like bread.
-卡: croissant | 可頌 | cards/letters/food/croissant.webp | I eat a croissant.
-卡: donut | 甜甜圈 | cards/letters/food/donut.webp | Yum, a sweet donut!
-卡: egg | 蛋 | cards/letters/food/egg.webp | I like eggs.
-卡: fries | 薯條 | cards/letters/food/fries.webp | I like French fries.
-卡: grapes | 葡萄 | cards/letters/food/grapes.webp | The grapes are purple.
-卡: hamburger | 漢堡 | cards/letters/food/hamburger.webp | I want a hamburger.
-卡: ice cream | 冰淇淋 | cards/letters/food/ice-cream.webp | Yum! I like ice cream.
-卡: jelly | 果凍 | cards/letters/food/jelly.webp | Wiggle, wiggle, jelly!
-卡: kiwi | 奇異果 | cards/letters/food/kiwi.webp | The kiwi is green.
-卡: lollipop | 棒棒糖 | cards/letters/food/lollipop.webp | I like lollipops.
-卡: marshmallow | 棉花糖 | cards/letters/food/marshmallow.webp | The marshmallow is soft.
-卡: noodles | 麵 | cards/letters/food/noodles.webp | Slurp! I like noodles.
-卡: orange | 柳橙 | cards/letters/food/orange.webp | The orange is juicy.
-卡: pizza | 披薩 | cards/letters/food/pizza.webp | I like pizza.
-卡: quiche | 鹹派 | cards/letters/food/quiche.webp | The quiche is yummy.
-卡: rice | 飯 | cards/letters/food/rice.webp | Eat your rice.
-卡: sushi | 壽司 | cards/letters/food/sushi.webp | I like sushi.
-卡: tea | 茶 | cards/letters/food/tea.webp | Daddy drinks tea.
+卡: apple | 蘋果 | cards/letters/food/apple.webp | Yum, delicious apple! | The apple is red. | Do you want an apple?
+卡: bread | 麵包 | cards/letters/food/bread.webp | I like bread. | I eat bread for breakfast. | The bread smells good!
+卡: croissant | 可頌 | cards/letters/food/croissant.webp | I eat a croissant. | The croissant is soft. | Yum! A warm croissant.
+卡: donut | 甜甜圈 | cards/letters/food/donut.webp | Yum, a sweet donut! | The donut has a hole. | I want a chocolate donut.
+卡: egg | 蛋 | cards/letters/food/egg.webp | I like eggs. | The chicken lays an egg. | Crack the egg.
+卡: fries | 薯條 | cards/letters/food/fries.webp | I like French fries. | The fries are hot. | Fries and ketchup, please!
+卡: grapes | 葡萄 | cards/letters/food/grapes.webp | The grapes are purple. | I like grapes. | Wash the grapes, please.
+卡: hamburger | 漢堡 | cards/letters/food/hamburger.webp | I want a hamburger. | The hamburger is big. | Yum! A hamburger for lunch.
+卡: ice cream | 冰淇淋 | cards/letters/food/ice-cream.webp | Yum! I like ice cream. | The ice cream is cold. | Lick, lick! It's melting!
+卡: jelly | 果凍 | cards/letters/food/jelly.webp | Wiggle, wiggle, jelly! | The jelly is red. | I like jelly.
+卡: kiwi | 奇異果 | cards/letters/food/kiwi.webp | The kiwi is green inside. | The kiwi is brown and fuzzy. | Cut the kiwi, please.
+卡: lollipop | 棒棒糖 | cards/letters/food/lollipop.webp | I like lollipops. | The lollipop is sweet. | Lick the lollipop!
+卡: marshmallow | 棉花糖 | cards/letters/food/marshmallow.webp | The marshmallow is soft. | The marshmallow is white. | Yum! A sweet marshmallow.
+卡: noodles | 麵 | cards/letters/food/noodles.webp | Slurp! I like noodles. | The noodles are long. | Let's eat noodles.
+卡: orange | 柳橙 | cards/letters/food/orange.webp | The orange is juicy. | The orange is round. | Peel the orange, please.
+卡: pizza | 披薩 | cards/letters/food/pizza.webp | I like pizza. | The pizza is hot. | Can I have some pizza?
+卡: quiche | 鹹派 | cards/letters/food/quiche.webp | The quiche is yummy. | The quiche has eggs in it. | Try some quiche!
+卡: rice | 飯 | cards/letters/food/rice.webp | Eat your rice. | I eat rice every day. | The rice is white.
+卡: sushi | 壽司 | cards/letters/food/sushi.webp | I like sushi. | The sushi has fish. | Yum! Sushi for dinner.
+卡: tea | 茶 | cards/letters/food/tea.webp | Daddy drinks tea. | The tea is hot. | Tea time!
 // 原圖的 U 寫「UMBRELLA CAKE」，英文沒有這種食物，先不放；想放的話把前面的 // 拿掉
 // 卡: umbrella cake | 雨傘蛋糕 | cards/letters/food/umbrella-cake.webp | Yum, a sweet cake!
-卡: vegetables | 蔬菜 | cards/letters/food/vegetables.webp | Eat your vegetables.
-卡: watermelon | 西瓜 | cards/letters/food/watermelon.webp | The watermelon is sweet.
+卡: vegetables | 蔬菜 | cards/letters/food/vegetables.webp | Eat your vegetables. | Vegetables make me strong. | I like vegetables.
+卡: watermelon | 西瓜 | cards/letters/food/watermelon.webp | The watermelon is sweet. | The watermelon is big. | Let's eat watermelon!
 // X 開頭的食物很少，原圖用中文「西瓜」的拼音 xigua
-卡: xigua | 西瓜 | cards/letters/food/xigua.webp | Xigua means watermelon.
-卡: yogurt | 優格 | cards/letters/food/yogurt.webp | Yum! I like yogurt.
-卡: zucchini | 櫛瓜 | cards/letters/food/zucchini.webp | The zucchini is green.
+卡: xigua | 西瓜 | cards/letters/food/xigua.webp | Xigua means watermelon. | Xigua is sweet and juicy. | I like xigua!
+卡: yogurt | 優格 | cards/letters/food/yogurt.webp | Yum! I like yogurt. | The yogurt is cold. | I eat yogurt with a spoon.
+卡: zucchini | 櫛瓜 | cards/letters/food/zucchini.webp | The zucchini is green. | The zucchini is long. | Let's cook the zucchini.
 
 字卡本: 生活用品篇 ABC
-卡: airplane | 飛機 | cards/letters/things/airplane.webp | The airplane can fly.
-卡: balloon | 氣球 | cards/letters/things/balloon.webp | Look at my balloons!
-卡: clock | 時鐘 | cards/letters/things/clock.webp | Tick, tock! What time is it?
-卡: door | 門 | cards/letters/things/door.webp | Open the door, please.
-卡: engine | 火車頭 | cards/letters/things/engine.webp | Choo choo! Here comes the engine.
-卡: fan | 電風扇 | cards/letters/things/fan.webp | Turn on the fan.
-卡: guitar | 吉他 | cards/letters/things/guitar.webp | Play the guitar.
-卡: house | 房子 | cards/letters/things/house.webp | This is my house.
-卡: iron | 熨斗 | cards/letters/things/iron.webp | The iron is hot!
-卡: jar | 罐子 | cards/letters/things/jar.webp | Open the jar.
-卡: key | 鑰匙 | cards/letters/things/key.webp | Where is my key?
-卡: lamp | 檯燈 | cards/letters/things/lamp.webp | Turn on the lamp.
-卡: mirror | 鏡子 | cards/letters/things/mirror.webp | Look in the mirror.
-卡: nail | 釘子 | cards/letters/things/nail.webp | Bang, bang! Hit the nail.
-卡: ornament | 聖誕吊飾 | cards/letters/things/ornament.webp | Hang it on the Christmas tree.
-卡: pencil | 鉛筆 | cards/letters/things/pencil.webp | Draw with a pencil.
-卡: quilt | 棉被 | cards/letters/things/quilt.webp | The quilt is warm.
-卡: rocket | 火箭 | cards/letters/things/rocket.webp | Three, two, one, blast off!
-卡: socks | 襪子 | cards/letters/things/socks.webp | Put on your socks.
-卡: teapot | 茶壺 | cards/letters/things/teapot.webp | The teapot is hot.
-卡: umbrella | 雨傘 | cards/letters/things/umbrella.webp | Open your umbrella.
-卡: vase | 花瓶 | cards/letters/things/vase.webp | Put the flowers in the vase.
-卡: watch | 手錶 | cards/letters/things/watch.webp | Look at my watch.
-卡: xylophone | 木琴 | cards/letters/things/xylophone.webp | Play the xylophone.
-卡: yo-yo | 溜溜球 | cards/letters/things/yo-yo.webp | Let's play with the yo-yo.
-卡: zipper | 拉鍊 | cards/letters/things/zipper.webp | Zip up your jacket.
+卡: airplane | 飛機 | cards/letters/things/airplane.webp | The airplane can fly. | The airplane is in the sky. | Zoom! The airplane goes up.
+卡: balloon | 氣球 | cards/letters/things/balloon.webp | Look at my balloons! | My balloon is red. | Pop! Oh no, my balloon!
+卡: clock | 時鐘 | cards/letters/things/clock.webp | Tick, tock! What time is it? | The clock is on the wall. | Look at the clock.
+卡: door | 門 | cards/letters/things/door.webp | Open the door, please. | Close the door. | Knock, knock! Who is at the door?
+卡: engine | 火車頭 | cards/letters/things/engine.webp | Choo choo! Here comes the engine. | The engine pulls the train. | The engine is strong.
+卡: fan | 電風扇 | cards/letters/things/fan.webp | Turn on the fan. | It's hot. Turn on the fan. | The fan goes round and round.
+卡: guitar | 吉他 | cards/letters/things/guitar.webp | Play the guitar. | Strum, strum! I play the guitar. | Daddy can play the guitar.
+卡: house | 房子 | cards/letters/things/house.webp | This is my house. | Let's go to my house. | My house has a red door.
+卡: iron | 熨斗 | cards/letters/things/iron.webp | The iron is hot! | Don't touch the iron. | Mommy irons my shirt.
+卡: jar | 罐子 | cards/letters/things/jar.webp | Open the jar. | The cookies are in the jar. | The jar is full.
+卡: key | 鑰匙 | cards/letters/things/key.webp | Where is my key? | Open the door with the key. | I found the key!
+卡: lamp | 檯燈 | cards/letters/things/lamp.webp | Turn on the lamp. | The lamp is bright. | Turn off the lamp. Good night.
+卡: mirror | 鏡子 | cards/letters/things/mirror.webp | Look in the mirror. | I see me in the mirror! | Smile at the mirror.
+卡: nail | 釘子 | cards/letters/things/nail.webp | Bang, bang! Hit the nail. | The nail is sharp. | Be careful with the nail.
+卡: ornament | 聖誕吊飾 | cards/letters/things/ornament.webp | Hang it on the Christmas tree. | The ornament is shiny. | Merry Christmas!
+卡: pencil | 鉛筆 | cards/letters/things/pencil.webp | Draw with a pencil. | My pencil is yellow. | Write your name with a pencil.
+卡: quilt | 棉被 | cards/letters/things/quilt.webp | The quilt is warm. | Cover up with the quilt. | Good night. Here is your quilt.
+卡: rocket | 火箭 | cards/letters/things/rocket.webp | Three, two, one, blast off! | The rocket goes to the moon. | Zoom! The rocket is fast.
+卡: socks | 襪子 | cards/letters/things/socks.webp | Put on your socks. | My socks are blue. | Where are my socks?
+卡: teapot | 茶壺 | cards/letters/things/teapot.webp | The teapot is hot. | I'm a little teapot. | Pour the tea from the teapot.
+卡: umbrella | 雨傘 | cards/letters/things/umbrella.webp | Open your umbrella. | It's raining. Open your umbrella. | My umbrella keeps me dry.
+卡: vase | 花瓶 | cards/letters/things/vase.webp | Put the flowers in the vase. | Be careful! Don't break the vase. | The vase is pretty.
+卡: watch | 手錶 | cards/letters/things/watch.webp | Look at my watch. | My watch says three o'clock. | Daddy has a new watch.
+卡: xylophone | 木琴 | cards/letters/things/xylophone.webp | Play the xylophone. | Ding, ding, ding! I play the xylophone. | The xylophone has many colors.
+卡: yo-yo | 溜溜球 | cards/letters/things/yo-yo.webp | Let's play with the yo-yo. | Up and down goes the yo-yo. | My yo-yo is red.
+卡: zipper | 拉鍊 | cards/letters/things/zipper.webp | Zip up your jacket. | Zip, zip! Close the zipper. | Pull the zipper up.
 
 【ABC】🔠
 
@@ -179,214 +262,409 @@ https://youtu.be/g9EgE_JtEAw | Count & Move 數到 20（英文）
 // （原卡右上角寫錯成 (x)，背面已換成正確的 (q)）
 // 犛牛原卡上是異體字「氂牛」，只用插圖，名字用這裡寫的
 字卡本: ABC 圖卡
-卡: apple | 蘋果 | cards/abc/apple-q.webp | cards/abc/apple.webp | Yum, delicious apple!
-卡: banana | 香蕉 | cards/abc/banana-q.webp | cards/abc/banana.webp | The banana is yellow.
-卡: cat | 貓 | cards/abc/cat-q.webp | cards/abc/cat.webp | Meow! I am a cat.
-卡: duck | 鴨子 | cards/abc/duck-q.webp | cards/abc/duck.webp | Quack, quack! I am a duck.
-卡: elephant | 大象 | cards/abc/elephant-q.webp | cards/abc/elephant.webp | The elephant is big.
-卡: fox | 狐狸 | cards/abc/fox-q.webp | cards/abc/fox.webp | Look, a red fox!
-卡: giraffe | 長頸鹿 | cards/abc/giraffe-q.webp | cards/abc/giraffe.webp | The giraffe is tall.
-卡: house | 房子 | cards/abc/house-q.webp | cards/abc/house.webp | This is my house.
-卡: ice cream | 冰淇淋 | cards/abc/ice-cream-q.webp | cards/abc/ice-cream.webp | Yum! I like ice cream.
-卡: jet | 噴射機 | cards/abc/jet-q.webp | cards/abc/jet.webp | Whoosh! The jet is fast.
-卡: kangaroo | 袋鼠 | cards/abc/kangaroo-q.webp | cards/abc/kangaroo.webp | Jump, jump, kangaroo!
-卡: lion | 獅子 | cards/abc/lion-q.webp | cards/abc/lion.webp | Roar! I am a lion.
-卡: monkey | 猴子 | cards/abc/monkey-q.webp | cards/abc/monkey.webp | The monkey likes bananas.
-卡: nest | 鳥巢 | cards/abc/nest-q.webp | cards/abc/nest.webp | The bird is in the nest.
-卡: owl | 貓頭鷹 | cards/abc/owl-q.webp | cards/abc/owl.webp | Hoot, hoot! I am an owl.
-卡: penguin | 企鵝 | cards/abc/penguin-q.webp | cards/abc/penguin.webp | The penguin can swim.
-卡: peacock | 孔雀 | cards/abc/peacock-q.webp | Look at the pretty peacock!
-卡: queen | 皇后 | cards/abc/queen-q.webp | cards/abc/queen.webp | The queen has a crown.
-卡: rabbit | 兔子 | cards/abc/rabbit-q.webp | cards/abc/rabbit.webp | Hop, hop, little rabbit!
-卡: snake | 蛇 | cards/abc/snake-q.webp | cards/abc/snake.webp | Hiss! I am a snake.
-卡: turtle | 烏龜 | cards/abc/turtle-q.webp | cards/abc/turtle.webp | The turtle is slow.
-卡: unicorn | 獨角獸 | cards/abc/unicorn-q.webp | cards/abc/unicorn.webp | The unicorn has one horn.
-卡: volcano | 火山 | cards/abc/volcano-q.webp | cards/abc/volcano.webp | The volcano is very hot!
-卡: whale | 鯨魚 | cards/abc/whale-q.webp | cards/abc/whale.webp | The whale is very big.
-卡: x-ray fish | X光魚 | cards/abc/x-ray-fish-q.webp | cards/abc/x-ray-fish.webp | Look! I can see the bones.
-卡: yak | 犛牛 | cards/abc/yak-q.webp | The yak has long hair.
-卡: zebra | 斑馬 | cards/abc/zebra-q.webp | cards/abc/zebra.webp | The zebra has stripes.
+卡: apple | 蘋果 | cards/abc/apple-q.webp | cards/abc/apple.webp | Yum, delicious apple! | The apple is red. | Do you want an apple?
+卡: banana | 香蕉 | cards/abc/banana-q.webp | cards/abc/banana.webp | The banana is yellow. | The monkey likes bananas. | Peel the banana.
+卡: cat | 貓 | cards/abc/cat-q.webp | cards/abc/cat.webp | Meow! I am a cat. | Shh! The cat is sleeping. | Pet the cat gently.
+卡: duck | 鴨子 | cards/abc/duck-q.webp | cards/abc/duck.webp | Quack, quack! I am a duck. | The duck can swim. | Hello, little duck!
+卡: elephant | 大象 | cards/abc/elephant-q.webp | cards/abc/elephant.webp | The elephant has a long nose. | The elephant is big and gray. | Stomp, stomp! Here comes the elephant.
+卡: fox | 狐狸 | cards/abc/fox-q.webp | cards/abc/fox.webp | Look, a red fox! | The fox has a fluffy tail. | What does the fox say?
+卡: giraffe | 長頸鹿 | cards/abc/giraffe-q.webp | cards/abc/giraffe.webp | The giraffe is tall. | The giraffe has a long neck. | The giraffe eats leaves.
+卡: house | 房子 | cards/abc/house-q.webp | cards/abc/house.webp | This is my house. | Let's go to my house. | My house has a red door.
+卡: ice cream | 冰淇淋 | cards/abc/ice-cream-q.webp | cards/abc/ice-cream.webp | Yum! I like ice cream. | The ice cream is cold. | Lick, lick! It's melting!
+卡: jet | 噴射機 | cards/abc/jet-q.webp | cards/abc/jet.webp | Whoosh! The jet is fast. | The jet flies high. | Look up! A jet!
+卡: kangaroo | 袋鼠 | cards/abc/kangaroo-q.webp | cards/abc/kangaroo.webp | Jump, jump, kangaroo! | The kangaroo can jump high. | The baby is in the pocket.
+卡: lion | 獅子 | cards/abc/lion-q.webp | cards/abc/lion.webp | Roar! I am a lion. | The lion is strong. | The lion is the king of animals.
+卡: monkey | 猴子 | cards/abc/monkey-q.webp | cards/abc/monkey.webp | The monkey likes bananas. | The monkey can climb trees. | Ooh, ooh, ah, ah! I am a monkey.
+卡: nest | 鳥巢 | cards/abc/nest-q.webp | cards/abc/nest.webp | The bird is in the nest. | There are eggs in the nest. | The bird makes a nest.
+卡: owl | 貓頭鷹 | cards/abc/owl-q.webp | cards/abc/owl.webp | Hoot, hoot! I am an owl. | The owl has big eyes. | The owl is awake at night.
+卡: penguin | 企鵝 | cards/abc/penguin-q.webp | cards/abc/penguin.webp | The penguin can swim. | The penguin is black and white. | Waddle, waddle, little penguin!
+卡: peacock | 孔雀 | cards/abc/peacock-q.webp | Look at the pretty peacock! | The peacock has a big tail. | The peacock is blue and green.
+卡: queen | 皇后 | cards/abc/queen-q.webp | cards/abc/queen.webp | The queen has a crown. | Hello, Queen! | The queen lives in a castle.
+卡: rabbit | 兔子 | cards/abc/rabbit-q.webp | cards/abc/rabbit.webp | Hop, hop, little rabbit! | The rabbit has long ears. | The rabbit likes carrots.
+卡: snake | 蛇 | cards/abc/snake-q.webp | cards/abc/snake.webp | Hiss! I am a snake. | The snake is long. | The snake has no legs.
+卡: turtle | 烏龜 | cards/abc/turtle-q.webp | cards/abc/turtle.webp | The turtle is slow. | The turtle has a hard shell. | The turtle can swim.
+卡: unicorn | 獨角獸 | cards/abc/unicorn-q.webp | cards/abc/unicorn.webp | The unicorn has one horn. | The unicorn is magic! | I want to ride a unicorn.
+卡: volcano | 火山 | cards/abc/volcano-q.webp | cards/abc/volcano.webp | The volcano is very hot! | The volcano is a big mountain. | Look! Smoke from the volcano.
+卡: whale | 鯨魚 | cards/abc/whale-q.webp | cards/abc/whale.webp | The whale is very big. | The whale lives in the sea. | Splash! The whale says hello.
+卡: x-ray fish | X光魚 | cards/abc/x-ray-fish-q.webp | cards/abc/x-ray-fish.webp | Look! I can see the bones. | The x-ray fish is small. | Swim, swim, little fish!
+卡: yak | 犛牛 | cards/abc/yak-q.webp | The yak has long hair. | The yak lives in the mountains. | The yak is big and strong.
+卡: zebra | 斑馬 | cards/abc/zebra-q.webp | cards/abc/zebra.webp | The zebra has stripes. | The zebra is black and white. | The zebra can run fast.
 
 // 單元名稱裡有 ABC，就會照 A～Z 排好、卡片上標出開頭字母
 // 同一個字母可以放好幾張；新加的寫在哪裡都可以，App 會自己排到對的字母
 
 字卡本: 動物 ABC
 // jaguar、newt、quail、vulture、x-ray fish、yak 沒有一模一樣的 emoji，先用長得像的代替（花豹、蜥蜴、小鳥、老鷹、熱帶魚、水牛），有照片可以換掉
-卡: ant | 螞蟻 | 🐜 | The ant is small.
-卡: alligator | 鱷魚 | 🐊 | Snap, snap! I am an alligator.
-卡: bear | 熊 | 🐻 | The bear is big.
-卡: bee | 蜜蜂 | 🐝 | Buzz, buzz! I am a bee.
-卡: butterfly | 蝴蝶 | 🦋 | Fly, fly, butterfly!
-卡: cat | 貓 | 🐱 | Meow! I am a cat.
-卡: cow | 牛 | 🐮 | Moo! I am a cow.
-卡: dog | 狗 | 🐶 | Woof, woof! I am a dog.
-卡: duck | 鴨子 | 🦆 | Quack, quack! I am a duck.
-卡: dolphin | 海豚 | 🐬 | The dolphin can jump!
-卡: elephant | 大象 | 🐘 | The elephant has a long nose.
-卡: fish | 魚 | 🐟 | The fish can swim.
-卡: frog | 青蛙 | 🐸 | Ribbit! The frog can jump.
-卡: fox | 狐狸 | 🦊 | Look, a red fox!
-卡: gorilla | 大猩猩 | 🦍 | The gorilla is strong.
-卡: goat | 山羊 | 🐐 | The goat likes grass.
-卡: horse | 馬 | 🐴 | Neigh! The horse can run.
-卡: hippo | 河馬 | 🦛 | The hippo likes water.
-卡: insect | 昆蟲 | 🪲 | Look, a little insect!
-卡: jaguar | 美洲豹 | 🐆 | The jaguar runs fast.
-卡: kangaroo | 袋鼠 | 🦘 | Jump, jump, kangaroo!
-卡: koala | 無尾熊 | 🐨 | The koala is sleepy.
-卡: lion | 獅子 | 🦁 | Roar! I am a lion.
-卡: ladybug | 瓢蟲 | 🐞 | The ladybug is red.
-卡: monkey | 猴子 | 🐵 | The monkey likes bananas.
-卡: mouse | 老鼠 | 🐭 | Squeak! I am a mouse.
-卡: newt | 蠑螈 | 🦎 | The newt can swim.
-卡: octopus | 章魚 | 🐙 | The octopus has eight legs.
-卡: otter | 水獺 | 🦦 | The otter likes to play.
-卡: pig | 豬 | 🐷 | Oink, oink! I am a pig.
-卡: panda | 熊貓 | 🐼 | The panda is black and white.
-卡: penguin | 企鵝 | 🐧 | The penguin can swim.
-卡: quail | 鵪鶉 | 🐦 | The quail is a little bird.
-卡: rabbit | 兔子 | 🐰 | Hop, hop, little rabbit!
-卡: rooster | 公雞 | 🐓 | Cock-a-doodle-doo! Good morning!
-卡: snake | 蛇 | 🐍 | Hiss! I am a snake.
-卡: squirrel | 松鼠 | 🐿️ | The squirrel likes nuts.
-卡: seal | 海豹 | 🦭 | Clap, clap! I am a seal.
-卡: tiger | 老虎 | 🐯 | The tiger is orange and black.
-卡: turtle | 烏龜 | 🐢 | The turtle is slow.
-卡: unicorn | 獨角獸 | 🦄 | The unicorn has one horn.
-卡: vulture | 禿鷹 | 🦅 | The vulture can fly.
-卡: whale | 鯨魚 | 🐳 | The whale is very big.
-卡: wolf | 狼 | 🐺 | Look, a gray wolf!
-卡: x-ray fish | X光魚 | 🐠 | Look! I can see the bones.
-卡: yak | 犛牛 | 🐃 | The yak has long hair.
-卡: zebra | 斑馬 | 🦓 | The zebra has stripes.
+卡: ant | 螞蟻 | 🐜 | The ant is small. | Look, an ant! | The ants work together.
+卡: alligator | 鱷魚 | 🐊 | Snap, snap! I am an alligator. | The alligator has big teeth. | The alligator swims in the river.
+卡: bear | 熊 | 🐻 | The bear is big. | Growl! Here comes the bear. | The bear likes honey.
+卡: bee | 蜜蜂 | 🐝 | Buzz, buzz! I am a bee. | The bee makes honey. | The bee likes flowers.
+卡: butterfly | 蝴蝶 | 🦋 | Fly, fly, butterfly! | The butterfly is pretty. | The butterfly sits on a flower.
+卡: cat | 貓 | 🐱 | Meow! I am a cat. | Shh! The cat is sleeping. | Pet the cat gently.
+卡: cow | 牛 | 🐮 | Moo! I am a cow. | The cow gives us milk. | The cow eats grass.
+卡: dog | 狗 | 🐶 | Woof, woof! I am a dog. | The dog wags its tail. | Let's walk the dog.
+卡: duck | 鴨子 | 🦆 | Quack, quack! I am a duck. | The duck can swim. | Hello, little duck!
+卡: dolphin | 海豚 | 🐬 | The dolphin can jump! | The dolphin is smart. | The dolphin swims in the sea.
+卡: elephant | 大象 | 🐘 | The elephant has a long nose. | The elephant is big and gray. | Stomp, stomp! Here comes the elephant.
+卡: fish | 魚 | 🐟 | The fish can swim. | Blub, blub! I am a fish. | The fish lives in the water.
+卡: frog | 青蛙 | 🐸 | Ribbit! The frog can jump. | The frog is green. | The frog lives in the pond.
+卡: fox | 狐狸 | 🦊 | Look, a red fox! | The fox has a fluffy tail. | What does the fox say?
+卡: gorilla | 大猩猩 | 🦍 | The gorilla is strong. | The gorilla eats bananas. | Boom, boom! The gorilla beats its chest.
+卡: goat | 山羊 | 🐐 | The goat likes grass. | Maa! I am a goat. | The goat can climb rocks.
+卡: horse | 馬 | 🐴 | Neigh! I am a horse. | The horse can run fast. | Let's ride the horse.
+卡: hippo | 河馬 | 🦛 | The hippo likes water. | The hippo has a big mouth. | Open wide, hippo!
+卡: insect | 昆蟲 | 🪲 | Look, a little insect! | An insect has six legs. | The insect is on the leaf.
+卡: jaguar | 美洲豹 | 🐆 | The jaguar runs fast. | The jaguar has spots. | The jaguar lives in the jungle.
+卡: kangaroo | 袋鼠 | 🦘 | Jump, jump, kangaroo! | The kangaroo can jump high. | The baby is in the pocket.
+卡: koala | 無尾熊 | 🐨 | The koala is sleepy. | The koala hugs the tree. | The koala eats leaves.
+卡: lion | 獅子 | 🦁 | Roar! I am a lion. | The lion is strong. | The lion is the king of animals.
+卡: ladybug | 瓢蟲 | 🐞 | The ladybug is red. | The ladybug has black spots. | Fly away, little ladybug!
+卡: monkey | 猴子 | 🐵 | The monkey likes bananas. | The monkey can climb trees. | Ooh, ooh, ah, ah! I am a monkey.
+卡: mouse | 老鼠 | 🐭 | Squeak! I am a mouse. | The mouse is small. | The mouse likes cheese.
+卡: newt | 蠑螈 | 🦎 | The newt can swim. | The newt is small. | The newt lives in the pond.
+卡: octopus | 章魚 | 🐙 | The octopus has eight arms. | The octopus lives in the sea. | Wiggle, wiggle, octopus!
+卡: otter | 水獺 | 🦦 | The otter likes to play. | The otter can swim. | The otter eats fish.
+卡: pig | 豬 | 🐷 | Oink, oink! I am a pig. | The pig is pink. | The pig likes mud.
+卡: panda | 熊貓 | 🐼 | The panda is black and white. | The panda eats bamboo. | The panda is so cute!
+卡: penguin | 企鵝 | 🐧 | The penguin can swim. | The penguin is black and white. | Waddle, waddle, little penguin!
+卡: quail | 鵪鶉 | 🐦 | The quail is a little bird. | The quail is brown. | Look, a quail!
+卡: rabbit | 兔子 | 🐰 | Hop, hop, little rabbit! | The rabbit has long ears. | The rabbit likes carrots.
+卡: rooster | 公雞 | 🐓 | Cock-a-doodle-doo! Good morning! | The rooster wakes me up. | The rooster is loud!
+卡: snake | 蛇 | 🐍 | Hiss! I am a snake. | The snake is long. | The snake has no legs.
+卡: squirrel | 松鼠 | 🐿️ | The squirrel likes nuts. | The squirrel climbs the tree. | The squirrel has a fluffy tail.
+卡: seal | 海豹 | 🦭 | Clap, clap! I am a seal. | The seal can swim. | The seal plays with a ball.
+卡: tiger | 老虎 | 🐯 | The tiger is orange and black. | Roar! The tiger is strong. | The tiger has stripes.
+卡: turtle | 烏龜 | 🐢 | The turtle is slow. | The turtle has a hard shell. | The turtle can swim.
+卡: unicorn | 獨角獸 | 🦄 | The unicorn has one horn. | The unicorn is magic! | I want to ride a unicorn.
+卡: vulture | 禿鷹 | 🦅 | The vulture can fly. | The vulture flies high in the sky. | Look up! A vulture!
+卡: whale | 鯨魚 | 🐳 | The whale is very big. | The whale lives in the sea. | Splash! The whale says hello.
+卡: wolf | 狼 | 🐺 | Look, a gray wolf! | Awoo! The wolf howls. | The wolf lives in the forest.
+卡: x-ray fish | X光魚 | 🐠 | Look! I can see the bones. | The x-ray fish is small. | Swim, swim, little fish!
+卡: yak | 犛牛 | 🐃 | The yak has long hair. | The yak lives in the mountains. | The yak is big and strong.
+卡: zebra | 斑馬 | 🦓 | The zebra has stripes. | The zebra is black and white. | The zebra can run fast.
 
 字卡本: 水果 ABC
-卡: apple | 蘋果 | 🍎 | Yum, delicious apple!
-卡: avocado | 酪梨 | 🥑 | The avocado is green.
-卡: banana | 香蕉 | 🍌 | The banana is yellow.
-卡: blueberry | 藍莓 | 🫐 | The blueberry is blue.
-卡: coconut | 椰子 | 🥥 | The coconut is hard.
-卡: grape | 葡萄 | 🍇 | I like purple grapes.
-卡: kiwi | 奇異果 | 🥝 | The kiwi is green inside.
-卡: lemon | 檸檬 | 🍋 | Oh, the lemon is sour!
-卡: mango | 芒果 | 🥭 | Yum, sweet mango!
-卡: melon | 哈密瓜 | 🍈 | The melon is sweet.
-卡: orange | 柳橙 | 🍊 | The orange is round.
-卡: peach | 水蜜桃 | 🍑 | The peach is soft.
-卡: pear | 梨子 | 🍐 | I like pears.
-卡: pineapple | 鳳梨 | 🍍 | Yum, juicy pineapple!
-卡: strawberry | 草莓 | 🍓 | The strawberry is red.
-卡: tomato | 番茄 | 🍅 | I see a red tomato.
-卡: watermelon | 西瓜 | 🍉 | The watermelon is big.
-卡: dragon fruit | 火龍果 | cards/fruits/dragon-fruit.jpg | The dragon fruit is pink.
-卡: durian | 榴槤 | cards/fruits/durian.jpg | The durian smells strong!
-卡: guava | 芭樂 | cards/fruits/guava.jpg | The guava is green.
-卡: lychee | 荔枝 | cards/fruits/lychee.jpg | The lychee is sweet.
-卡: papaya | 木瓜 | cards/fruits/papaya.jpg | The papaya is orange.
-卡: starfruit | 楊桃 | cards/fruits/starfruit.jpg | It looks like a star!
-卡: wax apple | 蓮霧 | cards/fruits/wax-apple.jpg | The wax apple is red.
+卡: apple | 蘋果 | 🍎 | Yum, delicious apple! | The apple is red. | Do you want an apple?
+卡: avocado | 酪梨 | 🥑 | The avocado is green. | The avocado is soft inside. | The avocado has a big seed.
+卡: banana | 香蕉 | 🍌 | The banana is yellow. | The monkey likes bananas. | Peel the banana.
+卡: blueberry | 藍莓 | 🫐 | The blueberry is blue. | The blueberry is small. | I like blueberries.
+卡: coconut | 椰子 | 🥥 | The coconut is hard. | Drink the coconut water. | The coconut grows on a tree.
+卡: grape | 葡萄 | 🍇 | I like purple grapes. | The grape is small and round. | Pop a grape in your mouth!
+卡: kiwi | 奇異果 | 🥝 | The kiwi is green inside. | The kiwi is brown and fuzzy. | Cut the kiwi, please.
+卡: lemon | 檸檬 | 🍋 | Oh, the lemon is sour! | The lemon is yellow. | Squeeze the lemon!
+卡: mango | 芒果 | 🥭 | Yum, sweet mango! | The mango is yellow. | I love mango shaved ice!
+卡: melon | 哈密瓜 | 🍈 | The melon is sweet. | The melon is round. | Cut the melon, please.
+卡: orange | 柳橙 | 🍊 | The orange is juicy. | The orange is round. | Peel the orange, please.
+卡: peach | 水蜜桃 | 🍑 | The peach is soft. | The peach is pink. | The peach smells sweet.
+卡: pear | 梨子 | 🍐 | I like pears. | The pear is juicy. | The pear is green.
+卡: pineapple | 鳳梨 | 🍍 | Yum, juicy pineapple! | The pineapple is yellow inside. | Ouch! The pineapple is spiky!
+卡: strawberry | 草莓 | 🍓 | The strawberry is red. | I like strawberries. | The strawberry is sweet.
+卡: tomato | 番茄 | 🍅 | The tomato is red. | The tomato is round. | I like tomato soup.
+卡: watermelon | 西瓜 | 🍉 | The watermelon is sweet. | The watermelon is big. | Let's eat watermelon!
+卡: dragon fruit | 火龍果 | cards/fruits/dragon-fruit.jpg | The dragon fruit is pink. | It has little black seeds. | Yum! The dragon fruit is sweet.
+卡: durian | 榴槤 | cards/fruits/durian.jpg | The durian smells strong! | The durian is spiky. | Do you like durian?
+卡: guava | 芭樂 | cards/fruits/guava.jpg | The guava is green. | The guava is crunchy. | I like guava.
+卡: lychee | 荔枝 | cards/fruits/lychee.jpg | The lychee is sweet. | Peel the lychee. | The lychee is white inside.
+卡: papaya | 木瓜 | cards/fruits/papaya.jpg | The papaya is orange. | The papaya is soft. | Papaya milk, please!
+卡: starfruit | 楊桃 | cards/fruits/starfruit.jpg | It looks like a star! | The starfruit is yellow. | Cut it and see a star!
+卡: wax apple | 蓮霧 | cards/fruits/wax-apple.jpg | The wax apple is red. | The wax apple is crunchy. | The wax apple looks like a bell.
 
 字卡本: 生活用品 ABC
-卡: ambulance | 救護車 | 🚑 | The ambulance is fast.
-卡: ball | 球 | ⚽ | Give me the ball.
-卡: bag | 書包 | 🎒 | Open your bag.
-卡: bed | 床 | 🛏️ | Time for bed. Good night!
-卡: book | 書 | 📕 | Let's read a book.
-卡: car | 汽車 | 🚗 | Get in the car.
-卡: cup | 杯子 | 🥤 | Drink from the cup.
-卡: clock | 時鐘 | ⏰ | Tick, tock! What time is it?
-卡: door | 門 | 🚪 | Open the door, please.
-卡: drum | 鼓 | 🥁 | Boom, boom! Play the drum.
-卡: egg | 雞蛋 | 🥚 | I like eggs.
-卡: envelope | 信封 | ✉️ | Open the envelope.
-卡: fork | 叉子 | 🍴 | Eat with a fork.
-卡: flashlight | 手電筒 | 🔦 | Turn on the flashlight.
-卡: glasses | 眼鏡 | 👓 | Put on your glasses.
-卡: gift | 禮物 | 🎁 | Here is a gift for you!
-卡: hat | 帽子 | 🧢 | Put on your hat.
-卡: house | 房子 | 🏠 | This is my house.
-卡: ice cream | 冰淇淋 | 🍦 | Yum! I like ice cream.
-卡: ice | 冰塊 | 🧊 | The ice is cold.
-卡: jacket | 外套 | 🧥 | Put on your jacket.
-卡: jeans | 牛仔褲 | 👖 | Put on your jeans.
-卡: key | 鑰匙 | 🔑 | Where is my key?
-卡: kite | 風箏 | 🪁 | Fly the kite.
-卡: light bulb | 燈泡 | 💡 | Turn on the light.
-卡: lock | 鎖 | 🔒 | Lock the door.
-卡: mirror | 鏡子 | 🪞 | Look in the mirror.
-卡: milk | 牛奶 | 🥛 | Drink your milk.
-卡: notebook | 筆記本 | 📓 | Write in your notebook.
-卡: newspaper | 報紙 | 📰 | Daddy reads the newspaper.
-卡: orange juice | 柳橙汁 | 🧃 | I like orange juice.
-卡: pencil | 鉛筆 | ✏️ | Draw with a pencil.
-卡: pen | 原子筆 | 🖊️ | Write with a pen.
-卡: ruler | 尺 | 📏 | Draw a line with the ruler.
-卡: radio | 收音機 | 📻 | Listen to the radio.
-卡: sock | 襪子 | 🧦 | Put on your socks.
-卡: spoon | 湯匙 | 🥄 | Eat with a spoon.
-卡: scissors | 剪刀 | ✂️ | Cut the paper.
-卡: toothbrush | 牙刷 | 🪥 | Brush your teeth.
-卡: teddy bear | 泰迪熊 | 🧸 | I love my teddy bear.
-卡: TV | 電視 | 📺 | Turn off the TV.
-卡: umbrella | 雨傘 | ☂️ | Open your umbrella.
-卡: violin | 小提琴 | 🎻 | Play the violin.
-卡: van | 廂型車 | 🚐 | Get in the van.
-卡: watch | 手錶 | ⌚ | Look at my watch.
-卡: window | 窗戶 | 🪟 | Open the window.
-卡: yo-yo | 溜溜球 | 🪀 | Let's play with the yo-yo.
-卡: yarn | 毛線 | 🧶 | The cat likes yarn.
+卡: ambulance | 救護車 | 🚑 | The ambulance is fast. | Wee-woo! Here comes the ambulance. | The ambulance helps sick people.
+卡: ball | 球 | ⚽ | Give me the ball. | Throw the ball to me. | Kick the ball!
+卡: bag | 書包 | 🎒 | Open your bag. | Put your book in your bag. | My bag is heavy.
+卡: bed | 床 | 🛏️ | Time for bed. Good night! | Make your bed. | My bed is soft.
+卡: book | 書 | 📕 | Let's read a book. | Open your book. | I like this book.
+卡: car | 汽車 | 🚗 | Beep, beep! Here comes the car. | Get in the car. | Vroom! My car is fast.
+卡: cup | 杯子 | 🥤 | Drink from the cup. | My cup is blue. | Hold your cup with two hands.
+卡: clock | 時鐘 | ⏰ | Tick, tock! What time is it? | The clock is on the wall. | Look at the clock.
+卡: door | 門 | 🚪 | Open the door, please. | Close the door. | Knock, knock! Who is at the door?
+卡: drum | 鼓 | 🥁 | Boom, boom! Play the drum. | Bang the drum! | The drum is loud.
+卡: egg | 雞蛋 | 🥚 | I like eggs. | The chicken lays an egg. | Crack the egg.
+卡: envelope | 信封 | ✉️ | Open the envelope. | There is a letter in the envelope. | Put a stamp on the envelope.
+卡: fork | 叉子 | 🍴 | Eat with a fork. | Here is your fork. | Spoon and fork, please.
+卡: flashlight | 手電筒 | 🔦 | Turn on the flashlight. | It's dark. Use the flashlight. | The flashlight is bright.
+卡: glasses | 眼鏡 | 👓 | Put on your glasses. | Grandpa wears glasses. | Where are my glasses?
+卡: gift | 禮物 | 🎁 | Here is a gift for you! | Thank you for the gift! | Open the gift!
+卡: hat | 帽子 | 🧢 | Put on your hat. | My hat is red. | It's sunny. Wear a hat.
+卡: house | 房子 | 🏠 | This is my house. | Let's go to my house. | My house has a red door.
+卡: ice cream | 冰淇淋 | 🍦 | Yum! I like ice cream. | The ice cream is cold. | Lick, lick! It's melting!
+卡: ice | 冰塊 | 🧊 | The ice is cold. | The ice is slippery. | Put some ice in my juice.
+卡: jacket | 外套 | 🧥 | Put on your jacket. | It's cold. Wear your jacket. | My jacket is warm.
+卡: jeans | 牛仔褲 | 👖 | Put on your jeans. | My jeans are blue. | I like my new jeans.
+卡: key | 鑰匙 | 🔑 | Where is my key? | Open the door with the key. | I found the key!
+卡: kite | 風箏 | 🪁 | Fly the kite. | The kite is high in the sky. | Let's fly a kite in the park.
+卡: light bulb | 燈泡 | 💡 | Turn on the light. | The light bulb is bright. | I have an idea!
+卡: lock | 鎖 | 🔒 | Lock the door. | Use the key to open the lock. | Click! The door is locked.
+卡: mirror | 鏡子 | 🪞 | Look in the mirror. | I see me in the mirror! | Smile at the mirror.
+卡: milk | 牛奶 | 🥛 | Drink your milk. | The milk is white. | Milk makes me strong.
+卡: notebook | 筆記本 | 📓 | Write in your notebook. | Open your notebook. | Draw in the notebook.
+卡: newspaper | 報紙 | 📰 | Daddy reads the newspaper. | Grandpa reads the newspaper. | Here is the newspaper.
+卡: orange juice | 柳橙汁 | 🧃 | I like orange juice. | Orange juice is yummy. | A glass of orange juice, please.
+卡: pencil | 鉛筆 | ✏️ | Draw with a pencil. | My pencil is yellow. | Write your name with a pencil.
+卡: pen | 原子筆 | 🖊️ | Write with a pen. | My pen is blue. | Can I use your pen?
+卡: ruler | 尺 | 📏 | Draw a line with the ruler. | The ruler is long. | Measure it with the ruler.
+卡: radio | 收音機 | 📻 | Listen to the radio. | Turn on the radio. | Music on the radio!
+卡: sock | 襪子 | 🧦 | Put on your socks. | My socks are blue. | Where is my other sock?
+卡: spoon | 湯匙 | 🥄 | Eat with a spoon. | Here is your spoon. | Soup and a spoon, please.
+卡: scissors | 剪刀 | ✂️ | Cut the paper. | Be careful with the scissors. | Snip, snip! Cut, cut!
+卡: toothbrush | 牙刷 | 🪥 | Brush your teeth. | My toothbrush is blue. | Brush, brush, brush your teeth!
+卡: teddy bear | 泰迪熊 | 🧸 | I love my teddy bear. | Hug the teddy bear. | My teddy bear is soft.
+卡: TV | 電視 | 📺 | Turn off the TV. | Let's watch TV. | Don't sit too close to the TV.
+卡: umbrella | 雨傘 | ☂️ | Open your umbrella. | It's raining. Open your umbrella. | My umbrella keeps me dry.
+卡: violin | 小提琴 | 🎻 | Play the violin. | The violin sounds pretty. | I can play the violin.
+卡: van | 廂型車 | 🚐 | Get in the van. | The van is big. | Our van is white.
+卡: watch | 手錶 | ⌚ | Look at my watch. | My watch says three o'clock. | Daddy has a new watch.
+卡: window | 窗戶 | 🪟 | Open the window. | Look out the window. | Close the window. It's cold.
+卡: yo-yo | 溜溜球 | 🪀 | Let's play with the yo-yo. | Up and down goes the yo-yo. | My yo-yo is red.
+卡: yarn | 毛線 | 🧶 | The cat likes yarn. | The yarn is soft. | Roll the yarn into a ball.
 
-【其他】🌈
+【第 1 級】🌱
+// 每天都看得到、摸得到的東西，句子最短：Moo! I am a cow.／Give me the ball.
+
+字卡本: 家人 Family
+卡: mom | 媽媽 | 👩 | I love you, Mom! | Good morning, Mom! | Mom, I'm hungry.
+卡: dad | 爸爸 | 👨 | Hi, Dad! | Dad, let's play! | Dad can carry me.
+卡: baby | 寶寶 | 👶 | The baby is sleeping. | Shh! Don't wake the baby. | The baby is so small.
+卡: grandma | 奶奶、外婆 | 👵 | Hug Grandma! | Grandma makes yummy food. | I love you, Grandma!
+卡: grandpa | 爺爺、外公 | 👴 | Hug Grandpa! | Grandpa tells me stories. | Let's go for a walk, Grandpa.
+卡: brother | 哥哥、弟弟 | 👦 | Let's play, brother! | My brother is tall. | I share with my brother.
+卡: sister | 姊姊、妹妹 | 👧 | My sister can sing. | I love my sister. | My sister and I play together.
+卡: family | 家人 | 👨‍👩‍👧 | I love my family. | This is my family. | We are a happy family.
+
+字卡本: 農場動物 Farm
+// 先學會牠們怎麼叫，小朋友最愛學
+卡: cow | 牛 | 🐮 | Moo! I am a cow. | The cow gives us milk. | The cow eats grass.
+卡: pig | 豬 | 🐷 | Oink, oink! I am a pig. | The pig is pink. | The pig likes mud.
+卡: dog | 狗 | 🐶 | Woof, woof! I am a dog. | The dog wags its tail. | Let's walk the dog.
+卡: cat | 貓 | 🐱 | Meow! I am a cat. | Shh! The cat is sleeping. | Pet the cat gently.
+卡: duck | 鴨子 | 🦆 | Quack, quack! I am a duck. | The duck can swim. | Hello, little duck!
+卡: chicken | 雞 | 🐔 | Cluck, cluck! I am a chicken. | The chicken lays eggs. | Let's feed the chickens.
+卡: sheep | 綿羊 | 🐑 | Baa! I am a sheep. | The sheep is soft and white. | Baa, baa, black sheep.
+卡: horse | 馬 | 🐴 | Neigh! I am a horse. | The horse can run fast. | Let's ride the horse.
+卡: goat | 山羊 | 🐐 | The goat likes grass. | Maa! I am a goat. | The goat can climb rocks.
+卡: rabbit | 兔子 | 🐰 | Hop, hop, little rabbit! | The rabbit has long ears. | The rabbit likes carrots.
 
 字卡本: 顏色 Colors
-卡: red | 紅色 | 🔴 | The apple is red.
-卡: orange | 橘色 | 🟠 | The carrot is orange.
-卡: yellow | 黃色 | 🟡 | The banana is yellow.
-卡: green | 綠色 | 🟢 | The frog is green.
-卡: blue | 藍色 | 🔵 | The sky is blue.
-卡: purple | 紫色 | 🟣 | The grapes are purple.
-卡: brown | 咖啡色 | 🟤 | The bear is brown.
-卡: black | 黑色 | ⚫ | The night sky is black.
-卡: white | 白色 | ⚪ | The snow is white.
-
-字卡本: 形狀 Shapes
-卡: circle | 圓形 | ⭕ | Draw a circle.
-卡: square | 正方形 | 🟦 | Draw a square.
-卡: triangle | 三角形 | 🔺 | Draw a triangle.
-卡: star | 星形 | ⭐ | Twinkle, twinkle, little star.
-卡: heart | 愛心 | ❤️ | I love you!
-卡: diamond | 菱形 | 🔶 | Draw a diamond.
-卡: moon | 月亮 | 🌙 | Good night, moon.
+卡: red | 紅色 | 🔴 | The apple is red. | Stop! The light is red. | My ball is red.
+卡: orange | 橘色 | 🟠 | The carrot is orange. | The pumpkin is orange. | My shirt is orange.
+卡: yellow | 黃色 | 🟡 | The banana is yellow. | The sun is yellow. | I have a yellow duck.
+卡: green | 綠色 | 🟢 | The frog is green. | The grass is green. | Go! The light is green.
+卡: blue | 藍色 | 🔵 | The sky is blue. | The sea is blue. | My cup is blue.
+卡: purple | 紫色 | 🟣 | The grapes are purple. | I like purple. | The eggplant is purple.
+卡: brown | 咖啡色 | 🟤 | The bear is brown. | The tree is brown. | Chocolate is brown.
+卡: black | 黑色 | ⚫ | The night sky is black. | The crow is black. | My shoes are black.
+卡: white | 白色 | ⚪ | The snow is white. | The cloud is white. | Milk is white.
+卡: pink | 粉紅色 | 🌸 | The flower is pink. | The pig is pink. | I like pink.
 
 字卡本: 身體 Body
-卡: eye | 眼睛 | 👁️ | Close your eyes.
-卡: ear | 耳朵 | 👂 | Touch your ears.
-卡: nose | 鼻子 | 👃 | Touch your nose.
-卡: mouth | 嘴巴 | 👄 | Open your mouth.
-卡: tooth | 牙齒 | 🦷 | Brush your teeth.
-卡: tongue | 舌頭 | 👅 | Stick out your tongue.
-卡: hand | 手 | ✋ | Clap your hands.
-卡: arm | 手臂 | 💪 | Raise your arms.
-卡: leg | 腿 | 🦵 | Shake your legs.
-卡: foot | 腳 | 🦶 | Stamp your feet.
+// 句子都是動作，邊聽邊做：Touch your nose.
+卡: eye | 眼睛 | 👁️ | Close your eyes. | Open your eyes. | I see with my eyes.
+卡: ear | 耳朵 | 👂 | Touch your ears. | I hear with my ears. | Listen with your ears.
+卡: nose | 鼻子 | 👃 | Touch your nose. | I smell with my nose. | Wiggle your nose like a rabbit!
+卡: mouth | 嘴巴 | 👄 | Open your mouth. | Close your mouth. | I eat with my mouth.
+卡: tooth | 牙齒 | 🦷 | Brush your teeth. | I have a loose tooth! | Show me your teeth.
+卡: tongue | 舌頭 | 👅 | Stick out your tongue. | I taste with my tongue. | Say ahh! Show me your tongue.
+卡: hand | 手 | ✋ | Clap your hands. | Wash your hands. | Hold my hand.
+卡: arm | 手臂 | 💪 | Raise your arms. | Wave your arms. | Give me a big hug!
+卡: leg | 腿 | 🦵 | Shake your legs. | Stand on one leg. | Kick your legs.
+卡: foot | 腳 | 🦶 | Stamp your feet. | Tap your foot. | Hop on one foot.
+
+字卡本: 吃吃喝喝 Food
+卡: milk | 牛奶 | 🥛 | Drink your milk. | The milk is white. | Milk makes me strong.
+卡: water | 水 | 💧 | Water, please. | Drink some water. | The water is cold.
+卡: juice | 果汁 | 🧃 | I like juice. | Can I have some juice? | The juice is sweet.
+卡: rice | 飯 | 🍚 | Eat your rice. | I eat rice every day. | The rice is white.
+卡: noodles | 麵 | 🍜 | Slurp! I like noodles. | The noodles are long. | Let's eat noodles.
+卡: bread | 麵包 | 🍞 | I like bread. | I eat bread for breakfast. | The bread smells good!
+卡: egg | 蛋 | 🥚 | I like eggs. | The chicken lays an egg. | Crack the egg.
+卡: cookie | 餅乾 | 🍪 | Yum, a cookie! | I want a cookie. | Share your cookie with me.
+卡: cake | 蛋糕 | 🍰 | Happy birthday! Here is a cake. | The cake is sweet. | Let's cut the cake.
+卡: candy | 糖果 | 🍬 | Just one candy, please. | The candy is sweet. | Brush your teeth after candy.
+卡: soup | 湯 | 🍲 | The soup is hot. | Blow on the soup. | I like corn soup.
+
+字卡本: 玩具 Toys
+卡: ball | 球 | ⚽ | Give me the ball. | Throw the ball to me. | Kick the ball!
+卡: doll | 娃娃 | 🪆 | I love my doll. | My doll has long hair. | Let's play with the doll.
+卡: teddy bear | 泰迪熊 | 🧸 | I love my teddy bear. | Hug the teddy bear. | My teddy bear is soft.
+卡: blocks | 積木 | 🧱 | Let's build with blocks. | Stack the blocks up high. | Oops! The blocks fell down.
+卡: car | 玩具車 | 🚗 | Beep, beep! Here comes the car. | Get in the car. | Vroom! My car is fast.
+卡: robot | 機器人 | 🤖 | Beep, beep! I am a robot. | The robot can walk. | Let's build a robot.
+卡: kite | 風箏 | 🪁 | Fly the kite. | The kite is high in the sky. | Let's fly a kite in the park.
+卡: balloon | 氣球 | 🎈 | Look at my balloons! | My balloon is red. | Pop! Oh no, my balloon!
+卡: puzzle | 拼圖 | 🧩 | Let's do a puzzle. | Where does this piece go? | I finished the puzzle!
+卡: yo-yo | 溜溜球 | 🪀 | Let's play with the yo-yo. | Up and down goes the yo-yo. | My yo-yo is red.
+
+【第 2 級】🌿
+// 字多一點、比較不常碰到，句子也長一點：Rabbits like carrots.／The snail is slow.
+
+字卡本: 形狀 Shapes
+卡: circle | 圓形 | ⭕ | Draw a circle. | The ball is a circle. | Let's sit in a circle.
+卡: square | 正方形 | 🟦 | Draw a square. | The window is a square. | A square has four sides.
+卡: triangle | 三角形 | 🔺 | Draw a triangle. | A triangle has three sides. | The pizza slice is a triangle.
+卡: star | 星形 | ⭐ | Twinkle, twinkle, little star. | Draw a star. | Look at the stars in the sky!
+卡: heart | 愛心 | ❤️ | I love you! | Draw a heart. | Make a heart with your hands.
+卡: diamond | 菱形 | 🔶 | Draw a diamond. | The kite is a diamond. | The diamond is shiny.
+卡: moon | 月亮 | 🌙 | Good night, moon. | The moon is bright. | Look at the round moon!
+
+字卡本: 衣服 Clothes
+卡: shirt | 上衣 | 👕 | Put on your shirt. | My shirt is blue. | I like your shirt!
+卡: pants | 褲子 | 👖 | Put on your pants. | My pants are long. | Pull up your pants.
+卡: shorts | 短褲 | 🩳 | It's hot. Wear your shorts. | Put on your shorts. | My shorts are green.
+卡: dress | 洋裝 | 👗 | What a pretty dress! | She wears a pink dress. | I like your dress.
+卡: shoes | 鞋子 | 👟 | Put on your shoes. | Where are my shoes? | My shoes are new.
+卡: socks | 襪子 | 🧦 | Put on your socks. | My socks are blue. | Where are my socks?
+卡: hat | 帽子 | 👒 | Put on your hat. | My hat is red. | It's sunny. Wear a hat.
+卡: coat | 大衣 | 🧥 | It's cold. Wear your coat. | Put on your coat. | My coat is warm.
+卡: scarf | 圍巾 | 🧣 | The scarf is warm. | Put on your scarf. | My scarf is long.
+卡: gloves | 手套 | 🧤 | Put on your gloves. | My hands are warm in my gloves. | Where are my gloves?
+卡: boots | 靴子 | 👢 | Put on your rain boots. | Jump in the puddle with your boots! | My boots are yellow.
+卡: swimsuit | 泳衣 | 🩱 | Let's go swimming! | Put on your swimsuit. | My swimsuit is blue.
+
+字卡本: 蔬菜 Vegetables
+卡: carrot | 紅蘿蔔 | 🥕 | Rabbits like carrots. | The carrot is orange. | Crunch, crunch! I eat a carrot.
+卡: corn | 玉米 | 🌽 | Yum, sweet corn! | The corn is yellow. | Pop, pop! Popcorn!
+卡: tomato | 番茄 | 🍅 | The tomato is red. | The tomato is round. | I like tomato soup.
+卡: potato | 馬鈴薯 | 🥔 | I like potatoes. | The potato is brown. | Let's mash the potato.
+卡: sweet potato | 地瓜 | 🍠 | The sweet potato is hot. | The sweet potato is sweet. | Yum! A warm sweet potato.
+卡: broccoli | 花椰菜 | 🥦 | Broccoli looks like a little tree. | The broccoli is green. | Eat your broccoli.
+卡: cucumber | 小黃瓜 | 🥒 | The cucumber is green. | The cucumber is long. | Crunch! The cucumber is cool.
+卡: pepper | 青椒 | 🫑 | The pepper is green. | The pepper is crunchy. | Don't pick out the pepper!
+卡: eggplant | 茄子 | 🍆 | The eggplant is purple. | The eggplant is long. | Let's cook the eggplant.
+卡: onion | 洋蔥 | 🧅 | The onion makes me cry! | The onion is round. | Peel the onion.
+卡: mushroom | 香菇 | 🍄 | Look, a little mushroom! | The mushroom is brown. | I like mushroom soup.
+卡: lettuce | 生菜 | 🥬 | Rabbits eat lettuce. | The lettuce is green. | Wash the lettuce.
+
+字卡本: 海洋動物 Sea Animals
+卡: fish | 魚 | 🐟 | The fish can swim. | Blub, blub! I am a fish. | The fish lives in the water.
+卡: whale | 鯨魚 | 🐳 | The whale is very big. | The whale lives in the sea. | Splash! The whale says hello.
+卡: dolphin | 海豚 | 🐬 | The dolphin can jump! | The dolphin is smart. | The dolphin swims in the sea.
+卡: shark | 鯊魚 | 🦈 | The shark has big teeth. | The shark swims fast. | Look out! A shark!
+卡: turtle | 海龜 | 🐢 | The turtle is slow. | The turtle has a hard shell. | The turtle can swim.
+卡: octopus | 章魚 | 🐙 | The octopus has eight arms. | The octopus lives in the sea. | Wiggle, wiggle, octopus!
+卡: crab | 螃蟹 | 🦀 | Pinch, pinch! I am a crab. | The crab walks sideways. | The crab lives on the beach.
+卡: shrimp | 蝦子 | 🦐 | The shrimp is small. | The shrimp is pink. | I like to eat shrimp.
+卡: squid | 魷魚 | 🦑 | The squid has long arms. | The squid lives in the sea. | Swish! The squid swims away.
+卡: seal | 海豹 | 🦭 | Clap, clap! I am a seal. | The seal can swim. | The seal plays with a ball.
+卡: shell | 貝殼 | 🐚 | I found a shell! | Listen to the shell. | The shell is on the beach.
+
+字卡本: 昆蟲 Bugs
+卡: ant | 螞蟻 | 🐜 | The ant is small. | Look, an ant! | The ants work together.
+卡: bee | 蜜蜂 | 🐝 | Buzz, buzz! I am a bee. | The bee makes honey. | The bee likes flowers.
+卡: butterfly | 蝴蝶 | 🦋 | Fly, fly, butterfly! | The butterfly is pretty. | The butterfly sits on a flower.
+卡: ladybug | 瓢蟲 | 🐞 | The ladybug is red. | The ladybug has black spots. | Fly away, little ladybug!
+卡: caterpillar | 毛毛蟲 | 🐛 | The caterpillar is hungry. | The caterpillar eats leaves. | The caterpillar becomes a butterfly.
+卡: snail | 蝸牛 | 🐌 | The snail is slow. | The snail has a shell. | Slowly, slowly, little snail.
+卡: spider | 蜘蛛 | 🕷️ | The spider has eight legs. | The spider makes a web. | Itsy bitsy spider!
+卡: cricket | 蟋蟀 | 🦗 | Chirp, chirp! I am a cricket. | The cricket can jump. | The cricket sings at night.
+卡: beetle | 甲蟲 | 🪲 | The beetle is strong. | The beetle is black and shiny. | The beetle has six legs.
+卡: mosquito | 蚊子 | 🦟 | Go away, mosquito! | Ouch! The mosquito bit me. | Buzz! Where is the mosquito?
+卡: worm | 蚯蚓 | 🪱 | The worm is long. | The worm lives in the dirt. | Wiggle, wiggle, little worm!
+
+字卡本: 天氣 Weather
+卡: sun | 太陽 | ☀️ | The sun is hot. | Good morning, sun! | The sun is up. Let's play!
+卡: cloud | 雲 | ☁️ | Look at the big cloud. | The cloud is white. | The cloud looks like a sheep!
+卡: rain | 雨 | 🌧️ | Rain, rain, go away! | Listen to the rain. | It's raining. Stay inside.
+卡: rainbow | 彩虹 | 🌈 | Look, a rainbow! | The rainbow has many colors. | Red, orange, yellow... a rainbow!
+卡: wind | 風 | 🌬️ | Whoosh! The wind is strong. | The wind blows my hat away. | The wind moves the kite.
+卡: lightning | 閃電 | ⚡ | Look! Lightning! | Flash! Then boom! | Lightning is very bright.
+卡: snow | 雪 | ❄️ | The snow is cold. | The snow is white. | Let's play in the snow!
+卡: snowman | 雪人 | ⛄ | Let's make a snowman! | The snowman has a carrot nose. | Bye-bye, snowman!
+卡: umbrella | 雨傘 | ☂️ | Open your umbrella. | It's raining. Open your umbrella. | My umbrella keeps me dry.
+
+字卡本: 家裡 My Home
+卡: bed | 床 | 🛏️ | Time for bed. Good night! | Make your bed. | My bed is soft.
+卡: chair | 椅子 | 🪑 | Sit on the chair. | Pull out your chair. | The chair is small.
+卡: sofa | 沙發 | 🛋️ | Sit on the sofa. | The sofa is soft. | Don't jump on the sofa!
+卡: door | 門 | 🚪 | Open the door, please. | Close the door. | Knock, knock! Who is at the door?
+卡: window | 窗戶 | 🪟 | Open the window. | Look out the window. | Close the window. It's cold.
+卡: light | 電燈 | 💡 | Turn on the light. | Turn off the light. Good night. | The light is bright.
+卡: TV | 電視 | 📺 | Turn off the TV. | Let's watch TV. | Don't sit too close to the TV.
+卡: clock | 時鐘 | ⏰ | Tick, tock! What time is it? | The clock is on the wall. | Look at the clock.
+卡: toilet | 馬桶 | 🚽 | Flush the toilet. | I need to go to the toilet. | Wash your hands after the toilet.
+卡: bathtub | 浴缸 | 🛁 | Time for a bath! | Splash, splash in the bathtub! | The water in the bathtub is warm.
+卡: toothbrush | 牙刷 | 🪥 | Brush your teeth. | My toothbrush is blue. | Brush, brush, brush your teeth!
+卡: soap | 肥皂 | 🧼 | Wash your hands with soap. | Look at the bubbles! | The soap smells good.
+卡: broom | 掃把 | 🧹 | Let's sweep the floor. | Help me with the broom. | The witch flies on a broom!
 
 字卡本: 交通工具 Vehicles
-卡: car | 汽車 | 🚗 | Beep, beep! Here comes the car.
-卡: bus | 公車 | 🚌 | Get on the bus.
-卡: taxi | 計程車 | 🚕 | Taxi! Stop, please.
-卡: scooter | 機車 | 🛵 | Mommy rides a scooter.
-卡: bike | 腳踏車 | 🚲 | Ride a bike.
-卡: train | 火車 | 🚆 | Choo choo! Here comes the train.
-卡: truck | 卡車 | 🚚 | The truck is big.
-卡: fire truck | 消防車 | 🚒 | The fire truck is red.
-卡: police car | 警車 | 🚓 | Here comes the police car.
-卡: ambulance | 救護車 | 🚑 | The ambulance is fast.
-卡: tractor | 拖拉機 | 🚜 | The tractor is on the farm.
-卡: boat | 船 | 🚤 | Row, row, row the boat.
-卡: ship | 輪船 | 🚢 | The ship is on the sea.
-卡: airplane | 飛機 | ✈️ | The airplane can fly.
-卡: helicopter | 直升機 | 🚁 | The helicopter goes up.
-卡: rocket | 火箭 | 🚀 | Three, two, one, blast off!
+卡: car | 汽車 | 🚗 | Beep, beep! Here comes the car. | Get in the car. | Vroom! My car is fast.
+卡: bus | 公車 | 🚌 | Get on the bus. | The wheels on the bus go round and round. | Let's wait for the bus.
+卡: taxi | 計程車 | 🚕 | Taxi! Stop, please. | The taxi is yellow. | Let's take a taxi.
+卡: scooter | 機車 | 🛵 | Mommy rides a scooter. | Put on your helmet. | Beep! The scooter is fast.
+卡: bike | 腳踏車 | 🚲 | Ride a bike. | Ring, ring! Here comes my bike. | My bike has two wheels.
+卡: train | 火車 | 🚆 | Choo choo! Here comes the train. | The train is long. | All aboard!
+卡: truck | 卡車 | 🚚 | The truck is big. | The truck carries boxes. | Beep, beep! The truck goes back.
+卡: fire truck | 消防車 | 🚒 | The fire truck is red. | Wee-woo! The fire truck is fast. | The fire truck has a long ladder.
+卡: police car | 警車 | 🚓 | Here comes the police car. | The police car has lights. | Wee-woo! The police car is fast.
+卡: ambulance | 救護車 | 🚑 | The ambulance is fast. | Wee-woo! Here comes the ambulance. | The ambulance helps sick people.
+卡: tractor | 拖拉機 | 🚜 | The tractor is on the farm. | The tractor is big and green. | The farmer drives the tractor.
+卡: boat | 船 | 🚤 | Row, row, row the boat. | The boat is on the water. | Let's go on a boat.
+卡: ship | 輪船 | 🚢 | The ship is on the sea. | The ship is very big. | Toot, toot! The ship says hello.
+卡: airplane | 飛機 | ✈️ | The airplane can fly. | The airplane is in the sky. | Zoom! The airplane goes up.
+卡: helicopter | 直升機 | 🚁 | The helicopter goes up. | The helicopter can fly. | Whirr, whirr! Look up!
+卡: rocket | 火箭 | 🚀 | Three, two, one, blast off! | The rocket goes to the moon. | Zoom! The rocket is fast.
+
+【第 3 級】🌳
+// 摸不到的字：心情、動作，還有大人在做的工作、要去的地方。句子用 I am…、Let's…、The doctor…
+// 單元名稱有「心情」「動作」的字卡本，問的時候不加 the：Where is happy?／Can you find run?
+
+字卡本: 心情 Feelings
+卡: happy | 開心 | 😄 | I am happy! | Clap your hands if you are happy! | Smile! I feel happy.
+卡: sad | 難過 | 😢 | I am sad. | Don't be sad. Here is a hug. | Why are you sad?
+卡: angry | 生氣 | 😠 | I am angry! | Grr! I feel angry. | Take a deep breath.
+卡: scared | 害怕 | 😨 | I am scared. | Don't be scared. I'm here. | The dark makes me scared.
+卡: tired | 累 | 😫 | I am tired. | Let's take a rest. | I'm tired. I want to sit down.
+卡: sleepy | 想睡覺 | 😴 | I am sleepy. Good night. | Yawn! I'm sleepy. | Time for bed, sleepy head!
+卡: hungry | 肚子餓 | 🤤 | I am hungry. | I'm hungry. Let's eat! | My tummy says I'm hungry.
+卡: surprised | 驚訝 | 😮 | Wow! I am surprised! | Oh! What a surprise! | Surprise! Happy birthday!
+卡: sick | 生病 | 🤒 | I am sick. | I have a cold. | Let's go see the doctor.
+卡: shy | 害羞 | 🙈 | I am shy. | It's okay to be shy. | Say hello. Don't be shy.
+卡: silly | 調皮 | 🤪 | I am silly! | Let's make a silly face! | You are so silly!
+
+字卡本: 動作 Actions
+// 句子是小朋友可以馬上做的動作：念完一起跳舞、拍手
+卡: run | 跑 | 🏃 | Run, run, run! | I can run fast. | Let's run to the park!
+卡: walk | 走路 | 🚶 | Let's walk. | Walk slowly, please. | I walk to school.
+卡: swim | 游泳 | 🏊 | I can swim. | Let's swim in the pool. | Swim like a fish!
+卡: dance | 跳舞 | 💃 | Let's dance! | Dance with me! | I dance to the music.
+卡: sing | 唱歌 | 🎤 | Let's sing a song. | Sing with me! | I like to sing.
+卡: clap | 拍手 | 👏 | Clap your hands! | Clap, clap, clap! | Clap two times.
+卡: wave | 揮手 | 👋 | Wave bye-bye! | Wave hello! | Wave your hands in the air.
+卡: eat | 吃 | 🍽️ | Let's eat! | Eat your lunch. | I eat with a spoon.
+卡: drink | 喝 | 🥤 | Drink some water. | Drink your milk. | I am thirsty. I want a drink.
+卡: sleep | 睡覺 | 🛌 | Time to sleep. | I sleep in my bed. | Good night. Sleep tight!
+卡: read | 看書 | 📖 | Let's read a book. | Read with me! | I can read.
+卡: write | 寫字 | ✍️ | Write your name. | I can write my name. | Write the letter A.
+卡: draw | 畫畫 | 🎨 | Let's draw a picture. | Draw a cat. | I like to draw.
+卡: climb | 爬 | 🧗 | Climb up, up, up! | Climb the ladder slowly. | The monkey can climb.
+卡: ride | 騎車 | 🚴 | Let's ride a bike. | Ride the horse! | I ride the bus to school.
+卡: cry | 哭 | 😭 | Don't cry. | The baby is crying. | It's okay to cry.
+
+字卡本: 職業 Jobs
+卡: doctor | 醫生 | 🧑‍⚕️ | The doctor helps me feel better. | Say ahh for the doctor. | I want to be a doctor.
+卡: teacher | 老師 | 🧑‍🏫 | Good morning, teacher! | The teacher reads us a story. | Listen to the teacher.
+卡: police officer | 警察 | 👮 | The police officer helps us. | The police officer keeps us safe. | Thank you, police officer!
+卡: firefighter | 消防員 | 🧑‍🚒 | The firefighter is brave. | The firefighter puts out the fire. | The firefighter drives a fire truck.
+卡: cook | 廚師 | 🧑‍🍳 | The cook makes yummy food. | The cook wears a white hat. | Thank you, cook! It's yummy.
+卡: farmer | 農夫 | 🧑‍🌾 | The farmer grows vegetables. | The farmer has cows and pigs. | The farmer drives a tractor.
+卡: pilot | 機長 | 🧑‍✈️ | The pilot flies the airplane. | Hello! I am the pilot. | The pilot sits in the front.
+卡: astronaut | 太空人 | 🧑‍🚀 | The astronaut goes to the moon. | The astronaut flies in a rocket. | I want to be an astronaut!
+卡: builder | 工人 | 👷 | The builder builds houses. | The builder wears a helmet. | Bang, bang! The builder is working.
+卡: artist | 畫家 | 🧑‍🎨 | The artist paints pictures. | The artist uses many colors. | I am an artist too!
+卡: singer | 歌手 | 🧑‍🎤 | The singer sings songs. | The singer has a microphone. | Let's sing like a singer!
+
+字卡本: 地方 Places
+卡: school | 學校 | 🏫 | I go to school. | I play with my friends at school. | Bye-bye, Mom! I'm going to school.
+卡: park | 公園 | 🏞️ | Let's play in the park. | There are big trees in the park. | I go down the slide in the park.
+卡: hospital | 醫院 | 🏥 | The doctor works at the hospital. | The ambulance goes to the hospital. | Get well soon!
+卡: store | 便利商店 | 🏪 | Let's buy some milk at the store. | The store is open. | Let's go to the store.
+卡: library | 圖書館 | 📚 | Let's read at the library. | The library has many books. | Shh! Be quiet in the library.
+卡: beach | 海邊 | 🏖️ | Let's go to the beach! | I play in the sand at the beach. | The beach is hot and sunny.
+卡: mountain | 山 | ⛰️ | Let's climb the mountain. | The mountain is very high. | I see a big mountain.
+卡: train station | 火車站 | 🚉 | The train stops at the station. | Let's wait at the train station. | The train station is busy.
+卡: post office | 郵局 | 🏣 | Mail a letter at the post office. | Buy a stamp at the post office. | The post office is green.
+卡: castle | 城堡 | 🏰 | The princess lives in the castle. | The castle is big. | Let's build a sand castle!
 
 【影片】🎬
 // 英文單字的相關兒歌，一樣自己一區

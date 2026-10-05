@@ -17,8 +17,11 @@ export interface Card {
   word: string
   /** 補充說明，例如「貓」「一支鉛筆 one pencil」，可以空白 */
   meaning: string
-  /** 翻面時接著唸的簡單英文句子，例如「Yum, delicious apple!」，可以空白 */
-  sentence: string
+  /**
+   * 翻面時接著唸的簡單英文句子，例如「Yum, delicious apple!」，可以沒有。
+   * 寫好幾句的話每次翻到這張卡就輪到下一句，同一張卡才不會每天都聽到同一句。
+   */
+  sentences: string[]
   /** emoji，或圖片網址／public 底下的相對路徑，可以空白 */
   image: string
   /** 翻到背面時換成這張圖（例如正面遮住數字、背面是完整的卡），可以空白 */

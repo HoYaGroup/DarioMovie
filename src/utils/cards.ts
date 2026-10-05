@@ -13,7 +13,7 @@ import { parseVideoId, type Card, type CardClip, type VideoItem } from './youtub
  * 第一欄是卡片上最大的字，後面幾欄看內容自動判斷是什麼：
  *   ‧ 有 youtu 字樣的是影片片段，後面可以接「開始-結束」時間
  *   ‧ 只有 emoji，或是圖片網址／路徑的是圖；寫兩張的話，第一張是正面、第二張是背面
- *   ‧ 有英文、而且用 . ! ? 結尾的是句子，翻面時接在單字後面唸
+ *   ‧ 有英文、而且用 . ! ? 結尾的是句子，翻面時接在單字後面唸；寫好幾句（每句一欄）就輪流唸
  *   ‧ 其他的是說明（英文、中文都可以寫在一起）
  * 所以欄位順序寫錯、少寫一欄都沒關係，不會整張卡壞掉。
  */
@@ -84,7 +84,7 @@ export function parseCard(text: string): { card: Card | null; issue: string } {
   if (!word) return { card: null, issue: '字卡至少要寫一個字' }
 
   let meaning = ''
-  let sentence = ''
+  const sentences: string[] = []
   let image = ''
   let backImage = ''
   let clip: CardClip | null = null
@@ -102,7 +102,8 @@ export function parseCard(text: string): { card: Card | null; issue: string } {
       continue
     }
     if (RE_SENTENCE.test(field)) {
-      sentence = sentence ? `${sentence} ${field}` : field
+      // 一欄是一句（可以是兩小句：Time for bed. Good night!），好幾欄就是好幾句輪流
+      sentences.push(field)
       continue
     }
     // 多寫的說明接在一起，不要默默丟掉
@@ -110,7 +111,7 @@ export function parseCard(text: string): { card: Card | null; issue: string } {
     if (text) meaning = meaning ? `${meaning} ${text}` : text
   }
 
-  return { card: { word, meaning, sentence, image, backImage, clip }, issue }
+  return { card: { word, meaning, sentences, image, backImage, clip }, issue }
 }
 
 /** 數字卡：卡片上的字全是數字（3、13、100） */
@@ -240,7 +241,20 @@ const COUNT_NOUNS: Record<string, [string, string, string, string?]> = {
   '🦒': ['giraffe', '隻', '長頸鹿', 'giraffes'],
   '🐜': ['ant', '隻', '螞蟻', 'ants'],
   '🦁': ['lion', '隻', '獅子', 'lions'],
-
+  // 海裡的
+  '🐳': ['whale', '隻', '鯨魚'],
+  '🐬': ['dolphin', '隻', '海豚'],
+  '🦈': ['shark', '隻', '鯊魚'],
+  '🦀': ['crab', '隻', '螃蟹'],
+  '🦐': ['shrimp', '隻', '蝦子', 'shrimp'],
+  '🦑': ['squid', '隻', '魷魚', 'squid'],
+  '🦭': ['seal', '隻', '海豹'],
+  '🐚': ['shell', '個', '貝殼'],
+  // 小蟲
+  '🐛': ['caterpillar', '隻', '毛毛蟲'],
+  '🦗': ['cricket', '隻', '蟋蟀'],
+  '🕷': ['spider', '隻', '蜘蛛'],
+  '🪲': ['beetle', '隻', '甲蟲'],
 }
 
 export interface CountNoun {
@@ -290,7 +304,7 @@ export function numberLabels(card: Card): { en: string; zh: string } {
 export function numberCards(from: number, to: number): Card[] {
   const cards: Card[] = []
   for (let n = from; n <= to; n++) {
-    cards.push({ word: String(n), meaning: '', sentence: '', image: '', backImage: '', clip: null })
+    cards.push({ word: String(n), meaning: '', sentences: [], image: '', backImage: '', clip: null })
   }
   return cards
 }
@@ -300,20 +314,29 @@ export function numberCards(from: number, to: number): Card[] {
 /** 不可數的東西前面不加 a：This is milk */
 const UNCOUNTABLE = new Set([
   'milk', 'ice', 'ice cream', 'juice', 'orange juice', 'water', 'rice', 'bread', 'yarn', 'cheese', 'honey', 'soup',
-  'tea', 'jelly', 'yogurt', 'sushi', 'pizza',
+  'tea', 'jelly', 'yogurt', 'sushi', 'pizza', 'corn', 'broccoli', 'lettuce', 'garlic', 'soap',
+  'rain', 'snow', 'wind', 'lightning',
 ])
 /** 一定是複數的東西：These are glasses */
 const PLURAL = new Set([
   'glasses', 'jeans', 'scissors', 'pants', 'shorts', 'shoes', 'socks', 'chopsticks', 'fries', 'grapes', 'noodles',
-  'vegetables',
+  'vegetables', 'gloves', 'boots', 'blocks',
 ])
 
 /**
- * 數字、顏色前面不加 a／an，問的時候也不加 the：This is four、Can you find red?
- * 顏色卡的說明寫成「紅色」這種「…色」結尾就認得出來。
+ * 單元名稱裡有這些字的字卡本，卡片上是動作、心情，不是「一個東西」：
+ * 問的時候不加 the（Where is happy? / Can you find run?），也不說 a（This is sad.）。
  */
-function isBare(card: Card): boolean {
-  return isNumberCard(card) || /色$/.test(card.meaning)
+export function isBareDeck(title: string): boolean {
+  return /動作|心情|Actions?|Feelings?/i.test(title)
+}
+
+/**
+ * 數字、顏色、動作、心情前面不加 a／an，問的時候也不加 the：This is four、Can you find red?
+ * 顏色卡的說明寫成「紅色」這種「…色」結尾就認得出來；動作、心情看字卡本的名稱（isBareDeck）。
+ */
+function isBare(card: Card, bareDeck = false): boolean {
+  return bareDeck || isNumberCard(card) || /色$/.test(card.meaning)
 }
 
 /**
@@ -337,21 +360,21 @@ export function englishOf(card: Card): string {
  * 「這是…」的英文，小朋友點錯時說給他聽：
  *   This is a horse／This is an elephant／This is milk／These are glasses／This is four／This is red
  */
-export function thisIs(card: Card): string {
+export function thisIs(card: Card, bareDeck = false): string {
   const en = englishOf(card)
   if (PLURAL.has(en.toLowerCase())) return `These are ${en}.`
-  return `This is ${withArticle(en, isBare(card))}.`
+  return `This is ${withArticle(en, isBare(card, bareDeck))}.`
 }
 
 /**
- * 翻面時接在單字後面唸的句子。片單上沒寫的話，英文單字卡至少說一句「I see a cat.」，
- * 數字卡、沒有英文的卡就不說。
+ * 翻面時可以接在單字後面唸的句子（好幾句的話由畫面輪流挑一句）。
+ * 片單上沒寫的話，英文單字卡至少說一句「I see a cat.」；數字卡寫了句子才說，沒有英文的卡就不說。
  */
-export function sentenceOf(card: Card): string {
-  if (card.sentence) return card.sentence
-  if (isNumberCard(card)) return ''
+export function sentencesOf(card: Card, bareDeck = false): string[] {
+  if (card.sentences.length) return card.sentences
+  if (isNumberCard(card) || bareDeck) return []
   const en = speechOf(card).en
-  return en ? `I see ${withArticle(en, isBare(card))}.` : ''
+  return en ? [`I see ${withArticle(en, isBare(card))}.`] : []
 }
 
 /** 考考我有幾種問法，每一題輪流換，小朋友聽得懂不同的說法 */
@@ -359,13 +382,13 @@ export const ASK_STYLES = 3
 
 /**
  * 考考我的題目：Where is the cat? / Can you find the cat? / Can you touch the cat?
- * 數字說「number seven」，顏色直接說「red」，複數用 Where are the glasses?
+ * 數字說「number seven」，顏色、動作、心情直接說（red、run、happy），複數用 Where are the glasses?
  * 這張卡沒有英文就回空字串，讓呼叫的人改用中文問。
  */
-export function askOf(card: Card, style: number): string {
+export function askOf(card: Card, style: number, bareDeck = false): string {
   const en = englishOf(card)
   if (!en) return ''
-  const target = isNumberCard(card) ? `number ${en}` : isBare(card) ? en : `the ${en}`
+  const target = isNumberCard(card) ? `number ${en}` : isBare(card, bareDeck) ? en : `the ${en}`
   const plural = PLURAL.has(en.toLowerCase())
   switch (style % ASK_STYLES) {
     case 0: return `${plural ? 'Where are' : 'Where is'} ${target}?`
