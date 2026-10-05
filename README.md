@@ -181,6 +181,7 @@ https://youtu.be/aaaaaaaaaaa | 三隻小豬
 - **數一數**：數字卡（1～20）放 emoji 的話，正面會畫出那麼多個東西，「Let's count! Touch the apples.」
   小朋友一個一個點，App 用英文跟著數 one、two、three……；數完問「How many apples are there?」，
   三個數字選一個，選對了翻面說「Eleven. 十一顆蘋果. Eleven apples.」。
+  還沒答對之前點卡片不會翻面，而是再說一次現在要做什麼（還在數就說 Touch the apples，數完了就再問 How many）。
   超過 10 的前 10 個排成兩排，看得出 13 是 10 再加 3。
   會說「apples」「十一顆蘋果」的 emoji 列在 `src/utils/cards.ts` 的 `COUNT_NOUNS`（常見的動物、水果都有，
   量詞也照中文說：兩隻狗、十二條魚），表上沒有的 emoji 一樣可以數，只是會說「Touch them」。
@@ -248,6 +249,7 @@ https://youtu.be/aaaaaaaaaaa | 三隻小豬
 | 強制休息 | 預設每看 15 分鐘休息 3 分鐘，倒數完才能繼續 |
 | 家長門禁 | 長按齒輪 1.5 秒 + 4 位數密碼才進得去設定 |
 | PWA | 加到主畫面後全螢幕執行，沒有網址列與分頁 |
+| 字卡離線 | `public/cards/` 的圖片安裝時就全部下載（約 2MB），沒網路也能翻字卡、考考我；YouTube 影片沒辦法離線 |
 
 ## 專案結構
 

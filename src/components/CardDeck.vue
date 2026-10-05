@@ -144,6 +144,11 @@ const counted = ref<number[]>([])
 /** 數完了問 How many：三個數字給小朋友選，空的表示還沒數完 */
 const countOptions = ref<number[]>([])
 const countWrong = ref<number[]>([])
+/** How many 答對了沒：數東西的卡要先數完、答對，才翻得過去看答案 */
+const countSolved = ref(false)
+const mustCountFirst = computed(() => showCount.value && !countSolved.value)
+/** 還沒答對就點卡片：題目跳一下，提醒小朋友現在要做什麼 */
+const nudging = ref(false)
 
 /* 字母卡上方的 A～Z：有卡的字母可以點，點了跳到那個字母的第一張 */
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
@@ -221,12 +226,45 @@ function flip() {
   else stopSpeaking()
 }
 
+let nudgeTimer: ReturnType<typeof setTimeout> | null = null
+
+/**
+ * 數東西的卡還沒答對：不翻面，把現在要做的事再說一次——
+ * 還在數就說「Let's count! Touch the apples.」，數完了就再問「How many apples are there?」
+ */
+function nudge() {
+  const c = card.value
+  if (!c) return
+  clearPrompt()
+  speak([en(countOptions.value.length ? countQuestion(c) : frontAsk(c).say)])
+  // 先拿掉再加回去，連點好幾下動畫也會重新跳
+  nudging.value = false
+  if (nudgeTimer) clearTimeout(nudgeTimer)
+  requestAnimationFrame(() => {
+    nudging.value = true
+    nudgeTimer = setTimeout(() => { nudging.value = false }, 600)
+  })
+}
+
+/** 點卡片（或電視遙控器按確定）：數東西的卡要先回答 How many，其他的卡直接翻面 */
+function tapCard() {
+  if (mustCountFirst.value) nudge()
+  else flip()
+}
+
+/** 「聽」按鈕：數東西的卡還沒答對前，只把題目再說一次，不先把答案說出來 */
+function listen() {
+  if (mustCountFirst.value) nudge()
+  else if (card.value) say(card.value)
+}
+
 function resetCard() {
   if (flipTimer) clearTimeout(flipTimer)
   flipped.value = false
   counted.value = []
   countOptions.value = []
   countWrong.value = []
+  countSolved.value = false
 }
 
 function go(step: number) {
@@ -277,6 +315,7 @@ function pickCount(opt: number) {
   if (!c || flipped.value) return
   if (opt === count.value) {
     chimeRight()
+    countSolved.value = true
     flipped.value = true
     speak([{ pause: 250 }, en('Yes!'), { pause: 300 }, ...answerParts(c)])
     return
@@ -311,7 +350,7 @@ function onCardClick() {
     swiped = false
     return
   }
-  flip()
+  tapCard()
 }
 
 const cardRef = ref<HTMLElement | null>(null)
@@ -731,17 +770,17 @@ onBeforeUnmount(() => {
           :class="{ 'is-flipped': flipped }"
           role="button"
           tabindex="0"
-          :aria-label="flipped ? '翻回正面' : '翻面看答案'"
+          :aria-label="flipped ? '翻回正面' : mustCountFirst ? '先數一數' : '翻面看答案'"
           @click="onCardClick"
           @pointerdown="onPointerDown"
           @pointerup="onPointerUp"
           @pointercancel="swipeX = null"
-          @keydown.enter.prevent="flip"
-          @keydown.space.prevent="flip"
+          @keydown.enter.prevent="tapCard"
+          @keydown.space.prevent="tapCard"
         >
           <div class="flip-inner">
             <!-- 正面只有圖：先讓小朋友自己猜、自己數 -->
-            <div class="face face-front" :class="{ 'is-asking': countOptions.length }" :aria-hidden="flipped">
+            <div class="face face-front" :class="{ 'is-asking': countOptions.length, 'is-nudging': nudging }" :aria-hidden="flipped">
               <span v-if="currentLetter" class="abc-badge">{{ badgeOf(card) }}</span>
               <div
                 v-if="showCount"
@@ -833,7 +872,7 @@ onBeforeUnmount(() => {
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.4 7.4 14 6l-6 6 6 6 1.4-1.4-4.6-4.6z" /></svg>
         </button>
 
-        <button v-if="canSpeak" class="ctl ctl-wide" @click="say(card)">
+        <button v-if="canSpeak" class="ctl ctl-wide" @click="listen">
           <span aria-hidden="true">🔊</span>聽
         </button>
 
@@ -1314,6 +1353,20 @@ onBeforeUnmount(() => {
   animation: pop .25s ease-out;
 }
 
+/* 還沒答對就點卡片：題目跳一下，還沒數到的東西也晃一下 */
+.is-nudging .face-hint,
+.is-nudging .count-question { animation: nudge .5s ease; }
+.is-nudging .count-item:not(.is-counted) .count-emoji { animation: wiggle .5s ease; }
+
+@keyframes nudge {
+  40% { scale: 1.15; }
+}
+
+@keyframes wiggle {
+  25% { rotate: -12deg; }
+  75% { rotate: 12deg; }
+}
+
 @keyframes pop {
   from { scale: .3; opacity: 0; }
   to { scale: 1; opacity: 1; }
@@ -1747,6 +1800,10 @@ onBeforeUnmount(() => {
   .option-star,
   .done-emoji,
   .count-badge,
+  .count-option,
+  .is-nudging .face-hint,
+  .is-nudging .count-question,
+  .is-nudging .count-emoji,
   .option-caption { animation: none; }
 }
 </style>

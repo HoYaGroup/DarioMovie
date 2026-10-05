@@ -39,17 +39,19 @@ export default defineConfig({
       },
 
       workbox: {
-        // App 本身的殼可以離線使用（YouTube 影片本身無法離線快取）
-        globPatterns: ['**/*.{js,css,html,png,svg,ico,webmanifest}'],
+        // App 本身的殼和 public/cards/ 的字卡圖片，安裝時就全部下載好，沒網路也能翻字卡
+        // （圖片全部加起來約 2MB；之後只有改過的圖會重新下載）。YouTube 影片本身無法離線快取
+        globPatterns: ['**/*.{js,css,html,png,svg,ico,webmanifest,jpg,jpeg,webp,gif,avif}'],
         navigateFallback: 'index.html',
         runtimeCaching: [
           {
-            // 字卡用的照片（public/cards/）：看過一次就存起來，之後沒網路也翻得到
-            urlPattern: /\/cards\/.+\.(?:jpe?g|webp|gif|avif)$/i,
+            // 片單裡直接寫網址的字卡圖片（不是放在 public/cards/ 的）：看過一次就存起來
+            urlPattern: /^https:\/\/(?!i\.ytimg\.com\/).+\.(?:jpe?g|png|webp|gif|avif)(?:\?.*)?$/i,
             handler: 'CacheFirst',
             options: {
               cacheName: 'card-images',
               expiration: { maxEntries: 300, maxAgeSeconds: 60 * 60 * 24 * 90 },
+              cacheableResponse: { statuses: [0, 200] },
             },
           },
           {

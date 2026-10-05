@@ -27,7 +27,10 @@ function pickVoice(lang: string): SpeechSynthesisVoice | null {
   const want = norm(lang)
   const exact = voices.filter((v) => norm(v.lang) === want)
   const sameLang = voices.filter((v) => norm(v.lang).startsWith(want.split('-')[0]!))
-  const pool = exact.length ? exact : sameLang
+  const all = exact.length ? exact : sameLang
+  // 沒網路時只挑裝置內建的語音：電腦版 Chrome 的 Google 語音要連網，離線會整句不出聲
+  const local = all.filter((v) => v.localService)
+  const pool = navigator.onLine === false && local.length ? local : all
   return pool.find((v) => PREFERRED.test(v.name)) ?? pool.find((v) => v.localService) ?? pool[0] ?? null
 }
 
