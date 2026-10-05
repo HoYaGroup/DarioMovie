@@ -2,8 +2,8 @@
 import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { categoryColor, type Card, type CardClip, type VideoItem } from '~/utils/youtube'
 import {
-  countOf, isPicture, imageSrc, speechOf, isAbcDeck, initialOf, cardsOf, chantOf, meaningText, thisIs, isNumberCard,
-  isSpokenOnlyMeaning,
+  countOf, countNounOf, isPicture, imageSrc, speechOf, isAbcDeck, initialOf, cardsOf, thisIs, isNumberCard,
+  numberLabels, sentenceOf, enNumber, zhNumber, englishOf, askOf, ASK_STYLES,
 } from '~/utils/cards'
 import { canSpeak, speak, stopSpeaking, chimeRight, chimeWrong, type SpeechPart, type SpeechText } from '~/utils/speech'
 import { useLibrary } from '~/composables/useLibrary'
@@ -25,6 +25,8 @@ const { starsOf, addStar } = useCardStars()
 const cards = computed<Card[]>(() => cardsOf(props.deck))
 /** 這本是 ABC 字母卡（單元名稱裡有 ABC）：照 A～Z 排、卡片上標出開頭字母 */
 const isAbc = computed(() => isAbcDeck(props.deck.title))
+/** 整本都是數字卡：上面放一排數字，今天教到哪裡就直接跳過去 */
+const isNumberDeck = computed(() => cards.value.length > 0 && cards.value.every(isNumberCard))
 const stars = computed(() => starsOf(props.deck.uid))
 
 /** 跟片單上這一區同一個顏色，小朋友知道自己還在同一個地方 */
@@ -36,86 +38,56 @@ const color = computed(() => {
 type Mode = 'learn' | 'quiz'
 const mode = ref<Mode>('learn')
 
+const en = (text: string): SpeechText => ({ text, lang: 'en-US' })
+const zh = (text: string): SpeechText => ({ text, lang: 'zh-TW' })
+
 /**
- * 翻面看答案、考考我答對之後唸的：有口訣就照口訣（「P、P、puh、puh、panda」，字母卡再接中文意思），
- * 沒有口訣就把說明裡寫的語言都唸出來。
+ * 翻面看答案時唸的，不分英文版、中文版，一張卡兩種都學：
+ *   單字卡：中文、英文，再接一句簡單的英文 —— 蘋果。Apple. Yum, delicious apple!
+ *   數字卡：先說數字，再說中文、英文 —— One. 一支鉛筆. One pencil.／Eleven. 十一顆蘋果. Eleven apples.
  */
-function fullParts(c: Card): SpeechText[] {
-  const { en, zh } = speechOf(c)
-  const chant = chantOf(c, isAbc.value)
-  if (chant) return [...chant, ...(isAbc.value ? [{ text: zh, lang: 'zh-TW' as const }] : [])]
-  return [{ text: en, lang: 'en-US' }, { text: zh, lang: 'zh-TW' }]
+function answerParts(c: Card): SpeechText[] {
+  if (isNumberCard(c)) {
+    const word = enNumber(Number(c.word))
+    const label = numberLabels(c)
+    return [en(word), zh(label.zh), ...(label.en !== word ? [en(label.en)] : [])]
+  }
+  const name = speechOf(c)
+  return [zh(name.zh), en(name.en), en(sentenceOf(c))]
 }
 
 function say(c: Card) {
-  speak(fullParts(c))
+  clearPrompt()
+  speak(answerParts(c))
 }
 
-/**
- * 考考我的題目只唸這張卡本身——單字（mouse）或數字（seven、七），不唸口訣也不給提示，
- * 讓小朋友自己認。只唸一種語言：有英文唸英文，數字卡沒有英文就用中文唸數字。
- */
-function promptParts(c: Card): SpeechText[] {
-  const { en, zh } = speechOf(c)
-  if (en) return [{ text: en, lang: 'en-US' }]
-  if (isNumberCard(c)) return [{ text: c.word, lang: 'zh-TW' }]
-  return [{ text: zh, lang: 'zh-TW' }]
-}
-
-function sayPrompt(c: Card) {
-  speak(promptParts(c))
-}
-
-/** 這張卡叫什麼：hippo，河馬／勾勾5（點錯的時候告訴小朋友用） */
+/** 這張卡叫什麼，考考我答對時說：Cat. 貓。／Seven. 七。數字形狀卡連形狀一起說（Seven. 一根拐杖. A cane.） */
 function nameParts(c: Card): SpeechText[] {
-  const { en, zh } = speechOf(c)
-  const parts: SpeechText[] = []
-  if (en) parts.push({ text: en, lang: 'en-US' })
-  if (zh) parts.push({ text: zh, lang: 'zh-TW' })
-  return parts.length ? parts : promptParts(c)
+  if (isNumberCard(c)) {
+    const n = Number(c.word)
+    return isPicture(c) ? answerParts(c) : [en(enNumber(n)), zh(zhNumber(n))]
+  }
+  const name = speechOf(c)
+  return [en(name.en), zh(name.zh)]
 }
 
-/**
- * 點錯了要說的話：先說 No!，告訴他點的是什麼，再把題目唸一次（看圖選數字的題目是圖，不用再唸）。
- * 「No」「This is」「Listen again」是固定的教室用語，每一本都講英文，聽久了就懂，順便練聽力；
- * 卡片內容照這本的語言：
- *   英文卡：No! This is a horse. Listen again. …… Frog.
- *   中文卡：No! This is 大肚6. Listen again. …… 八.（說明和題目維持中文）
- * 「Listen again.」後面停將近一秒，小朋友才聽得出接下來那個字是題目，不會跟前一句黏在一起。
- */
-function remindParts(wrong: Card, q: Question): SpeechPart[] {
-  const prompt = q.kind === 'listen' ? promptParts(cards.value[q.answer]!) : []
-  return [
-    { pause: 250 },
-    { text: 'No!', lang: 'en-US' },
-    { pause: 300 },
-    ...thisIsParts(wrong, q),
-    ...(prompt.length ? [{ pause: 500 }, { text: 'Listen again.', lang: 'en-US' as const }, { pause: 900 }, ...prompt] : []),
-  ]
+/** 「這是…」：This is a horse. ／ This is four. 點錯時說一次；小朋友再點那張點錯的，也是唸這句 */
+function thisIsParts(c: Card): SpeechText[] {
+  return englishOf(c) ? [en(thisIs(c))] : [en('This is'), zh(speechOf(c).zh || c.word)]
 }
 
-/**
- * 「這是…」：英文卡整句英文（This is a horse.），中文卡「This is」接中文說明（This is 勾勾5）。
- * 點錯時說一次；小朋友再點那張點錯的，也是唸這句給他聽。
- */
-function thisIsParts(wrong: Card, q: Question): SpeechText[] {
-  const wrongEn = speechOf(wrong).en
-  const englishDeck = q.kind === 'listen' && promptParts(cards.value[q.answer]!)[0]?.lang === 'en-US'
-  return englishDeck && wrongEn
-    // 數字、顏色（說明是「紅色」這種）不加 a／an：This is four、This is red
-    ? [{ text: thisIs(wrongEn, isNumberCard(wrong) || /色$/.test(meaningText(wrong))), lang: 'en-US' }]
-    : [{ text: 'This is', lang: 'en-US' }, ...nameParts(wrong)]
-}
-
-/** 點錯的選項下面貼的小標籤：圖片選項寫「hippo 河馬」，數字選項寫說明（five、勾勾5） */
+/** 點錯的選項下面貼的小標籤：hippo 河馬、four 四 */
 function captionOf(c: Card): string {
-  if (isNumberCard(c)) return meaningText(c) || c.word
-  return [c.word, meaningText(c)].filter(Boolean).join(' ')
+  if (isNumberCard(c)) {
+    const n = Number(c.word)
+    return `${enNumber(n)} ${zhNumber(n)}`
+  }
+  return [c.word, c.meaning].filter(Boolean).join(' ')
 }
 
 /** 字串看起來有多寬（中文字算 1、英文數字算 0.55），標籤用它決定字要縮多小才放得進一行 */
 function visualLength(text: string): number {
-  return [...text].reduce((n, ch) => n + (/[\u2E80-\uFFEF]/.test(ch) ? 1 : 0.55), 0)
+  return [...text].reduce((n, ch) => n + (/[⺀-￯]/.test(ch) ? 1 : 0.55), 0)
 }
 
 /** 字母卡角落的「Pp」 */
@@ -130,8 +102,13 @@ const index = ref(0)
 const flipped = ref(false)
 const card = computed(() => cards.value[index.value])
 const count = computed(() => (card.value ? countOf(card.value) : null))
-/** 數字卡沒有自己的圖，正面才畫一堆東西讓小朋友數；有圖的（例如數字形狀卡）就直接看圖 */
-const showCount = computed(() => count.value !== null && !!card.value?.image && !isPicture(card.value))
+
+/** 數東西的卡：放了 emoji 的 1～20，正面畫出那麼多個讓小朋友點著數；有自己的圖的（數字形狀卡）就直接看圖 */
+function isCounting(c: Card): boolean {
+  return countOf(c) !== null && !!c.image && !isPicture(c)
+}
+const showCount = computed(() => !!card.value && isCounting(card.value))
+
 /** 背面的圖：有指定背面圖就用它，否則跟正面同一張 */
 const backPicture = computed(() => {
   const c = card.value
@@ -140,10 +117,33 @@ const backPicture = computed(() => {
 })
 const isLast = computed(() => index.value === cards.value.length - 1)
 
+/**
+ * 正面要小朋友做什麼：唸出來，也寫在卡片下面（中文那行是給爸媽看的）。
+ *   數東西的卡：Let's count! Touch the apples.
+ *   數字卡：What number is this?
+ *   單字卡：What is this?
+ */
+function frontAsk(c: Card): { say: string; en: string; zh: string } {
+  if (isCounting(c)) {
+    const noun = countNounOf(c)
+    const touch = `Touch ${noun ? `the ${countOf(c) === 1 ? noun.en : noun.plural}` : 'them'}.`
+    return { say: `Let's count! ${touch}`, en: touch, zh: '點點看，一個一個數' }
+  }
+  if (isNumberCard(c)) return { say: 'What number is this?', en: 'What number is this?', zh: '這是數字幾？點一下翻面' }
+  return { say: 'What is this?', en: 'What is this?', zh: '這是什麼？點一下翻面' }
+}
+
+/** 數完之後的題目：How many apples are there? */
+function countQuestion(c: Card): string {
+  const noun = countNounOf(c)
+  return `How many ${noun ? `${noun.plural} ` : ''}are there?`
+}
+
 /** 數字卡上已經點過的東西，依點的順序排，數字徽章就是它的位置 */
 const counted = ref<number[]>([])
-/** 一個一個數的時候用哪種語言：跟這張卡一樣，中文卡就數「一、二、三」 */
-const countLang = computed(() => (card.value && speechOf(card.value).en ? 'en-US' : 'zh-TW'))
+/** 數完了問 How many：三個數字給小朋友選，空的表示還沒數完 */
+const countOptions = ref<number[]>([])
+const countWrong = ref<number[]>([])
 
 /* 字母卡上方的 A～Z：有卡的字母可以點，點了跳到那個字母的第一張 */
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
@@ -156,6 +156,31 @@ const letterIndex = computed(() => {
   return map
 })
 const currentLetter = computed(() => (isAbc.value && card.value ? initialOf(card.value.word) : ''))
+
+/**
+ * 數字卡上方的一排數字：數字是一天教一點，要能直接跳到今天教的那個。
+ * 卡不多就一張一個；像 0～100 那麼多張，改成每十個一格（0、10、20…），點了跳到那一段的第一張。
+ */
+const numberChips = computed(() => {
+  if (!isNumberDeck.value) return []
+  const list = cards.value
+  if (list.length <= 24) return list.map((c, i) => ({ label: c.word, index: i }))
+  const chips: { label: string; index: number }[] = []
+  const seen = new Set<number>()
+  list.forEach((c, i) => {
+    const tens = Math.floor(Number(c.word) / 10) * 10
+    if (seen.has(tens)) return
+    seen.add(tens)
+    chips.push({ label: String(tens), index: i })
+  })
+  return chips
+})
+/** 現在這張卡落在哪一格：最後一個起點不超過現在這張的 */
+const currentChip = computed(() => {
+  let at = -1
+  for (const chip of numberChips.value) if (chip.index <= index.value) at = chip.index
+  return at
+})
 
 /** 數字卡的排法：讓東西排得像骰子、蛋盒那樣好數，不要一長串 */
 const countCols = computed(() => {
@@ -170,21 +195,47 @@ const countCols = computed(() => {
 const countRows = computed(() => Math.ceil((count.value ?? 0) / Math.max(1, countCols.value)))
 
 let flipTimer: ReturnType<typeof setTimeout> | null = null
+let promptTimer: ReturnType<typeof setTimeout> | null = null
+
+function clearPrompt() {
+  if (promptTimer) clearTimeout(promptTimer)
+  promptTimer = null
+}
+
+/** 換到一張新卡：停一下再問「What is this?」，小朋友知道要開始猜（或開始數）了 */
+function askCardLater() {
+  clearPrompt()
+  if (!canSpeak) return
+  const at = index.value
+  promptTimer = setTimeout(() => {
+    const c = card.value
+    if (!c || index.value !== at || flipped.value || mode.value !== 'learn' || clip.value) return
+    speak([en(frontAsk(c).say)])
+  }, 450)
+}
 
 function flip() {
+  clearPrompt()
   flipped.value = !flipped.value
-  if (flipped.value && card.value) say(card.value)
+  if (flipped.value && card.value) speak(answerParts(card.value))
   else stopSpeaking()
+}
+
+function resetCard() {
+  if (flipTimer) clearTimeout(flipTimer)
+  flipped.value = false
+  counted.value = []
+  countOptions.value = []
+  countWrong.value = []
 }
 
 function go(step: number) {
   const n = cards.value.length
   if (!n) return
-  if (flipTimer) clearTimeout(flipTimer)
   index.value = (index.value + step + n) % n
-  flipped.value = false
-  counted.value = []
+  resetCard()
   stopSpeaking()
+  askCardLater()
 }
 
 function jumpTo(letter: string) {
@@ -192,23 +243,48 @@ function jumpTo(letter: string) {
   if (i !== undefined) go(i - index.value)
 }
 
-/** 點一個東西就數一個，數到最後一個自動翻面揭曉答案 */
+/** 點一個東西就用英文數一個，數到最後一個就問 How many …? */
 function countTap(i: number) {
   if (swiped) {
     swiped = false
     return
   }
-  if (counted.value.includes(i)) return
+  if (counted.value.includes(i) || countOptions.value.length) return
+  clearPrompt()
   counted.value = [...counted.value, i]
   const n = counted.value.length
-  speak([{ text: String(n), lang: countLang.value }], 0.9)
+  speak([en(enNumber(n))], 0.9)
 
   if (n === count.value) {
     const at = index.value
     flipTimer = setTimeout(() => {
-      if (index.value === at && !flipped.value && mode.value === 'learn') flip()
-    }, 800)
+      if (index.value !== at || flipped.value || mode.value !== 'learn' || !card.value) return
+      countOptions.value = countChoices(n)
+      speak([en(countQuestion(card.value))])
+    }, 700)
   }
+}
+
+/** How many 的三個選項：答案和差一兩個的數字，照大小排，像數線一樣好找 */
+function countChoices(n: number): number[] {
+  const near = shuffle([n - 2, n - 1, n + 1, n + 2].filter((x) => x >= 1)).slice(0, 2)
+  return [n, ...near].sort((a, b) => a - b)
+}
+
+/** 選對了翻面揭曉：Yes! Eleven. 十一顆蘋果. Eleven apples. 選錯告訴他選的是幾，再試一次 */
+function pickCount(opt: number) {
+  const c = card.value
+  if (!c || flipped.value) return
+  if (opt === count.value) {
+    chimeRight()
+    flipped.value = true
+    speak([{ pause: 250 }, en('Yes!'), { pause: 300 }, ...answerParts(c)])
+    return
+  }
+  if (countWrong.value.includes(opt)) return
+  countWrong.value = [...countWrong.value, opt]
+  chimeWrong()
+  speak([{ pause: 250 }, en('No!'), { pause: 300 }, en(`This is ${enNumber(opt)}.`), { pause: 500 }, en('Try again!')])
 }
 
 /* 左右滑換卡；滑過之後瀏覽器還是會送一次 click，要把它吃掉，不然會順便翻面 */
@@ -244,12 +320,12 @@ function toLearn() {
   clearQuizTimers()
   stopSpeaking()
   mode.value = 'learn'
-  flipped.value = false
-  counted.value = []
+  resetCard()
+  askCardLater()
   if (isTv) nextTick(() => cardRef.value?.focus())
 }
 
-/* ---------- 考考我：聽發音，從幾張圖裡點出對的 ---------- */
+/* ---------- 考考我：聽題目，從幾張圖裡點出對的 ---------- */
 
 /** 一輪最多幾題：小朋友專注的時間很短，寧可多玩幾輪 */
 const QUIZ_LEN = 8
@@ -258,8 +334,8 @@ const canQuiz = computed(() => cards.value.length >= 2)
 
 /**
  * 題目的種類：
- *   listen  聽單字（或數字），點出是哪張圖；數字卡沒有自己的圖時，點的是數字
- *   picture 看形狀圖，點出是數字幾（數字卡有自己的圖時）
+ *   listen  聽題目（Where is the cat? / Can you find number seven?），點出是哪張圖；數字卡沒有自己的圖時，點的是數字
+ *   picture 看形狀圖，點出是數字幾（What number is this?，數字卡有自己的圖時）
  */
 type QuizKind = 'listen' | 'picture'
 
@@ -268,6 +344,8 @@ interface Question {
   /** 正確答案是第幾張卡 */
   answer: number
   options: number[]
+  /** 用哪一種問法（Where is／Can you find／Can you touch）；點錯再問一次時用同一句 */
+  style: number
   /** 這題點錯過，答對也不給星星 */
   missed: boolean
   /** 點錯之後補考的那一題，不會再補第二次 */
@@ -315,7 +393,7 @@ function shuffle<T>(list: T[]): T[] {
 
 /**
  * 這張卡可以出哪幾種題目。
- * 數字形狀卡兩種混著出：看圖選數字，以及聽數字（「七」）從形狀圖裡找出拐杖。
+ * 數字形狀卡兩種混著出：看圖選數字，以及聽數字（Can you find number seven?）從形狀圖裡找出拐杖。
  */
 function kindsFor(c: Card): QuizKind[] {
   return countOf(c) !== null && isPicture(c) ? ['picture', 'listen'] : ['listen']
@@ -351,7 +429,14 @@ function makeQuestion(answer: number, retry = false): Question {
       return true
     })
     .slice(0, 2)
-  return { kind, answer, options: shuffle([answer, ...others]), missed: false, retry }
+  return {
+    kind,
+    answer,
+    options: shuffle([answer, ...others]),
+    style: Math.floor(Math.random() * ASK_STYLES),
+    missed: false,
+    retry,
+  }
 }
 
 const optionsRef = ref<HTMLElement | null>(null)
@@ -363,6 +448,7 @@ function focusFirstOption() {
 
 function startQuiz() {
   clearQuizTimers()
+  clearPrompt()
   stopSpeaking()
   const order = shuffle(cards.value.map((_, i) => i)).slice(0, QUIZ_LEN)
   questions.value = order.map((i) => makeQuestion(i))
@@ -373,24 +459,53 @@ function startQuiz() {
   rightPick.value = null
   quizDone.value = false
   mode.value = 'quiz'
-  askLater()
+  askLater(450, true)
   focusFirstOption()
 }
 
-/**
- * 數字卡有自己的圖（例如數字形狀卡）：改成看圖選數字。
- * 這種題目不唸出來 —— 一唸就等於把答案說出來了，答對之後才唸完整的口訣。
- */
+/** 數字卡有自己的圖（例如數字形狀卡）：改成看圖選數字 */
 const pictureQuiz = computed(() => question.value?.kind === 'picture')
 
-function ask() {
-  const q = question.value
-  if (q && q.kind === 'listen') sayPrompt(cards.value[q.answer]!)
+/**
+ * 題目怎麼問：Where is the cat? / Can you find number seven? / Can you touch the glasses?
+ * 看圖選數字問 What number is this? 卡片沒有英文的話，只好用中文問。
+ */
+function promptParts(q: Question): SpeechText[] {
+  if (q.kind === 'picture') return [en('What number is this?')]
+  const c = cards.value[q.answer]!
+  const ask = askOf(c, q.style)
+  return ask ? [en(ask)] : [zh(`${speechOf(c).zh || c.word}在哪裡？`)]
 }
 
-function askLater(ms = 450) {
+/** 第一題前面先說一聲，小朋友知道要開始玩了 */
+function ask(intro = false) {
+  const q = question.value
+  if (!q) return
+  speak([...(intro ? [en("Let's play a game!"), { pause: 400 }] : []), ...promptParts(q)])
+}
+
+function askLater(ms = 450, intro = false) {
   if (askTimer) clearTimeout(askTimer)
-  askTimer = setTimeout(ask, ms)
+  askTimer = setTimeout(() => ask(intro), ms)
+}
+
+/**
+ * 點錯了要說的話：先說 No!，告訴他點的是什麼，再把題目問一次。
+ *   No! This is a horse. Listen again. …… Where is the frog?
+ *   No! This is four. Try again. …… What number is this?
+ * 「Listen again.」後面停將近一秒，小朋友才聽得出接下來那句是題目，不會跟前一句黏在一起。
+ */
+function remindParts(wrong: Card, q: Question): SpeechPart[] {
+  return [
+    { pause: 250 },
+    en('No!'),
+    { pause: 300 },
+    ...thisIsParts(wrong),
+    { pause: 500 },
+    en(q.kind === 'listen' ? 'Listen again.' : 'Try again.'),
+    { pause: 900 },
+    ...promptParts(q),
+  ]
 }
 
 function pick(opt: number) {
@@ -400,7 +515,7 @@ function pick(opt: number) {
   // 點過的錯誤選項再點一次：只把它的名字唸給他聽，不再說 No、不再扣分，讓他自己比較
   if (wrongPicks.value.includes(opt)) {
     if (askTimer) clearTimeout(askTimer)
-    speak(thisIsParts(cards.value[opt]!, q))
+    speak(thisIsParts(cards.value[opt]!))
     return
   }
 
@@ -412,14 +527,12 @@ function pick(opt: number) {
       roundStars.value++
       addStar(props.deck.uid)
     }
-    // 先說 Yes!；有口訣的再把口訣唸一遍（字母卡再加中文）當複習，看圖選數字沒聽過題目，也唸一遍。
-    // 整串唸完才換下一題，不會被下一題的題目切掉
-    const card = cards.value[q.answer]!
-    const sayAll = q.kind === 'picture' || Boolean(chantOf(card, isAbc.value))
+    // 先說 Yes!，再把答案說一遍當複習；整串唸完才換下一題，不會被下一題的題目切掉
     speakThen([
       { pause: 250 },
-      { text: 'Yes!', lang: 'en-US' },
-      ...(sayAll ? [{ pause: 400 }, ...fullParts(card)] : []),
+      en('Yes!'),
+      { pause: 400 },
+      ...nameParts(cards.value[q.answer]!),
     ], nextQuestion)
     return
   }
@@ -430,9 +543,20 @@ function pick(opt: number) {
   if (!q.missed && !q.retry) questions.value.push(makeQuestion(q.answer, true))
   q.missed = true
 
-  // 點錯正好是教的時候：No!，告訴他點的是什麼，再把題目唸一次（開頭停一下，讓答錯的音效先響完）
+  // 點錯正好是教的時候：No!，告訴他點的是什麼，再把題目問一次（開頭停一下，讓答錯的音效先響完）
   if (askTimer) clearTimeout(askTimer)
   speak(remindParts(cards.value[opt]!, q))
+}
+
+/** 玩完一輪的鼓勵：Great job! You got five stars! */
+function doneParts(): SpeechPart[] {
+  const s = roundStars.value
+  const cheer = s >= roundSize.value
+    ? 'Wow! You got them all! Great job!'
+    : s === 0
+      ? "Good try! Let's play again!"
+      : `Great job! You got ${enNumber(s)} ${s === 1 ? 'star' : 'stars'}!`
+  return [{ pause: 500 }, en(cheer)]
 }
 
 function nextQuestion() {
@@ -441,6 +565,7 @@ function nextQuestion() {
   if (qIndex.value + 1 >= questions.value.length) {
     quizDone.value = true
     chimeRight()
+    speak(doneParts())
     return
   }
   qIndex.value++
@@ -465,9 +590,7 @@ function optionIsImage(c: Card, kind: QuizKind): boolean {
 /** 沒有語音的裝置（例如部分電視）只好把題目寫出來 */
 const promptText = computed(() => {
   const q = question.value
-  const c = q ? cards.value[q.answer] : null
-  if (!c) return ''
-  return isNumberCard(c) ? (speechOf(c).en || c.word) : c.word
+  return q ? promptParts(q).map((p) => p.text).join(' ') : ''
 })
 
 /* ---------- 影片片段：只播老師教這個字的那幾秒 ---------- */
@@ -480,6 +603,7 @@ const {
 } = useYouTubePlayer({ onFinish: closeClip })
 
 async function openClip(c: CardClip) {
+  clearPrompt()
   stopSpeaking()
   clip.value = c
   await nextTick()
@@ -520,12 +644,14 @@ onMounted(() => {
   }, 1000)
 
   window.addEventListener('keydown', onKey)
+  askCardLater()
   if (isTv) nextTick(() => cardRef.value?.focus())
 })
 
 onBeforeUnmount(() => {
   if (ticker) clearInterval(ticker)
   if (flipTimer) clearTimeout(flipTimer)
+  clearPrompt()
   clearQuizTimers()
   stopSpeaking()
   window.removeEventListener('keydown', onKey)
@@ -571,17 +697,30 @@ onBeforeUnmount(() => {
     <!-- ===== 看卡片 ===== -->
     <main v-if="mode === 'learn' && card" class="learn">
       <!-- 字母卡：A～Z 一排，點字母直接跳過去，沒有卡的字母淡掉 -->
-      <nav v-if="isAbc" class="abc-strip" aria-label="字母">
+      <nav v-if="isAbc" class="jump-strip" aria-label="字母">
         <button
           v-for="l in ALPHABET"
           :key="l"
-          class="abc-chip"
+          class="jump-chip"
           :class="{ 'is-current': l === currentLetter }"
           :disabled="!letterIndex.has(l)"
           :aria-current="l === currentLetter ? 'true' : undefined"
           @click="jumpTo(l)"
         >
           {{ l }}
+        </button>
+      </nav>
+      <!-- 數字卡：一排數字，今天教到哪個就直接點過去 -->
+      <nav v-else-if="numberChips.length" class="jump-strip" aria-label="數字">
+        <button
+          v-for="chip in numberChips"
+          :key="chip.index"
+          class="jump-chip is-number"
+          :class="{ 'is-current': chip.index === currentChip }"
+          :aria-current="chip.index === currentChip ? 'true' : undefined"
+          @click="go(chip.index - index)"
+        >
+          {{ chip.label }}
         </button>
       </nav>
 
@@ -602,7 +741,7 @@ onBeforeUnmount(() => {
         >
           <div class="flip-inner">
             <!-- 正面只有圖：先讓小朋友自己猜、自己數 -->
-            <div class="face face-front" :aria-hidden="flipped">
+            <div class="face face-front" :class="{ 'is-asking': countOptions.length }" :aria-hidden="flipped">
               <span v-if="currentLetter" class="abc-badge">{{ badgeOf(card) }}</span>
               <div
                 v-if="showCount"
@@ -626,8 +765,26 @@ onBeforeUnmount(() => {
               <span v-else-if="card.image" class="face-emoji">{{ card.image }}</span>
               <span v-else class="face-word" :style="{ '--len': card.word.length }">{{ card.word }}</span>
 
-              <span class="face-hint">
-                {{ showCount ? '點點看，一個一個數' : count !== null ? '這是數字幾？點一下翻面' : '這是什麼？點一下翻面' }}
+              <!-- 數完了：How many apples are there? 三個數字選一個 -->
+              <div v-if="countOptions.length" class="count-ask" @click.stop>
+                <p class="count-question">{{ countQuestion(card) }}</p>
+                <div class="count-options">
+                  <button
+                    v-for="opt in countOptions"
+                    :key="opt"
+                    type="button"
+                    class="count-option"
+                    :class="{ 'is-wrong': countWrong.includes(opt) }"
+                    @click.stop="pickCount(opt)"
+                  >
+                    {{ opt }}
+                  </button>
+                </div>
+              </div>
+              <!-- 現在要做什麼：英文那行是說給小朋友聽的，中文那行給爸媽看 -->
+              <span v-else class="face-hint">
+                <span class="hint-en">{{ frontAsk(card).en }}</span>
+                <span class="hint-zh">{{ frontAsk(card).zh }}</span>
               </span>
             </div>
 
@@ -639,20 +796,28 @@ onBeforeUnmount(() => {
               <span v-else-if="card.image && count === null" class="back-emoji">{{ card.image }}</span>
               <!-- 數字卡背面也排一排小小的實物，數量跟數字放在一起看 -->
               <span v-if="showCount" class="back-count">{{ (card.image || '⭐').repeat(count ?? 0) }}</span>
-              <span class="back-word" :style="{ '--len': card.word.length }">
+              <span class="back-word" :class="{ 'is-number': isNumberCard(card) }" :style="{ '--len': card.word.length }">
                 <!-- 字母卡把開頭字母上色：A is for ant 的那個 a -->
                 <template v-if="currentLetter"><span class="back-initial">{{ card.word.charAt(0) }}</span>{{ card.word.slice(1) }}</template>
                 <template v-else>{{ card.word }}</template>
               </span>
-              <!-- 中文數字卡（13 十三）只顯示數字，「十三」翻面時唸出來就好 -->
-              <span v-if="meaningText(card) && !isSpokenOnlyMeaning(card)" class="back-meaning">{{ meaningText(card) }}</span>
+              <!-- 數字卡：one pencil／一支鉛筆；單字卡：說明，再加上翻面時唸的那句英文 -->
+              <template v-if="isNumberCard(card)">
+                <span class="back-meaning">{{ numberLabels(card).en }}</span>
+                <span class="back-sub">{{ numberLabels(card).zh }}</span>
+              </template>
+              <template v-else>
+                <span v-if="card.meaning" class="back-meaning">{{ card.meaning }}</span>
+                <span v-if="sentenceOf(card)" class="back-sub">{{ sentenceOf(card) }}</span>
+              </template>
             </div>
           </div>
         </div>
       </div>
 
       <div class="progress" :aria-label="`第 ${index + 1} 張，共 ${cards.length} 張`">
-        <template v-if="cards.length <= 15">
+        <!-- 上面已經有一排字母、數字的話，不用再排一排點點 -->
+        <template v-if="cards.length <= 15 && !isAbc && !numberChips.length">
           <span
             v-for="(_, i) in cards"
             :key="i"
@@ -694,12 +859,19 @@ onBeforeUnmount(() => {
         <!-- 看圖選數字：題目就是那張形狀圖 -->
         <template v-if="pictureQuiz">
           <img class="prompt-img" :src="imageSrc(cards[question.answer]!.image)" alt="" draggable="false">
-          <p class="prompt-text">這是數字幾？</p>
+          <p class="prompt-text">
+            What number is this?
+            <span class="prompt-zh">這是數字幾？</span>
+          </p>
         </template>
-        <button v-else class="ask-btn" @click="ask">
+        <!-- 題目不寫出來（寫了就等於把答案給他看），用聽的；沒有語音的裝置才把題目寫出來 -->
+        <button v-else class="ask-btn" @click="ask()">
           <span class="ask-icon" aria-hidden="true">🔊</span>
-          <span v-if="canSpeak">聽聽看，是哪一個？</span>
-          <span v-else>哪一個是「{{ promptText }}」？</span>
+          <span v-if="canSpeak" class="ask-label">
+            Listen and touch!
+            <span class="ask-zh">聽聽看，點出對的那一張</span>
+          </span>
+          <span v-else>{{ promptText }}</span>
         </button>
 
         <div ref="optionsRef" class="options" :class="{ 'is-compact': pictureQuiz }">
@@ -960,7 +1132,7 @@ onBeforeUnmount(() => {
   background: color-mix(in srgb, var(--deck) 14%, var(--paper));
 }
 
-.face-emoji { font-size: min(52cqw, 48cqh); line-height: 1.1; }
+.face-emoji { font-size: min(52cqw, 44cqh); line-height: 1.1; }
 .back-emoji { font-size: min(30cqw, 26cqh); line-height: 1.1; }
 
 .face-img,
@@ -972,20 +1144,24 @@ onBeforeUnmount(() => {
   border-radius: 18px;
   pointer-events: none;
 }
-.face-img { height: 74%; }
-.back-img { flex: none; height: 42%; }
+.face-img { height: 64%; }
 
-/* 背面另外放了一張完整的卡（上面已經有數字和名稱），圖放大、下面的字縮小 */
-.has-back-image { gap: 6px; padding-top: 28px; }
-.has-back-image .back-img { height: 66%; }
-.has-back-image .back-word { font-size: min(15cqh, calc(80cqw / max(var(--len), 2.4))); }
-.has-back-image .back-meaning { font-size: min(8cqh, 9cqw); }
+/* 正面的圖、字往上挪一點，底下留位子給「What is this?」那兩行 */
+.face-front > .face-img,
+.face-front > .face-emoji,
+.face-front > .face-word { margin-bottom: 10cqh; }
+.back-img { flex: none; height: 42%; }
 
 
 /* 長的字自動縮小，elephant 跟 3 都要剛好塞得下 */
 .face-word,
-.back-word {
+.back-word.is-number {
   font-size: min(38cqh, calc(150cqw / max(var(--len), 2.4)));
+}
+/* 單字卡背面還要放說明和一句英文，字小一點 */
+.back-word { font-size: min(28cqh, calc(130cqw / max(var(--len), 2.4))); }
+.face-word,
+.back-word {
   font-weight: 900;
   line-height: 1;
   letter-spacing: .5px;
@@ -1001,16 +1177,48 @@ onBeforeUnmount(() => {
 }
 
 .back-meaning {
-  font-size: min(10cqh, 11cqw);
+  font-size: min(9cqh, 10cqw);
   font-weight: 800;
   color: var(--ink-dim);
   text-align: center;
 }
 
+/* 翻面時唸的那句英文，或是數字卡的中文說法 */
+.back-sub {
+  max-width: 92%;
+  font-size: max(13px, min(5.6cqh, 6.4cqw));
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--ink-dim);
+  text-align: center;
+}
+
+/* 背面另外放了一張完整的卡（上面已經有數字和名稱），圖放大、下面的字縮小；要寫在一般大小的後面才蓋得過 */
+.has-back-image { gap: 6px; padding-top: 28px; }
+.has-back-image .back-img { height: 58%; }
+.has-back-image .back-word { font-size: min(14cqh, calc(80cqw / max(var(--len), 2.4))); }
+.has-back-image .back-meaning { font-size: min(7cqh, 8cqw); }
+.has-back-image .back-sub { font-size: max(12px, min(4.6cqh, 5.4cqw)); }
+
 .face-hint {
   position: absolute;
+  left: 4%;
+  right: 4%;
   bottom: 3.5cqh;
-  font-size: max(13px, min(4.6cqh, 5cqw));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .6cqh;
+  text-align: center;
+  line-height: 1.2;
+}
+.hint-en {
+  font-size: max(16px, min(6cqh, 7cqw));
+  font-weight: 900;
+  color: var(--ink);
+}
+.hint-zh {
+  font-size: max(12px, min(3.8cqh, 4.4cqw));
   font-weight: 700;
   color: var(--ink-dim);
 }
@@ -1022,7 +1230,7 @@ onBeforeUnmount(() => {
   gap: 2.5cqh 3cqw;
   justify-content: center;
   align-content: center;
-  margin-bottom: 6cqh;
+  margin-bottom: 12cqh;
 }
 
 .count-item {
@@ -1044,6 +1252,48 @@ onBeforeUnmount(() => {
   display: block;
   font-size: min(calc(76cqw / var(--cols)), calc(60cqh / var(--rows)), 34cqh);
 }
+
+/* 數完要回答 How many：東西縮小一點，底下讓給題目和選項 */
+.is-asking .count-grid { margin-bottom: 30cqh; }
+.is-asking .count-emoji { font-size: min(calc(70cqw / var(--cols)), calc(40cqh / var(--rows)), 22cqh); }
+.is-asking .count-badge { font-size: max(10px, min(calc(14cqw / var(--cols)), 5cqh)); }
+
+.count-ask {
+  position: absolute;
+  left: 4%;
+  right: 4%;
+  bottom: 3.5cqh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2cqh;
+  cursor: default;
+}
+.count-question {
+  margin: 0;
+  font-size: max(16px, min(6cqh, 7cqw));
+  font-weight: 900;
+  line-height: 1.2;
+  text-align: center;
+}
+.count-options { display: flex; gap: 5cqw; }
+.count-option {
+  width: min(17cqh, 22cqw);
+  height: min(17cqh, 22cqw);
+  padding: 0;
+  border: 4px solid var(--deck);
+  border-radius: 18px;
+  background: #fff;
+  color: var(--ink);
+  font-family: inherit;
+  font-size: min(10cqh, 12cqw);
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  animation: pop .25s ease-out;
+}
+.count-option:active { transform: scale(.92); }
+.count-option.is-wrong { opacity: .35; animation: shake .4s ease; }
 
 /* 數過的：稍微淡一點，掛上「第幾個」的號碼牌 */
 .count-item.is-counted .count-emoji { opacity: .45; }
@@ -1069,8 +1319,8 @@ onBeforeUnmount(() => {
   to { scale: 1; opacity: 1; }
 }
 
-/* ---------- 字母卡的 A～Z ---------- */
-.abc-strip {
+/* ---------- 字母卡的 A～Z、數字卡的一排數字 ---------- */
+.jump-strip {
   flex: none;
   display: flex;
   flex-wrap: wrap;
@@ -1079,7 +1329,7 @@ onBeforeUnmount(() => {
   margin: 0 0 14px;
 }
 
-.abc-chip {
+.jump-chip {
   width: 32px;
   height: 32px;
   padding: 0;
@@ -1092,9 +1342,17 @@ onBeforeUnmount(() => {
   font-weight: 800;
   cursor: pointer;
 }
-.abc-chip:active { transform: scale(.9); }
-.abc-chip:disabled { opacity: .28; cursor: default; }
-.abc-chip.is-current { background: var(--deck); color: var(--ink); }
+.jump-chip:active { transform: scale(.9); }
+.jump-chip:disabled { opacity: .28; cursor: default; }
+.jump-chip.is-current { background: var(--deck); color: var(--ink); }
+/* 數字有到三位數（100），寬度跟著字走 */
+.jump-chip.is-number {
+  width: auto;
+  min-width: 36px;
+  height: 36px;
+  padding: 0 9px;
+  font-variant-numeric: tabular-nums;
+}
 
 /* ---------- 進度與控制 ---------- */
 .progress {
@@ -1194,6 +1452,21 @@ onBeforeUnmount(() => {
 }
 .ask-btn:active { transform: scale(.96); }
 
+/* 英文是說給小朋友聽的，底下一行小小的中文給爸媽看 */
+.ask-label,
+.prompt-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.2;
+}
+.ask-label { align-items: flex-start; }
+.ask-zh,
+.prompt-zh {
+  font-size: .62em;
+  font-weight: 700;
+  opacity: .75;
+}
 
 .ask-icon {
   display: grid;
@@ -1432,8 +1705,8 @@ onBeforeUnmount(() => {
     justify-items: center;
   }
   .stage { grid-column: 1; grid-row: 1 / 5; height: 100%; }
-  /* 橫向高度不夠放 A～Z，用左右鍵或滑動換卡 */
-  .abc-strip { display: none; }
+  /* 橫向高度不夠放 A～Z、一排數字，用左右鍵或滑動換卡 */
+  .jump-strip { display: none; }
   .progress { grid-column: 2; grid-row: 2; margin: 0 0 12px; }
   .learn-controls {
     grid-column: 2;

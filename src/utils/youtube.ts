@@ -15,8 +15,10 @@ export interface CardClip {
 export interface Card {
   /** 卡片上最大的那個字，例如「3」「cat」 */
   word: string
-  /** 補充說明，例如「three 三」「貓」，可以空白 */
+  /** 補充說明，例如「貓」「一支鉛筆 one pencil」，可以空白 */
   meaning: string
+  /** 翻面時接著唸的簡單英文句子，例如「Yum, delicious apple!」，可以空白 */
+  sentence: string
   /** emoji，或圖片網址／public 底下的相對路徑，可以空白 */
   image: string
   /** 翻到背面時換成這張圖（例如正面遮住數字、背面是完整的卡），可以空白 */

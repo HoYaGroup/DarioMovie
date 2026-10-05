@@ -1,25 +1,29 @@
 import { parseVideoId, type Card, type CardClip, type VideoItem } from './youtube'
-import type { SpeechText } from './speech'
 
 /**
  * 字卡的解析與顯示輔助。
  *
  * playlist.txt 裡一張卡寫成一行：
  *
- *   卡: 3 | three 三 | 🍎 | https://youtu.be/xxxxxxxxxxx 0:35-0:42
- *   卡: cat | 貓 | 🐱
+ *   卡: apple | 蘋果 | 🍎 | Yum, delicious apple!
  *   卡: dog | 狗 | cards/dog.jpg
- *   卡: 3 | 3、3、蝴蝶3 | cards/shapes/3-q.webp | cards/shapes/3.webp
+ *   卡: 11 | 🍎 | https://youtu.be/xxxxxxxxxxx 0:35-0:42
+ *   卡: 1 | 一支鉛筆 one pencil | cards/shapes/1-q.webp | cards/shapes/1.webp
  *
  * 第一欄是卡片上最大的字，後面幾欄看內容自動判斷是什麼：
  *   ‧ 有 youtu 字樣的是影片片段，後面可以接「開始-結束」時間
  *   ‧ 只有 emoji，或是圖片網址／路徑的是圖；寫兩張的話，第一張是正面、第二張是背面
+ *   ‧ 有英文、而且用 . ! ? 結尾的是句子，翻面時接在單字後面唸
  *   ‧ 其他的是說明（英文、中文都可以寫在一起）
  * 所以欄位順序寫錯、少寫一欄都沒關係，不會整張卡壞掉。
  */
 
 const RE_EMOJI_ONLY = /^(?:\p{Extended_Pictographic}|\p{Regional_Indicator}|[\u{FE0F}\u{200D}\u{1F3FB}-\u{1F3FF}]|\s)+$/u
 const RE_IMAGE_EXT = /\.(?:png|jpe?g|webp|gif|svg|avif)(?:\?.*)?$/i
+/** 句子：有英文字，用 . ! ? 結尾（Yum, delicious apple!） */
+const RE_SENTENCE = /[A-Za-z].*[.!?]["'”’)]?$/
+/** 以前用來指定開頭音的 KK 音標（/ju/）：現在不唸口訣了，舊的片單寫了也略過 */
+const RE_KK = /(?:^|\s)\/[^/\s]+\/(?=\s|$)/g
 
 /** 數字卡最多畫幾個東西，再多就數不清楚了 */
 const MAX_COUNT = 20
@@ -80,6 +84,7 @@ export function parseCard(text: string): { card: Card | null; issue: string } {
   if (!word) return { card: null, issue: '字卡至少要寫一個字' }
 
   let meaning = ''
+  let sentence = ''
   let image = ''
   let backImage = ''
   let clip: CardClip | null = null
@@ -96,24 +101,21 @@ export function parseCard(text: string): { card: Card | null; issue: string } {
       else image = field
       continue
     }
+    if (RE_SENTENCE.test(field)) {
+      sentence = sentence ? `${sentence} ${field}` : field
+      continue
+    }
     // 多寫的說明接在一起，不要默默丟掉
-    meaning = meaning ? `${meaning} ${field}` : field
+    const text = field.replace(RE_KK, ' ').trim()
+    if (text) meaning = meaning ? `${meaning} ${text}` : text
   }
 
-  return { card: { word, meaning, image, backImage, clip }, issue }
+  return { card: { word, meaning, sentence, image, backImage, clip }, issue }
 }
 
 /** 數字卡：卡片上的字全是數字（3、13、100） */
 export function isNumberCard(card: Card): boolean {
   return /^\d+$/.test(card.word.trim())
-}
-
-/**
- * 數字卡的說明只是中文唸法（13 → 十三）：畫面上只顯示數字，「十三」用聽的就好，
- * 重點是認數字的樣子。說明是口訣（鉛筆1）或英文（thirty）的照樣顯示。
- */
-export function isSpokenOnlyMeaning(card: Card): boolean {
-  return isNumberCard(card) && /^[零〇一二兩三四五六七八九十百千萬]+$/.test(meaningText(card))
 }
 
 /**
@@ -145,105 +147,14 @@ function zhOf(s: string): string {
 }
 
 /**
- * 這張卡要唸什麼。說明寫哪種語言就唸哪種，兩種都寫才兩種都唸——
- * 一本卡固定一種語言，小朋友比較不會搞混。
- * 英文：卡片上的字是英文就唸它，否則唸說明裡的英文；說明完全沒寫中文、卡片又是數字，
- * 交給英文語音唸（「3」會唸成 three）。
- * 中文：說明裡英文以外的部分（有中文字才唸）。
+ * 單字卡的中文、英文名字（數字卡另外看 numberLabels）。
+ * 英文：卡片上的字是英文就用它，否則用說明裡的英文；中文：說明裡英文以外的部分。
  */
 export function speechOf(card: Card): { en: string; zh: string } {
-  const meaning = meaningText(card)
-  const numberInEnglish = isNumberCard(card) && !hasHan(meaning) ? card.word : ''
-  const en = latin(card.word) || latin(meaning) || numberInEnglish
-  const zh = zhOf(meaning) || zhOf(card.word)
-  return { en, zh }
+  return { en: latin(card.word) || latin(card.meaning), zh: zhOf(card.meaning) || zhOf(card.word) }
 }
 
-/* ---------- 開頭的音（KK 音標） ---------- */
-
-const RE_KK = /^\/[^/\s]+\/$/
-
-/**
- * 說明裡可以單獨寫一段 KK 音標，指定這張卡開頭的音，例如 unicorn 開頭不是 U 平常的音：
- *   卡: unicorn | /ju/ 獨角獸 | 🦄
- * 拿出來當 sound（不含斜線），剩下的才是真正顯示、唸出來的說明。
- */
-function splitSound(meaning: string): { sound: string; text: string } {
-  const tokens = meaning.split(/\s+/).filter(Boolean)
-  const i = tokens.findIndex((t) => RE_KK.test(t))
-  if (i < 0) return { sound: '', text: meaning }
-  return { sound: tokens[i]!.slice(1, -1), text: tokens.filter((_, j) => j !== i).join(' ') }
-}
-
-const RE_CHANT = /^(\S+?)\s*[、，,]\s*(\S+?)\s*[、，,]\s*(.+)$/
-
-/** 說明寫成口訣「1、1、鉛筆1」時拆出後半「鉛筆1」；開頭兩次要跟卡片上的字一樣才算口訣 */
-function chantTail(card: Card): string | null {
-  const m = splitSound(card.meaning).text.match(RE_CHANT)
-  return m && m[1] === card.word && m[2] === card.word ? m[3]! : null
-}
-
-/**
- * 卡片上顯示、點錯時說的說明：拿掉指定開頭音的那段音標；
- * 口訣只留後半「鉛筆1」——「1、1、」是唸口訣的節奏，翻面時唸就好，不用寫出來。
- */
-export function meaningText(card: Card): string {
-  return chantTail(card) ?? splitSound(card.meaning).text
-}
-
-/**
- * 自然發音：每個字母開頭最常見的音（KK 音標）。
- * 老師教的不一樣，改這張表，或在卡片上用 /音標/ 指定都可以。
- */
-export const LETTER_SOUNDS: Record<string, string> = {
-  A: 'æ', B: 'b', C: 'k', D: 'd', E: 'ɛ', F: 'f', G: 'g', H: 'h', I: 'ɪ',
-  J: 'dʒ', K: 'k', L: 'l', M: 'm', N: 'n', O: 'ɑ', P: 'p', Q: 'kw', R: 'r',
-  S: 's', T: 't', U: 'ʌ', V: 'v', W: 'w', X: 'ks', Y: 'j', Z: 'z',
-}
-
-/** 這張字母卡開頭的音：卡片上有指定就用指定的，否則用字母平常的音 */
-export function soundOf(card: Card): string {
-  return splitSound(card.meaning).sound || LETTER_SOUNDS[initialOf(card.word)] || ''
-}
-
-/*
- * 瀏覽器的語音沒辦法直接唸音標，只能給它文字。這裡把音標換成英文語音會唸成「一個音」的拼法
- * （/p/ → puh），每一個都用 Samantha 語音實測過：唸出來的長度跟一個單音節字一樣，不會被拆成字母一個一個拼。
- * /æ/（apple）、/ɪ/（it）試過好幾種拼法都唸不準，寧可不唸，口訣就只唸字母兩次；
- * /ks/ 的開頭跟 X 的字母唸法一樣，也不另外唸。
- */
-const KK_SAY: Record<string, string> = {
-  b: 'buh', p: 'puh', d: 'duh', t: 'tuh', g: 'guh', k: 'kuh', f: 'fuh', v: 'vuh',
-  s: 'suh', z: 'zuh', h: 'huh', m: 'muh', n: 'nuh', l: 'luh', r: 'ruh', w: 'wuh',
-  j: 'yuh', dʒ: 'juh', tʃ: 'chuh', ʃ: 'shuh', kw: 'kwuh',
-  ɛ: 'eh', ɑ: 'ah', ʌ: 'uh', e: 'ay', i: 'ee', o: 'oh', u: 'oo', ɔ: 'aw', aɪ: 'eye', aʊ: 'ow', ju: 'you',
-}
-
-/* ---------- 口訣 ---------- */
-
-/**
- * 口訣，翻面看答案、考考我答對之後唸：
- *   數字卡：說明寫成「3、3、蝴蝶3」
- *   字母卡：自動組成「P、P、puh、puh、panda」
- * 考考我出題時不唸口訣——口訣等於提示，題目只唸單字本身，讓小朋友自己認。
- */
-export function chantOf(card: Card, abc: boolean): SpeechText[] | null {
-  // 說明自己寫成口訣：「1、1、鉛筆1」，整句照唸
-  if (chantTail(card) !== null) {
-    const chant = splitSound(card.meaning).text
-    return [{ text: chant, lang: hasHan(chant) ? 'zh-TW' : 'en-US' }]
-  }
-
-  // ABC 字母卡：字母唸兩次、開頭的音唸兩次，再接單字，全部用英文語音唸
-  if (!abc) return null
-  const letter = initialOf(card.word)
-  if (!letter) return null
-  const say = KK_SAY[soundOf(card)] ?? ''
-  const sound = say ? ` ${say}, ${say},` : ''
-  return [{ text: `${letter}, ${letter},${sound} ${card.word}`, lang: 'en-US' }]
-}
-
-/* ---------- 數字卡一次產生一串 ---------- */
+/* ---------- 數字的唸法 ---------- */
 
 /** 一次最多產生到幾：給小朋友認數字，999 已經很夠 */
 export const NUMBER_MAX = 999
@@ -252,6 +163,7 @@ const ZH_DIGITS = ['零', '一', '二', '三', '四', '五', '六', '七', '八'
 
 /** 數字的中文唸法：31 → 三十一、105 → 一百零五、200 → 兩百（台灣口語） */
 export function zhNumber(n: number): string {
+  if (n > NUMBER_MAX) return String(n)
   const d = (x: number) => ZH_DIGITS[x]!
   if (n < 10) return d(n)
   if (n < 20) return '十' + (n % 10 ? d(n % 10) : '')
@@ -273,6 +185,7 @@ const EN_TENS = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy
 
 /** 數字的英文：31 → thirty-one、100 → one hundred、125 → one hundred twenty-five（美式） */
 export function enNumber(n: number): string {
+  if (n > NUMBER_MAX) return String(n)
   if (n < 20) return EN_ONES[n]!
   if (n < 100) return EN_TENS[Math.floor(n / 10)]! + (n % 10 ? '-' + EN_ONES[n % 10]! : '')
   const rest = n % 100
@@ -280,45 +193,178 @@ export function enNumber(n: number): string {
 }
 
 /**
- * 「數字卡: 0～100 | 中文」產生的卡：不放 emoji，正面直接顯示數字讓小朋友認，
- * 說明是唸法（中文「三十一」只用聽的，英文「thirty-one」會顯示出來）。
+ * 數東西用的名字：數字卡放這些 emoji，就知道要說「Touch the apples」「十一顆蘋果」。
+ * [英文, 量詞, 中文, 英文複數（加 s 就好的不用寫）]
+ * 片單裡用了這裡沒有的 emoji 也可以數，只是會說「Touch them」「How many are there?」。
  */
-export function numberCards(from: number, to: number, lang: 'zh' | 'en'): Card[] {
+const COUNT_NOUNS: Record<string, [string, string, string, string?]> = {
+  '🍎': ['apple', '顆', '蘋果'],
+  '🍊': ['orange', '顆', '柳橙'],
+  '🍋': ['lemon', '顆', '檸檬'],
+  '🍌': ['banana', '根', '香蕉'],
+  '🍓': ['strawberry', '顆', '草莓', 'strawberries'],
+  '🍐': ['pear', '顆', '梨子'],
+  '🍑': ['peach', '顆', '水蜜桃', 'peaches'],
+  '🥝': ['kiwi', '顆', '奇異果'],
+  '🥕': ['carrot', '根', '紅蘿蔔'],
+  '🐶': ['dog', '隻', '狗'],
+  '🐱': ['cat', '隻', '貓'],
+  '🐭': ['mouse', '隻', '老鼠', 'mice'],
+  '🐰': ['rabbit', '隻', '兔子'],
+  '🐷': ['pig', '隻', '豬'],
+  '🐸': ['frog', '隻', '青蛙'],
+  '🐵': ['monkey', '隻', '猴子'],
+  '🐥': ['chick', '隻', '小雞'],
+  '🐤': ['chick', '隻', '小雞'],
+  '🦆': ['duck', '隻', '鴨子'],
+  '🐧': ['penguin', '隻', '企鵝'],
+  '🐢': ['turtle', '隻', '烏龜'],
+  '🐟': ['fish', '條', '魚', 'fish'],
+  '🐠': ['fish', '條', '魚', 'fish'],
+  '🐙': ['octopus', '隻', '章魚', 'octopuses'],
+  '🐞': ['ladybug', '隻', '瓢蟲'],
+  '🐝': ['bee', '隻', '蜜蜂'],
+  '🦋': ['butterfly', '隻', '蝴蝶', 'butterflies'],
+  '🐌': ['snail', '隻', '蝸牛'],
+  '⭐': ['star', '顆', '星星'],
+  '🎈': ['balloon', '顆', '氣球'],
+  '🚗': ['car', '輛', '車'],
+  '🍪': ['cookie', '片', '餅乾'],
+  '🌸': ['flower', '朵', '花'],
+  '🥚': ['egg', '顆', '蛋'],
+  '⚽': ['ball', '顆', '球'],
+  '✏': ['pencil', '支', '鉛筆'],
+}
+
+export interface CountNoun {
+  /** apple */
+  en: string
+  /** apples */
+  plural: string
+  /** 蘋果 */
+  zh: string
+  /** 顆 */
+  unit: string
+}
+
+/** 數字卡上拿來數的東西叫什麼；不是數東西的卡、或 emoji 不在上面的表裡就回 null */
+export function countNounOf(card: Card): CountNoun | null {
+  if (countOf(card) === null || !card.image || isPicture(card)) return null
+  const hit = COUNT_NOUNS[card.image.replace(/️/g, '').trim()]
+  if (!hit) return null
+  const [en, unit, zh, plural] = hit
+  return { en, plural: plural ?? `${en}s`, zh, unit }
+}
+
+/**
+ * 數字卡要說的中文、英文：
+ *   數東西的卡（11 🍎）：eleven apples／十一顆蘋果
+ *   說明寫了東西的卡（1 一支鉛筆 one pencil）：one pencil／一支鉛筆
+ *   只有數字的卡（31）：thirty-one／三十一
+ * 中英文都要有：數字不再分成中文版、英文版，一張卡兩種都學。
+ */
+export function numberLabels(card: Card): { en: string; zh: string } {
+  const n = Number(card.word)
+  const noun = countNounOf(card)
+  if (noun) {
+    return {
+      en: `${enNumber(n)} ${n === 1 ? noun.en : noun.plural}`,
+      // 量詞前面的 2 要說「兩」：兩隻狗，不是二隻狗
+      zh: `${n === 2 ? '兩' : zhNumber(n)}${noun.unit}${noun.zh}`,
+    }
+  }
+  return { en: latin(card.meaning) || enNumber(n), zh: zhOf(card.meaning) || zhNumber(n) }
+}
+
+/**
+ * 「數字卡: 0～100」產生的卡：不放 emoji，正面直接顯示數字讓小朋友認，
+ * 中文、英文的唸法由 numberLabels 自己算。
+ */
+export function numberCards(from: number, to: number): Card[] {
   const cards: Card[] = []
   for (let n = from; n <= to; n++) {
-    cards.push({
-      word: String(n),
-      meaning: lang === 'zh' ? zhNumber(n) : enNumber(n),
-      image: '',
-      backImage: '',
-      clip: null,
-    })
+    cards.push({ word: String(n), meaning: '', sentence: '', image: '', backImage: '', clip: null })
   }
   return cards
 }
 
-/* ---------- 英文的「這是…」 ---------- */
+/* ---------- 英文的句子 ---------- */
 
 /** 不可數的東西前面不加 a：This is milk */
 const UNCOUNTABLE = new Set([
   'milk', 'ice', 'ice cream', 'juice', 'orange juice', 'water', 'rice', 'bread', 'yarn', 'cheese', 'honey', 'soup',
+  'tea', 'jelly', 'yogurt', 'sushi', 'pizza',
 ])
 /** 一定是複數的東西：These are glasses */
-const PLURAL = new Set(['glasses', 'jeans', 'scissors', 'pants', 'shorts', 'shoes', 'socks', 'chopsticks'])
+const PLURAL = new Set([
+  'glasses', 'jeans', 'scissors', 'pants', 'shorts', 'shoes', 'socks', 'chopsticks', 'fries', 'grapes', 'noodles',
+  'vegetables',
+])
 
 /**
- * 「這是…」的英文，小朋友點錯時說給他聽，a、an 要分對：
- *   This is a horse／This is an elephant／This is a unicorn（開頭唸 /ju/）／
- *   This is an x-ray fish（x 唸 /ɛks/）／This is milk／These are glasses
- * bare：不加 a／an 的，像數字（This is four）、顏色（This is red）
+ * 數字、顏色前面不加 a／an，問的時候也不加 the：This is four、Can you find red?
+ * 顏色卡的說明寫成「紅色」這種「…色」結尾就認得出來。
  */
-export function thisIs(word: string, bare = false): string {
+function isBare(card: Card): boolean {
+  return isNumberCard(card) || /色$/.test(card.meaning)
+}
+
+/**
+ * 英文名字前面加上 a／an：a horse、an elephant、a unicorn（開頭唸 /ju/）、
+ * an x-ray fish（x 唸 /ɛks/）、a xylophone（x 唸 /z/）、milk、glasses
+ */
+function withArticle(word: string, bare = false): string {
   const w = word.trim()
   const lower = w.toLowerCase()
-  if (PLURAL.has(lower)) return `These are ${w}.`
-  if (bare || UNCOUNTABLE.has(lower)) return `This is ${w}.`
-  const an = /^[aeio]/i.test(w) || /^u(?!ni|s[eu])/i.test(w) || /^x/i.test(w) || /^h(our|onest)/i.test(w)
-  return `This is ${an ? 'an' : 'a'} ${w}.`
+  if (bare || PLURAL.has(lower) || UNCOUNTABLE.has(lower)) return w
+  const an = /^[aeio]/i.test(w) || /^u(?!ni|s[eu])/i.test(w) || /^x(?=[-\s]|$)/i.test(w) || /^h(our|onest)/i.test(w)
+  return `${an ? 'an' : 'a'} ${w}`
+}
+
+/** 這張卡的英文名字：數字卡是數字的英文（seven），其他是單字本身 */
+export function englishOf(card: Card): string {
+  return isNumberCard(card) ? enNumber(Number(card.word)) : speechOf(card).en
+}
+
+/**
+ * 「這是…」的英文，小朋友點錯時說給他聽：
+ *   This is a horse／This is an elephant／This is milk／These are glasses／This is four／This is red
+ */
+export function thisIs(card: Card): string {
+  const en = englishOf(card)
+  if (PLURAL.has(en.toLowerCase())) return `These are ${en}.`
+  return `This is ${withArticle(en, isBare(card))}.`
+}
+
+/**
+ * 翻面時接在單字後面唸的句子。片單上沒寫的話，英文單字卡至少說一句「I see a cat.」，
+ * 數字卡、沒有英文的卡就不說。
+ */
+export function sentenceOf(card: Card): string {
+  if (card.sentence) return card.sentence
+  if (isNumberCard(card)) return ''
+  const en = speechOf(card).en
+  return en ? `I see ${withArticle(en, isBare(card))}.` : ''
+}
+
+/** 考考我有幾種問法，每一題輪流換，小朋友聽得懂不同的說法 */
+export const ASK_STYLES = 3
+
+/**
+ * 考考我的題目：Where is the cat? / Can you find the cat? / Can you touch the cat?
+ * 數字說「number seven」，顏色直接說「red」，複數用 Where are the glasses?
+ * 這張卡沒有英文就回空字串，讓呼叫的人改用中文問。
+ */
+export function askOf(card: Card, style: number): string {
+  const en = englishOf(card)
+  if (!en) return ''
+  const target = isNumberCard(card) ? `number ${en}` : isBare(card) ? en : `the ${en}`
+  const plural = PLURAL.has(en.toLowerCase())
+  switch (style % ASK_STYLES) {
+    case 0: return `${plural ? 'Where are' : 'Where is'} ${target}?`
+    case 1: return `Can you find ${target}?`
+    default: return `Can you touch ${target}?`
+  }
 }
 
 /* ---------- ABC 字母卡 ---------- */

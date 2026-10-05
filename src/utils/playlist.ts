@@ -41,13 +41,13 @@ const RE_SITE = /^(?:site|網站)\s*[:：]\s*(\S+)\s*$/i
 /** 字卡：卡: 開頭，也可以寫 字卡: 或 card: */
 const RE_CARD = /^(?:字?卡|card)\s*[:：]\s*(.*)$/i
 
-/** 一次產生一串數字卡：數字卡: 0～100 | 中文（或 英文） */
 /**
  * 開一本新的字卡，但不另外分一層：字卡本: 數字像什麼
  * 同一個分區裡的好幾本會排在同一個畫面，點一下就打開，不用再多點一排標籤
  */
 const RE_DECK = /^(?:字卡本|deck)\s*[:：]\s*(.+)$/i
 
+/** 一次產生一串數字卡：數字卡: 0～100 */
 const RE_NUMBERS = /^(?:數字卡|numbers)\s*[:：]\s*(\d+)\s*[-~～到]\s*(\d+)\s*(?:\|\s*(\S+))?\s*$/i
 
 const RE_SUB = [
@@ -264,8 +264,8 @@ export function parsePlaylist(text: string): ParseResult {
           warnings.push(`第 ${lineNo} 行：數字卡的範圍要從小寫到大、最多到 ${NUMBER_MAX}，已略過。`)
           return
         }
-        const lang = m[3] && /英|en/i.test(m[3]) ? 'en' : 'zh'
-        deckHere(currentCat).cards!.push(...numberCards(from, to, lang))
+        // 以前後面要寫「| 中文」或「| 英文」，現在每張卡中英文都唸，寫了也不影響
+        deckHere(currentCat).cards!.push(...numberCards(from, to))
         return
       }
     }
