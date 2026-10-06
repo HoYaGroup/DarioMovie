@@ -29,8 +29,9 @@ jobs:
 
       - run: npm ci
 
-      # 片單放在 playlists/：library.txt（學習庫）＋ videos.txt（家長自己的影片），
-      # npm run build 之前會自動合併成 public/playlist.txt（scripts/build-playlist.mjs）。
+      # 片單放在 playlists/：library/*.txt（學習庫，一個主題一個檔）＋ videos.txt（家長自己的影片），
+      # npm run build 之前會自動合併成 public/playlist.txt，並檢查有沒有寫錯（scripts/build-playlist.mjs，
+      # 有問題會在執行結果標黃色 warning，不擋部署）。
       # 以前放在 PLAYLIST secret 的做法已經不用了，那個 secret 可以刪掉。
 
       # 「新增影片」表單的分區選單有沒有跟上片單（只提醒，不擋部署）

@@ -50,7 +50,7 @@ export interface Card {
  */
 export type AskKind =
   | 'thing' | 'color' | 'shape' | 'feeling' | 'action' | 'should' | 'say' | 'like'
-  | 'who' | 'where' | 'weather' | 'season' | 'day' | 'month' | 'time'
+  | 'who' | 'where' | 'weather' | 'season' | 'day' | 'month' | 'time' | 'sense'
 
 /** 影片在片單中的資料形狀 */
 export interface VideoItem {
@@ -65,6 +65,11 @@ export interface VideoItem {
   cards?: Card[]
   /** 字卡本的英文名稱（字卡本: 數字像什麼 1～10 | Number Shapes），全英文模式顯示這個 */
   titleEn?: string
+  /**
+   * 字卡本以前的識別碼（用分區 id 組成，會跟著分區順序變）。
+   * 以前拿到的星星記在這上面，同步片單時由 useCardStars 搬到現在的 uid
+   */
+  legacyUid?: string
   /**
    * 這一筆在片單裡的唯一識別。
    * 用 id 當識別的話，同一支影片就沒辦法同時出現在好幾個單元 ——

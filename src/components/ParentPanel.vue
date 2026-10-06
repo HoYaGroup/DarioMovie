@@ -1222,7 +1222,7 @@ site: https://example.com | 某個學習網站
             </ul>
 
             <p class="hint">
-              檔案在 repo 的 <code>playlists/videos.txt</code>（你自己的影片）和 <code>playlists/library.txt</code>（學習庫），
+              檔案在 repo 的 <code>playlists/videos.txt</code>（你自己的影片）和 <code>playlists/library/</code>（學習庫，一個主題一個檔），
               部署時合併成 <code>{{ playlistUrl() }}</code>。要加影片也可以用 GitHub Actions 的「新增影片」，不用電腦。
               檔案內容沒變動時會保留你在這台 iPad 上的調整；一旦檔案改過，就以檔案為準覆蓋掉。
             </p>

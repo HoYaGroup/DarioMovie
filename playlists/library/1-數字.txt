@@ -1,0 +1,269 @@
+// ╔════════════════════════════════════════════════════════════╗
+// ║  學習庫・數字：認數字、數一數、數字在身邊、時間                  ║
+// ╚════════════════════════════════════════════════════════════╝
+//
+// 寫法和規則（字卡本、階段、句子……）看同一個資料夾的 README.md
+// 數字卡的影片片段是示範用：Count & Move 的 0:05～0:20，換成老師教學影片的秒數效果最好
+
+# 數字 🔢
+
+【認數字】💯
+// 正面問「What number is this?」（中文、中英模式問「這是數字幾？」），翻面照字卡上方選的語言唸
+// 上面有一排數字可以直接跳，一天教幾個都可以
+
+字卡本: 數字像什麼 1～10 | Number Shapes 1-10
+階段: 小班
+// 說明寫「中文 英文」：English 唸 One. Like a pencil.／中文 一。像一支鉛筆。／中英 一，one。像一支鉛筆，like a pencil。
+卡: 1 | 像一支鉛筆 like a pencil | cards/shapes/1-q.webp | cards/shapes/1.webp
+卡: 2 | 像一隻鴨子 like a duck | cards/shapes/2-q.webp | cards/shapes/2.webp
+卡: 3 | 像一隻蝴蝶 like a butterfly | cards/shapes/3-q.webp | cards/shapes/3.webp
+卡: 4 | 像一艘帆船 like a sailboat | cards/shapes/4-q.webp | cards/shapes/4.webp
+卡: 5 | 像一個勾勾 like a hook | cards/shapes/5-q.webp | cards/shapes/5.webp
+卡: 6 | 像大肚子 like a big tummy | cards/shapes/6-q.webp | cards/shapes/6.webp
+卡: 7 | 像一根拐杖 like a cane | cards/shapes/7-q.webp | cards/shapes/7.webp
+卡: 8 | 像一個雪人 like a snowman | cards/shapes/8-q.webp | cards/shapes/8.webp
+卡: 9 | 像一顆氣球 like a balloon | cards/shapes/9-q.webp | cards/shapes/9.webp
+卡: 10 | 像球棒和棒球 like a bat and a ball | cards/shapes/10-q.webp | cards/shapes/10.webp
+
+字卡本: 認數字 11～20 | Numbers 11-20
+階段: 中班
+// 只寫數字就好：正面直接顯示數字，翻面說 Thirteen. 十三.
+// 11～19 長得很像，認熟了再去「數一數 11～20」點著數
+卡: 11
+卡: 12
+卡: 13
+卡: 14
+卡: 15
+卡: 16
+卡: 17
+卡: 18
+卡: 19
+卡: 20
+
+字卡本: 兩個兩個數 2～20 | Count by Twos
+階段: 中班
+// 句子是一路數上來的口訣：翻到 6 就說 Six. 六. Two, four, six!
+卡: 2 | Let's count by twos!
+卡: 4 | Two, four!
+卡: 6 | Two, four, six!
+卡: 8 | Two, four, six, eight!
+卡: 10 | Two, four, six, eight, ten!
+卡: 12 | Ten, twelve!
+卡: 14 | Ten, twelve, fourteen!
+卡: 16 | Ten, twelve, fourteen, sixteen!
+卡: 18 | Ten, twelve, fourteen, sixteen, eighteen!
+卡: 20 | Ten, twelve, fourteen, sixteen, eighteen, twenty!
+
+字卡本: 10～100 | Count by Tens
+階段: 大班
+// 翻面說 Thirty. 三十. 再接十個十個數的口訣
+卡: 10 | Let's count by tens!
+卡: 20 | Ten, twenty!
+卡: 30 | Ten, twenty, thirty!
+卡: 40 | Ten, twenty, thirty, forty!
+卡: 50 | Ten, twenty, thirty, forty, fifty!
+卡: 60 | Fifty, sixty!
+卡: 70 | Fifty, sixty, seventy!
+卡: 80 | Fifty, sixty, seventy, eighty!
+卡: 90 | Fifty, sixty, seventy, eighty, ninety!
+卡: 100 | Ninety, one hundred! We did it!
+
+字卡本: 0～100 | Numbers 0-100
+階段: 大班
+// 一行就產生 0～100 的數字卡；上面那排數字變成每十個一格（0、10、20…）
+// 考考我會挑容易搞混的當選項：31 配 13、30
+數字卡: 0～100
+
+【數一數】🍎
+// 放 emoji 的數字卡：正面畫出那麼多個東西，「Let's count! Touch the apples.」小朋友一個一個點著數
+// 數完問「How many apples are there?」三個數字選一個，答對翻面：Eleven. 十一顆蘋果. Eleven apples.
+// 會說 apples、十一顆蘋果 的 emoji 列在 src/utils/cards.ts 的 COUNT_NOUNS（常見的動物、水果、海裡的、小蟲都有）
+
+字卡本: 數一數 1～5 | Let's Count 1-5
+階段: 幼幼班
+// 最簡單的一本：東西少、又大顆，剛開始數數從這裡玩
+卡: 1 | 🍎
+卡: 2 | 🍌
+卡: 3 | 🍓
+卡: 4 | 🍊
+卡: 5 | 🍐
+
+字卡本: 數一數 1～10 | Let's Count 1-10
+階段: 小班
+卡: 1 | 🍎
+卡: 2 | 🐶
+卡: 3 | 🐸
+卡: 4 | 🍌
+卡: 5 | 🐟
+卡: 6 | 🍓
+卡: 7 | 🐞
+卡: 8 | 🐥
+卡: 9 | 🍊
+卡: 10 | 🐝 | https://youtu.be/g9EgE_JtEAw 0:20-0:50
+
+字卡本: 數一數 海洋 1～10 | Sea Count 1-10
+階段: 小班
+// 換一批海裡的動物再數一次，順便認識「第 2 級 海洋動物」的字
+卡: 1 | 🐳
+卡: 2 | 🐬
+卡: 3 | 🦈
+卡: 4 | 🐢
+卡: 5 | 🐙
+卡: 6 | 🦀
+卡: 7 | 🐠
+卡: 8 | 🐚
+卡: 9 | 🦐
+卡: 10 | 🦑
+
+字卡本: 數一數 交通工具 1～10 | Vehicle Count 1-10
+階段: 小班
+// 中文順便學量詞：一架飛機、三列火車、四輛公車、九艘帆船
+卡: 1 | ✈️
+卡: 2 | 🚁
+卡: 3 | 🚂
+卡: 4 | 🚌
+卡: 5 | 🚲
+卡: 6 | 🚕
+卡: 7 | 🚒
+卡: 8 | 🚓
+卡: 9 | ⛵
+卡: 10 | 🚗
+
+字卡本: 數一數 11～20 | Let's Count 11-20
+階段: 中班
+// 前 10 個排成兩排，看得出 13 是 10 再加 3
+卡: 11 | 🐱
+卡: 12 | 🐘
+卡: 13 | 🐝
+卡: 14 | 🦒
+卡: 15 | 🦛
+卡: 16 | 🐜
+卡: 17 | 🐵
+卡: 18 | 🐷
+卡: 19 | 🦁
+卡: 20 | 🐢
+
+字卡本: 數一數 蟲蟲 11～20 | Bug Count 11-20
+階段: 中班
+卡: 11 | 🐜
+卡: 12 | 🐞
+卡: 13 | 🦋
+卡: 14 | 🐝
+卡: 15 | 🐛
+卡: 16 | 🐌
+卡: 17 | 🦗
+卡: 18 | 🕷️
+卡: 19 | 🪲
+卡: 20 | 🐞
+
+【數字在身邊】🧒
+// 有一點難度：數字在生活裡的哪裡？正面是數字，翻面說 Two. 我有兩隻眼睛. I have two eyes.
+// 說明寫中文，句子寫英文；邊說可以邊讓小朋友摸摸自己的眼睛、數數手指
+
+字卡本: 數字在身邊 1～10 | Numbers Around Me
+階段: 中班～大班
+卡: 1 | 我有一個鼻子 | I have one nose.
+卡: 2 | 我有兩隻眼睛 | I have two eyes.
+卡: 3 | 三輪車有三個輪子 | A tricycle has three wheels.
+卡: 4 | 小狗有四條腿 | A dog has four legs.
+卡: 5 | 一隻手有五根手指 | I have five fingers.
+卡: 6 | 昆蟲有六隻腳 | An insect has six legs.
+卡: 7 | 一個星期有七天 | A week has seven days.
+卡: 8 | 蜘蛛有八隻腳 | A spider has eight legs.
+卡: 9 | 貓有九條命 | A cat has nine lives.
+卡: 10 | 我有十根腳趾 | I have ten toes.
+卡: 12 | 一年有十二個月 | A year has twelve months.
+
+【時間】🕒
+// 四季、星期、月份、時鐘：一年、一週、一天的數字。問的時候不加 the（Where is Monday?）
+
+字卡本: 四季 | Seasons
+階段: 小班
+// 春夏秋冬：看窗外的樹和天氣，說說現在是哪一季
+卡: spring | 春天 | 🌸 | Spring is warm. | Flowers bloom in spring. | Hello, spring!
+卡: summer | 夏天 | 🌞 | Summer is hot. | I swim in summer. | Let's eat watermelon in summer!
+卡: autumn | 秋天 | 🍂 | Autumn is cool. | The leaves fall in autumn. | Crunch, crunch! Autumn leaves.
+卡: winter | 冬天 | ❄️ | Winter is cold. | It snows in winter. | Put on your coat. It's winter!
+
+字卡本: 星期 | Days of the Week
+階段: 中班
+// 圖是「七曜」：月亮日、火、水、木、金、土星日，星期天是太陽日——英文的 Monday 就是 Moon day
+卡: Monday | 星期一 | 🌙 | Today is Monday. | Monday comes after Sunday. | I go to school on Monday.
+卡: Tuesday | 星期二 | 🔥 | Today is Tuesday. | Tuesday comes after Monday. | I go to school on Tuesday.
+卡: Wednesday | 星期三 | 💧 | Today is Wednesday. | Wednesday comes after Tuesday. | I go to school on Wednesday.
+卡: Thursday | 星期四 | 🌳 | Today is Thursday. | Thursday comes after Wednesday. | I go to school on Thursday.
+卡: Friday | 星期五 | 🪙 | Today is Friday. | Friday comes after Thursday. | I go to school on Friday.
+卡: Saturday | 星期六 | 🪐 | Today is Saturday. | Saturday comes after Friday. | I play with my family on Saturday.
+卡: Sunday | 星期天 | ☀️ | Today is Sunday. | Sunday comes after Saturday. | I rest on Sunday.
+
+字卡本: 時鐘 整點 | O'clock
+階段: 大班
+// 看短針指哪裡：指到 3 就是三點鐘。每個鐘點配一件小朋友一天裡會做的事
+卡: one o'clock | 一點鐘 | 🕐 | It's one o'clock. | Tick, tock! It's one o'clock. | One o'clock. Time for a nap.
+卡: two o'clock | 兩點鐘 | 🕑 | It's two o'clock. | Tick, tock! It's two o'clock. | Two o'clock. Let's play.
+卡: three o'clock | 三點鐘 | 🕒 | It's three o'clock. | Tick, tock! It's three o'clock. | Three o'clock. Time for a snack.
+卡: four o'clock | 四點鐘 | 🕓 | It's four o'clock. | Tick, tock! It's four o'clock. | Four o'clock. School is over!
+卡: five o'clock | 五點鐘 | 🕔 | It's five o'clock. | Tick, tock! It's five o'clock. | Five o'clock. Time to go home.
+卡: six o'clock | 六點鐘 | 🕕 | It's six o'clock. | Tick, tock! It's six o'clock. | Six o'clock. Time for dinner.
+卡: seven o'clock | 七點鐘 | 🕖 | It's seven o'clock. | Tick, tock! It's seven o'clock. | Seven o'clock. Time to get up!
+卡: eight o'clock | 八點鐘 | 🕗 | It's eight o'clock. | Tick, tock! It's eight o'clock. | Eight o'clock. Time for breakfast.
+卡: nine o'clock | 九點鐘 | 🕘 | It's nine o'clock. | Tick, tock! It's nine o'clock. | Nine o'clock. Time for school.
+卡: ten o'clock | 十點鐘 | 🕙 | It's ten o'clock. | Tick, tock! It's ten o'clock. | Ten o'clock. Let's draw a picture.
+卡: eleven o'clock | 十一點鐘 | 🕚 | It's eleven o'clock. | Tick, tock! It's eleven o'clock. | Eleven o'clock. Let's play outside.
+卡: twelve o'clock | 十二點鐘 | 🕛 | It's twelve o'clock. | Tick, tock! It's twelve o'clock. | Twelve o'clock. Time for lunch.
+
+字卡本: 月份 | Months
+階段: 大班
+// 一年有十二個月。圖是那個月常見的事：三月花開、五月母親節、九月開學、十月萬聖節
+卡: January | 一月 | ⛄ | It's January. | January is the first month. | It's cold in January.
+卡: February | 二月 | 🧧 | It's February. | February is the second month. | February is a short month.
+卡: March | 三月 | 🌷 | It's March. | March is the third month. | Flowers bloom in March.
+卡: April | 四月 | ☔ | It's April. | April is the fourth month. | It rains in April.
+卡: May | 五月 | 💐 | It's May. | May is the fifth month. | Mother's Day is in May.
+卡: June | 六月 | 🍉 | It's June. | June is the sixth month. | It's hot in June.
+卡: July | 七月 | 🏖️ | It's July. | July is the seventh month. | Let's swim in July.
+卡: August | 八月 | 🌻 | It's August. | August is the eighth month. | Father's Day is in August.
+卡: September | 九月 | 🎒 | It's September. | September is the ninth month. | We go back to school in September.
+卡: October | 十月 | 🎃 | It's October. | October is the tenth month. | Halloween is in October.
+卡: November | 十一月 | 🍂 | It's November. | November is the eleventh month. | The leaves fall in November.
+卡: December | 十二月 | 🎄 | It's December. | December is the last month. | Christmas is in December.
+
+【影片】🎬
+// 數數的兒歌放在《數數》，四季、星期、月份、時鐘放在《時間》。影片放在自己一區，不跟字卡混在一起，小朋友練字卡時才不會分心
+《數數 🔢》
+https://youtu.be/-tpTosF4dN8 | 從 1 數到 10（中文）
+階段: 幼幼班～小班
+https://youtu.be/zQ5bQ6tjl_M | 數到 5 Stomp! Count To Five
+階段: 幼幼班～小班
+https://youtu.be/xNw1SSz18Gg | 手指數數 How Many Fingers?
+階段: 幼幼班～小班
+https://youtu.be/zTBy5G2lk5M | 數到 10 Counting 1 to 10
+階段: 小班
+https://youtu.be/g64qCr3Y_QU | 數公車 10 Little Buses
+階段: 小班
+https://youtu.be/7D4K9oi7oBM | 數數兒歌精選 Top 10 Counting Songs
+階段: 小班～中班
+https://youtu.be/jNeOIPxSq9g | 數 11 到 20 Counting 11 to 20
+階段: 中班
+https://youtu.be/9wj-d1oP0NY | 一起數蟲蟲 Let's Count with Bugs!
+階段: 中班
+https://youtu.be/g9EgE_JtEAw | Count & Move 數到 20（英文）
+階段: 中班～大班
+https://youtu.be/_MVzXKfr6e8 | 邊運動邊數到 20 Count to 20 and Workout
+階段: 中班～大班
+https://youtu.be/8wwydguSKOU | 兩個兩個數 Counting By Twos Song
+階段: 中班～大班
+https://youtu.be/g5RG82acJpU | 十個十個數到 100 Count to 100 by 10
+階段: 大班
+https://youtu.be/F3-AY1B-0qc | 數到 100 Counting to 100 is Fun to Do!
+階段: 大班
+
+《時間 🕒》
+https://youtu.be/4LsInzDH3q0 | 四季 The Seasons Song
+階段: 小班～中班
+https://youtu.be/vcMmiR7jWQc | 星期 Days Of The Week
+階段: 中班
+https://youtu.be/HGgsklW-mtg | 時鐘 Hickory Dickory Dock
+階段: 中班～大班
+https://youtu.be/gtc4c1JlAEM | 月份 The Months Chant
+階段: 大班

@@ -318,6 +318,16 @@ const COUNT_NOUNS: Record<string, [string, string, string, string?]> = {
   '🦗': ['cricket', '隻', '蟋蟀'],
   '🕷': ['spider', '隻', '蜘蛛'],
   '🪲': ['beetle', '隻', '甲蟲'],
+  // 交通工具：量詞不一樣，一架飛機、一列火車、一艘帆船
+  '✈': ['airplane', '架', '飛機'],
+  '🚁': ['helicopter', '架', '直升機'],
+  '🚂': ['train', '列', '火車'],
+  '🚌': ['bus', '輛', '公車', 'buses'],
+  '🚲': ['bike', '輛', '腳踏車'],
+  '🚕': ['taxi', '輛', '計程車'],
+  '🚒': ['fire truck', '輛', '消防車'],
+  '🚓': ['police car', '輛', '警車'],
+  '⛵': ['sailboat', '艘', '帆船'],
 }
 
 export interface CountNoun {
@@ -378,6 +388,7 @@ export function numberCards(from: number, to: number): Card[] {
 const UNCOUNTABLE = new Set([
   'milk', 'ice', 'ice cream', 'juice', 'orange juice', 'water', 'rice', 'bread', 'yarn', 'cheese', 'honey', 'soup',
   'tea', 'jelly', 'yogurt', 'sushi', 'pizza', 'corn', 'broccoli', 'lettuce', 'garlic', 'soap',
+  'bubble tea', 'shaved ice', 'oden', 'curry rice', 'fried chicken', 'paint', 'paper', 'grass', 'bamboo',
   'rain', 'snow', 'wind', 'lightning',
 ])
 /** 一定是複數的東西：These are glasses */
@@ -387,11 +398,11 @@ const PLURAL = new Set([
 ])
 
 /**
- * 單元名稱裡有這些字的字卡本，卡片上是動作、心情、相反詞、時間、禮貌的話，或是卡通角色的名字
- * （Woody、Poli），不是「一個東西」：問的時候不加 the（Where is happy? / Where is Monday?），也不說 a（This is sad.）。
+ * 單元名稱裡有這些字的字卡本，卡片上是動作、心情、相反詞、時間、禮貌、五感、該怎麼做的話，或是卡通角色、國家的名字
+ * （Woody、Poli、Japan），不是「一個東西」：問的時候不加 the（Where is happy? / Where is Monday?），也不說 a（This is sad.）。
  */
 export function isBareDeck(title: string): boolean {
-  return /動作|心情|相反|四季|星期|月份|時鐘|習慣|過馬路|禮貌|波力|汪汪隊|玩具總動員|Actions?|Feelings?|Opposites?|Seasons?|Days|Months?|O'clock|Habits?|Cross Safely|Manners|Magic Words|Robocar Poli|PAW Patrol|Toy Story/i.test(title)
+  return /動作|心情|相反|四季|星期|月份|時鐘|習慣|過馬路|禮貌|五感|好朋友|冷靜|世界各國|波力|汪汪隊|玩具總動員|Actions?|Feelings?|Opposites?|Seasons?|Days|Months?|O'clock|Habits?|Cross Safely|Manners|Magic Words|Senses|Good Friends|Calm Down|Around the World|Robocar Poli|PAW Patrol|Toy Story/i.test(title)
 }
 
 /**
@@ -416,6 +427,8 @@ export const FRONT_QUESTIONS: Record<AskKind, { en: string; zh: string }> = {
   day: { en: 'What day is it?', zh: '今天是星期幾？' },
   month: { en: 'What month is it?', zh: '這是幾月？' },
   time: { en: 'What time is it?', zh: '現在幾點鐘？' },
+  // 五感：正面是眼睛、耳朵，答案是 see、hear
+  sense: { en: 'What can you do with it?', zh: '可以用它做什麼？' },
 }
 
 /** 字卡本的名稱 → 正面問哪一種問題 */
@@ -425,11 +438,12 @@ export function askKindOf(title: string): AskKind {
   if (t(/形狀|Shapes?/i)) return 'shape'
   if (t(/心情|Feelings?/i)) return 'feeling'
   if (t(/動作|Actions?/i)) return 'action'
-  if (t(/習慣|過馬路|Habits?|Cross Safely/i)) return 'should'
+  if (t(/習慣|過馬路|好朋友|冷靜|Habits?|Cross Safely|Good Friends|Calm Down/i)) return 'should'
   if (t(/禮貌|Magic Words|Manners/i)) return 'say'
   if (t(/相反|Opposites?/i)) return 'like'
   if (t(/家人|職業|波力|汪汪隊|玩具總動員|Family|Jobs|Robocar Poli|PAW Patrol|Toy Story/i)) return 'who'
-  if (t(/地方|Places?/i)) return 'where'
+  if (t(/地方|世界各國|Places?|Around the World/i)) return 'where'
+  if (t(/五感|Senses/i)) return 'sense'
   if (t(/天氣|Weather/i)) return 'weather'
   if (t(/四季|Seasons?/i)) return 'season'
   if (t(/星期|Days/i)) return 'day'
@@ -442,6 +456,7 @@ export function askKindOf(title: string): AskKind {
 const ASK_NAMES: Record<string, AskKind> = {
   東西: 'thing', 顏色: 'color', 形狀: 'shape', 心情: 'feeling', 動作: 'action', 該做什麼: 'should', 說什麼: 'say',
   樣子: 'like', 誰: 'who', 哪裡: 'where', 天氣: 'weather', 季節: 'season', 星期: 'day', 月份: 'month', 幾點: 'time',
+  感官: 'sense',
 }
 
 export function parseAskKind(text: string): AskKind | undefined {

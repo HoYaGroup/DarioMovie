@@ -199,6 +199,28 @@ https://www.youtube.com/watch?v=al1dQn_WKeI | SF06 8 Mother's day
 https://www.youtube.com/watch?v=_Gi0CEn2FBM | SF06 8 Dragon boat
 https://www.youtube.com/watch?v=X7c_DCLJhDo | SF06 8 Father's Day
 
+# 中文 ✏️
+// 跟學習庫的「中文」（playlists/library/3-中文.txt）是同一個大分類，會併在一起，排在注音、國字、影片後面
+
+【喵喵歡樂唱】🐱
+
+// 學校的幼幼班兒歌教材，跟學校 YouTube 播放清單的順序一樣（01 上學去 → 11 新年）
+// https://www.youtube.com/playlist?list=PLs7dlM_zimeMzTE7BdIuNRc4fyT-E4ITl
+// 之後發②、③的話，在下面另外開一個《喵喵歡樂唱②》就好
+
+《喵喵歡樂唱①》
+https://www.youtube.com/watch?v=G5JHXLTNG_0 | 上學去
+https://www.youtube.com/watch?v=IJ_9YYDrY7o | 好朋友
+https://www.youtube.com/watch?v=y6EnWEkIb3E | 美味午餐
+https://www.youtube.com/watch?v=ChZa8QySRAA | 水果派對
+https://www.youtube.com/watch?v=j8WZ_R1bQN0 | 可愛寶貝
+https://www.youtube.com/watch?v=5E35_LtLtrY | 愛的抱抱
+https://www.youtube.com/watch?v=-aHiRVCLkt0 | 動動體操
+https://www.youtube.com/watch?v=K39B8gsS-pE | 節奏好好玩
+https://www.youtube.com/watch?v=9FUvo0x66BU | 蝸牛
+https://www.youtube.com/watch?v=fv-78S3HxNI | 小花貓
+https://www.youtube.com/watch?v=RqoHL66Wx5o | 新年
+
 # 娛樂 🎮
 
 【英文故事】📖
@@ -280,19 +302,6 @@ https://www.youtube.com/watch?v=ALcL3MuU4xQ | Make A Circle
 https://www.youtube.com/watch?v=TJhfl5vdxp4 | Make Circle
 https://www.youtube.com/watch?v=03pyY9C2Pm8 | Make triangle
 https://www.youtube.com/watch?v=AxmFV4MEDpw | ABCs & Fruits for Toddlers 🍓
-
-《喵喵歡樂唱 1️⃣》
-https://www.youtube.com/watch?v=G5JHXLTNG_0 | 上學去
-https://www.youtube.com/watch?v=IJ_9YYDrY7o | 好朋友
-https://www.youtube.com/watch?v=y6EnWEkIb3E | 美味午餐
-https://www.youtube.com/watch?v=ChZa8QySRAA | 水果派對
-https://www.youtube.com/watch?v=j8WZ_R1bQN0 | 可愛寶貝
-https://www.youtube.com/watch?v=5E35_LtLtrY | 愛的抱抱
-https://www.youtube.com/watch?v=-aHiRVCLkt0 | 動動體操
-https://www.youtube.com/watch?v=K39B8gsS-pE | 節奏好好玩
-https://www.youtube.com/watch?v=9FUvo0x66BU | 蝸牛
-https://www.youtube.com/watch?v=fv-78S3HxNI | 小花貓
-https://www.youtube.com/watch?v=RqoHL66Wx5o | 新年
 
 《卡通最愛》
 

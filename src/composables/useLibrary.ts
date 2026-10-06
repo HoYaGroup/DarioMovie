@@ -6,6 +6,7 @@ import {
 import { computed } from 'vue'
 import { parsePlaylist, hashText } from '~/utils/playlist'
 import { useState } from './useState'
+import { useCardStars } from './useCardStars'
 import appConfig from '../app.config'
 
 const STORE_KEY = 'kidtube.library.v2'
@@ -282,6 +283,7 @@ export function useLibrary() {
     categories.value = parsed.categories
     subCategories.value = parsed.subCategories
     videos.value = parsed.videos
+    useCardStars().adoptLegacy(parsed.videos)
     persist('從片單檔案同步')
     try { localStorage.setItem(SYNC_KEY, hash) } catch { /* 略過 */ }
 

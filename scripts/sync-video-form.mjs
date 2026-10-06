@@ -6,7 +6,7 @@
  *
  * 選單內容：
  *   ‧ playlists/videos.txt 的每一個分區（學習 › Little Kids (上)、娛樂 › 英文故事……）
- *   ‧ 學習庫裡名字是「影片」的分區（數字 › 影片、英文單字 › 影片）——加在 videos.txt 的影片會自動併進去
+ *   ‧ 學習庫（playlists/library/）裡名字是「影片」的分區（數字 › 影片、英文單字 › 影片）——加在 videos.txt 的影片會自動併進去
  *   ‧ 最後一個「新的分區」，選它再自己填名稱
  *
  * --check：只檢查不修改，選單跟片單不一致時印出警告（部署時用）
@@ -14,6 +14,7 @@
 import { readFileSync, writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
+import { libraryFiles } from './library-files.mjs'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const WORKFLOW = join(root, '.github', 'workflows', 'add-video.yml')
@@ -44,7 +45,7 @@ function placesIn(file, keep = () => true) {
 
 const places = [...new Set([
   ...placesIn(join(root, 'playlists', 'videos.txt')),
-  ...placesIn(join(root, 'playlists', 'library.txt'), (name) => name === '影片'),
+  ...libraryFiles(root).flatMap((file) => placesIn(file, (name) => name === '影片')),
 ])]
 
 /** YAML 單引號字串：裡面的單引號要寫兩次 */

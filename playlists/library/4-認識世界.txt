@@ -1,0 +1,183 @@
+// ╔════════════════════════════════════════════════════════════╗
+// ║  學習庫・認識世界：大自然、我自己、一起生活、世界各國              ║
+// ╚════════════════════════════════════════════════════════════╝
+//
+// 寫法和規則（字卡本、階段、句子、正面問什麼……）看同一個資料夾的 README.md
+// 跟「英文單字」一樣是中英雙語的字卡（照字卡上方選的語言唸），差別在照「認識什麼」分，不是照單字難度分。
+// 幼兒園課綱的六大領域都放一點：植物和動物（認知）、五感（身體）、冷靜下來（情緒）、好朋友（社會）、
+// 台灣小吃和世界各國（文化）、美勞時間（美感）
+
+# 認識世界 🌏
+
+【大自然】🌱
+// 摸得到、看得到的植物和動物：去公園、去動物園的時候拿出來對照
+
+字卡本: 植物 | Plants
+階段: 小班
+// 從種子到大樹：Plant a seed. → The sprout grows up. → The tree is tall.
+卡: seed | 種子 | 🫘 | Plant a seed. | The seed is small. | The seed grows into a plant.
+卡: sprout | 嫩芽 | 🌱 | Look, a little sprout! | The sprout grows up, up, up. | Water the sprout.
+卡: leaf | 葉子 | 🍃 | The leaf is green. | The leaf falls down. | Look at the big leaf.
+卡: flower | 花 | 🌸 | Smell the flower. | The flower is pretty. | The bee likes the flower.
+卡: tree | 樹 | 🌳 | The tree is tall. | Birds live in the tree. | Let's sit under the tree.
+卡: grass | 草 | 🌿 | The grass is green. | The cow eats grass. | Let's run on the grass.
+卡: sunflower | 向日葵 | 🌻 | The sunflower is yellow. | The sunflower looks at the sun. | The sunflower is very tall.
+卡: rose | 玫瑰 | 🌹 | The rose is red. | The rose smells sweet. | Careful! The rose has thorns.
+卡: cactus | 仙人掌 | 🌵 | Ouch! The cactus is spiky. | The cactus lives in the desert. | The cactus needs a little water.
+卡: bamboo | 竹子 | 🎋 | The panda eats bamboo. | The bamboo is tall. | The bamboo is green.
+
+字卡本: 動物寶寶 | Animal Babies
+階段: 中班
+// 動物寶寶有自己的名字：小狗是 puppy、小貓是 kitten。句子先說「A baby dog is a puppy.」把大的小的連起來
+// chick 的句子跟「鳥類」那本同一組
+卡: puppy | 小狗 | 🐶 | A baby dog is a puppy. | The puppy wags its tail. | Woof! The puppy wants to play.
+卡: kitten | 小貓 | 🐱 | A baby cat is a kitten. | The kitten is soft. | Meow! The kitten drinks milk.
+卡: chick | 小雞 | 🐥 | Peep, peep! I am a chick. | The chick is yellow. | The chick is small and soft.
+卡: calf | 小牛 | 🐮 | A baby cow is a calf. | The calf stays with its mom. | Moo! The calf is hungry.
+卡: lamb | 小羊 | 🐑 | A baby sheep is a lamb. | The lamb is soft and white. | Baa! The lamb says hello.
+卡: piglet | 小豬 | 🐷 | A baby pig is a piglet. | The piglet is pink. | Oink! The piglet rolls in the mud.
+卡: foal | 小馬 | 🐴 | A baby horse is a foal. | The foal has long legs. | The foal runs with its mom.
+卡: cub | 小熊、小獅子 | 🐻 | A baby bear is a cub. | A baby lion is a cub too! | The cub likes to play.
+卡: joey | 小袋鼠 | 🦘 | A baby kangaroo is a joey. | The joey lives in mom's pocket. | Peekaboo, joey!
+
+字卡本: 動物住哪裡 | Animal Homes
+階段: 中班～大班
+// 每張卡是一個家，句子說誰住在這裡：The spider lives in a web.。nest 的句子跟「ABC 圖卡」同一組
+卡: nest | 鳥巢 | 🪺 | The bird is in the nest. | There are eggs in the nest. | The bird makes a nest.
+卡: web | 蜘蛛網 | 🕸️ | The spider lives in a web. | The spider makes a web. | Look! A bug is in the web.
+卡: hole | 洞 | 🕳️ | The rabbit lives in a hole. | The mouse runs into the hole. | Look! A hole in the ground.
+卡: pond | 池塘 | 🪷 | The frog lives in the pond. | The duck swims in the pond. | Look at the fish in the pond.
+卡: sea | 大海 | 🌊 | Fish live in the sea. | The sea is big and blue. | The whale lives in the sea.
+卡: forest | 森林 | 🌲 | The bear lives in the forest. | The forest has many trees. | The owl lives in the forest.
+卡: jungle | 叢林 | 🌴 | The monkey lives in the jungle. | The jungle is hot and wet. | Tigers live in the jungle.
+卡: desert | 沙漠 | 🏜️ | The camel lives in the desert. | The desert is hot and dry. | There is lots of sand in the desert.
+卡: farm | 農場 | 🌾 | The cow lives on the farm. | The farmer works on the farm. | Let's visit the farm!
+
+【我自己】🧒
+// 我的身體會感覺、我的心情會變：認識自己，也學會照顧自己
+
+字卡本: 五感 | Five Senses
+階段: 小班～中班
+// 正面是眼睛、耳朵，問「What can you do with it?」（中文：可以用它做什麼？），答案是 see、hear。問的時候不加 the
+卡: see | 看 | 👀 | I see with my eyes. | Look! What do you see? | I can see a rainbow.
+卡: hear | 聽 | 👂 | I hear with my ears. | Shh! What do you hear? | I can hear a bird.
+卡: smell | 聞 | 👃 | I smell with my nose. | Sniff, sniff! What do you smell? | The flower smells good.
+卡: taste | 嚐 | 👅 | I taste with my tongue. | Yum! What do you taste? | The lemon tastes sour.
+卡: touch | 摸 | ✋ | I touch with my hands. | Touch it. Is it soft? | The teddy bear feels soft.
+
+字卡本: 冷靜下來 | Calm Down
+階段: 小班～中班
+// 接在「心情 Feelings」後面學：生氣、難過的時候可以怎麼做。卡片上是做法，問「What should we do?」
+卡: take a deep breath | 深呼吸 | 🌬️ | Take a deep breath. | Breathe in, breathe out. | Smell the flower, blow out the candle.
+卡: count to ten | 數到十 | 🔟 | Count to ten. | One, two, three... ten. | Count slowly. I feel better.
+卡: hug | 抱一抱 | 🤗 | Can I have a hug? | A big hug makes me feel better. | Hug your teddy bear.
+卡: talk about it | 說出來 | 🗣️ | Tell me how you feel. | I feel angry. Can you help me? | Use your words.
+卡: ask for help | 找大人幫忙 | 🙋 | Ask a grown-up for help. | Can you help me, please? | It's okay to ask for help.
+卡: take a break | 休息一下 | 😌 | Take a break. | Sit in a quiet place. | Rest for a little while.
+
+【一起生活】🏘️
+// 跟朋友、家人一起：怎麼當好朋友、我們吃什麼、一起畫畫
+
+字卡本: 好朋友 | Good Friends
+階段: 幼幼班～小班
+// 跟別的小朋友一起玩要怎麼做。卡片上是做法，問「What should we do?」，問的時候不加 the
+卡: share | 分享 | 🤲 | Let's share. | I share my toys. | Here, you can have some.
+卡: take turns | 輪流 | 🔄 | Let's take turns. | My turn, your turn. | Wait for your turn.
+卡: help | 幫忙 | 🤝 | Can I help you? | Let's help each other. | Thank you for helping me.
+卡: play together | 一起玩 | 👫 | Let's play together. | Do you want to play with me? | Playing together is fun!
+卡: say sorry | 說對不起 | 🙇 | I'm sorry. | Say sorry when you hurt a friend. | It's okay. We are friends.
+卡: be kind | 友善 | 💗 | Be kind to your friends. | Use gentle hands. | Kind words make friends happy.
+卡: listen | 聽別人說 | 👂 | Listen to your friend. | Look and listen. | Your turn to talk, my turn to listen.
+卡: wait in line | 排隊 | 🧍 | Wait in line. | Stand in line, please. | One by one, in a line.
+
+字卡本: 台灣小吃 | Taiwanese Food
+階段: 小班～中班
+// 我們每天吃的東西：早餐店、便利商店、夜市都看得到。圖是最接近的 emoji（飯糰是三角飯糰、香腸用熱狗的圖）
+卡: bubble tea | 珍珠奶茶 | 🧋 | I like bubble tea. | The bubbles are chewy. | Bubble tea is from Taiwan!
+卡: dumpling | 水餃 | 🥟 | Yum, a dumpling! | Dip the dumpling in the sauce. | Let's make dumplings.
+卡: rice ball | 飯糰 | 🍙 | I eat a rice ball for breakfast. | The rice ball has a triangle shape. | Hold the rice ball with two hands.
+卡: bento | 便當 | 🍱 | Open your bento. | My bento has rice and chicken. | Let's eat our bento at school.
+卡: scallion pancake | 蔥油餅 | 🫓 | The scallion pancake is hot. | Yum, scallion pancake! | Let's eat it with an egg.
+卡: oden | 關東煮 | 🍢 | The oden is hot. | Blow on the oden. | Yum, oden in soup!
+卡: sausage | 香腸 | 🌭 | The sausage smells good. | I want a sausage on a stick. | Grandpa likes Taiwanese sausage.
+卡: fried chicken | 雞排 | 🍗 | The fried chicken is big! | Crunch! Fried chicken. | Let's share the fried chicken.
+卡: curry rice | 咖哩飯 | 🍛 | I like curry rice. | The curry is yellow. | Yum! Curry rice for lunch.
+卡: shaved ice | 剉冰 | 🍧 | Shaved ice is cold. | I want mango shaved ice! | Yum! Shaved ice on a hot day.
+
+字卡本: 美勞時間 | Art Time
+階段: 小班
+// 畫畫、剪貼用的東西。scissors、pencil 的句子跟「生活用品 ABC」同一組
+卡: crayon | 蠟筆 | 🖍️ | Draw with a crayon. | My crayon is red. | Color the picture with crayons.
+卡: paintbrush | 水彩筆 | 🖌️ | Dip the paintbrush in the paint. | Paint with a paintbrush. | Wash the paintbrush.
+卡: paint | 顏料 | 🎨 | Let's paint a picture! | Mix red and yellow. Now it's orange! | Blue and yellow make green.
+卡: paper | 紙 | 📄 | Here is some paper. | Fold the paper. | Draw on the paper.
+卡: scissors | 剪刀 | ✂️ | Cut the paper. | Be careful with the scissors. | Snip, snip! Cut, cut!
+卡: pencil | 鉛筆 | ✏️ | Draw with a pencil. | My pencil is yellow. | Write your name with a pencil.
+卡: picture | 畫 | 🖼️ | Look at my picture! | I drew a picture for you. | Hang the picture on the wall.
+
+【世界】🌏
+// 每個國家怎麼說 hello。圖是國旗（iPad、手機、電視都看得到；Windows 的瀏覽器會顯示成兩個英文字母）
+
+字卡本: 世界各國 | Around the World
+階段: 大班
+// 卡片上是國家的名字，問「Where is this?」（中文：這是哪裡？），問的時候不加 the。句子第一句是那個國家的 hello
+卡: Taiwan | 台灣 | 🇹🇼 | Ni hao! Hello from Taiwan. | I live in Taiwan. | Taiwan is my home.
+卡: Japan | 日本 | 🇯🇵 | Konnichiwa! Hello from Japan. | Japan has sushi. | Mount Fuji is in Japan.
+卡: Korea | 韓國 | 🇰🇷 | Annyeong! Hello from Korea. | Korea has kimchi. | Let's go to Korea!
+卡: Thailand | 泰國 | 🇹🇭 | Sawasdee! Hello from Thailand. | Thailand has elephants. | Thailand is hot and sunny.
+卡: India | 印度 | 🇮🇳 | Namaste! Hello from India. | India has tigers. | People eat curry in India.
+卡: France | 法國 | 🇫🇷 | Bonjour! Hello from France. | France has the Eiffel Tower. | Let's eat bread in France.
+卡: Spain | 西班牙 | 🇪🇸 | Hola! Hello from Spain. | Spain is sunny. | Let's dance in Spain!
+卡: Kenya | 肯亞 | 🇰🇪 | Jambo! Hello from Kenya. | Kenya has lions and zebras. | Kenya is in Africa.
+卡: Brazil | 巴西 | 🇧🇷 | Ola! Hello from Brazil. | Brazil loves soccer. | Brazil has a big rainforest.
+卡: America | 美國 | 🇺🇸 | Hi! Hello from America. | America is very big. | People speak English in America.
+卡: Australia | 澳洲 | 🇦🇺 | G'day! Hello from Australia. | Australia has kangaroos. | Koalas live in Australia.
+
+【影片】🎬
+// 認識世界的兒歌，一樣自己一區。都是官方頻道（Sesame Street、Super Simple、Jack Hartmann、Pinkfong……），加進來前確認過允許嵌入播放
+
+《大自然 🌱》
+https://youtu.be/eImKfbwXGQ0 | 植物 Elmo's Apple Tree Song
+階段: 小班
+https://youtu.be/DPL0F2V9_gY | 植物 What a Plant Needs
+階段: 中班
+https://youtu.be/VoSrZ_lE8eQ | 動物寶寶 Baby Animals
+階段: 中班
+https://youtu.be/R3ZVxuflUY0 | 動物寶寶 Baby Farm Animals
+階段: 中班
+https://youtu.be/51fBJ0D3VsQ | 動物的家 Animal Houses
+階段: 中班
+https://youtu.be/DTp_YFZcvoU | 動物的家 Animal Habitats
+階段: 大班
+
+《我自己 🧒》
+https://youtu.be/KVymeq5NSTI | 五感 Five Senses
+階段: 小班
+https://youtu.be/uW4Lyz52Q8w | 五感 My 5 Senses
+階段: 中班
+https://youtu.be/_mZbzDOpylA | 冷靜 Belly Breathe（芝麻街）
+階段: 小班～中班
+https://youtu.be/OrbN-nSTe-E | 冷靜 When You Feel So Mad（小老虎丹尼爾）
+階段: 小班～中班
+
+《一起生活 🏘️》
+https://youtu.be/7p38bHv7Zxc | 輪流 Let's Take Turns
+階段: 幼幼班～小班
+https://youtu.be/rK14Ejaoqqw | 分享 Sharing Song（芝麻街）
+階段: 小班～中班
+
+《世界 🌏》
+https://youtu.be/2PagKPg4m-4 | 打招呼 Hello Around The World
+階段: 大班
+https://youtu.be/NAvc-NLVo7U | 打招呼 Countries Hello Song
+階段: 大班
+
+《恐龍與工程車 🦖》
+https://youtu.be/bGeWTQPKGZ4 | 工程車 At The Construction Site
+階段: 小班
+https://youtu.be/17nQ74S5SfU | 工程車 Construction Machines
+階段: 中班
+https://youtu.be/TjmGTbNLj6Q | 恐龍 10 Little Dinosaurs
+階段: 小班～中班
+https://youtu.be/82ooOpJLzr8 | 恐龍 We Are The Dinosaurs
+階段: 中班～大班

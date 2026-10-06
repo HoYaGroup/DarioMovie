@@ -1,276 +1,9 @@
 // ╔════════════════════════════════════════════════════════════╗
-// ║  學習庫：數字、英文單字、中文的字卡和相關兒歌                     ║
+// ║  學習庫・英文單字：ABC、第 1～3 級單字、卡通、英文兒歌            ║
 // ╚════════════════════════════════════════════════════════════╝
 //
-// 家長自己的影片請放 playlists/videos.txt，兩個檔案部署時會合併。
-// 數字卡的影片片段是示範用：Count & Move 的 0:05～0:20，換成老師教學影片的秒數效果最好
-//
-// 「# 」開頭是最上層的大分類，【】是大分類底下的分區；「字卡本:」開一本新的字卡，同一區的排在同一個畫面
-// 「字卡本: 中文名 | English name」的英文名稱是給全英文模式顯示的；名稱本來就有英文的（農場動物 Farm）不用另外寫
-// 卡片最後用 . ! ? 結尾的英文是句子，English 模式翻面時接在單字後面唸：Apple. Yum, delicious apple!
-// 一張卡可以寫好幾句（每句一欄，用 | 隔開），每次翻到這張卡就換下一句；同一個字在不同字卡本用同一組句子
-// 句型盡量錯開：叫聲（Moo!）、It can／has／is、問答（Do you like…?）、Let's…、打招呼（Hello, little duck!）
-//
-// 「階段: 小班～中班」寫在字卡本或影片的下面，標這一本適合幼幼班、小班、中班、大班的哪幾班（可以寫 幼幼班、小班 或 小班～大班）。
-// 家長在設定頁填孩子的出生年度，小朋友端的每個主題（數字、英文單字、中文）就只顯示適合他這一班的，不用另外開一個「幼兒園」；
-// 想看別班的，家長在設定頁另外開放。沒寫階段的一直顯示。寫在分區或冊下面的話，底下沒另外標的都跟著它
-// 幼幼班 2～3 歲、小班 3～4 歲、中班 4～5 歲、大班 5～6 歲（9 月 1 日那天滿幾歲）
-//
-// 每一區裡的字卡本照「簡單 → 有一點難」排：小朋友從最前面那本開始，熟了再往後
-// 英文單字分成第 1～3 級：第 1 級是每天都看得到的東西，第 3 級是心情、動作這種摸不到的字
-//
-// 英文字卡每張三句、句型錯開，同一個字在不同字卡本用同一組句子；
-// 正面問什麼看單元名稱：顏色問 What color is this?、形狀問 What shape is this?、心情問 How does he feel?……（見 src/utils/cards.ts 的 askKindOf）
-// 同一本裡有幾張不適用那個問法時，在那張卡的最後寫「問:東西」（天氣裡的雪人、雨傘問 What is this?）；
-// 相反詞每張卡最後寫「對:small」指定另一半，正面問 Is it big or small?（兩個字誰先講每次換）
-// 單元名稱有「相反」「四季」「星期」「月份」「時鐘」「習慣」「禮貌」的，問的時候不加 the（Where is Monday?）
-
-# 數字 🔢
-
-【認數字】💯
-// 正面問「What number is this?」（中文、中英模式問「這是數字幾？」），翻面照字卡上方選的語言唸
-// 上面有一排數字可以直接跳，一天教幾個都可以
-
-字卡本: 數字像什麼 1～10 | Number Shapes 1-10
-階段: 小班
-// 說明寫「中文 英文」：English 唸 One. Like a pencil.／中文 一。像一支鉛筆。／中英 一，one。像一支鉛筆，like a pencil。
-卡: 1 | 像一支鉛筆 like a pencil | cards/shapes/1-q.webp | cards/shapes/1.webp
-卡: 2 | 像一隻鴨子 like a duck | cards/shapes/2-q.webp | cards/shapes/2.webp
-卡: 3 | 像一隻蝴蝶 like a butterfly | cards/shapes/3-q.webp | cards/shapes/3.webp
-卡: 4 | 像一艘帆船 like a sailboat | cards/shapes/4-q.webp | cards/shapes/4.webp
-卡: 5 | 像一個勾勾 like a hook | cards/shapes/5-q.webp | cards/shapes/5.webp
-卡: 6 | 像大肚子 like a big tummy | cards/shapes/6-q.webp | cards/shapes/6.webp
-卡: 7 | 像一根拐杖 like a cane | cards/shapes/7-q.webp | cards/shapes/7.webp
-卡: 8 | 像一個雪人 like a snowman | cards/shapes/8-q.webp | cards/shapes/8.webp
-卡: 9 | 像一顆氣球 like a balloon | cards/shapes/9-q.webp | cards/shapes/9.webp
-卡: 10 | 像球棒和棒球 like a bat and a ball | cards/shapes/10-q.webp | cards/shapes/10.webp
-
-字卡本: 認數字 11～20 | Numbers 11-20
-階段: 中班
-// 只寫數字就好：正面直接顯示數字，翻面說 Thirteen. 十三.
-// 11～19 長得很像，認熟了再去「數一數 11～20」點著數
-卡: 11
-卡: 12
-卡: 13
-卡: 14
-卡: 15
-卡: 16
-卡: 17
-卡: 18
-卡: 19
-卡: 20
-
-字卡本: 兩個兩個數 2～20 | Count by Twos
-階段: 中班
-// 句子是一路數上來的口訣：翻到 6 就說 Six. 六. Two, four, six!
-卡: 2 | Let's count by twos!
-卡: 4 | Two, four!
-卡: 6 | Two, four, six!
-卡: 8 | Two, four, six, eight!
-卡: 10 | Two, four, six, eight, ten!
-卡: 12 | Ten, twelve!
-卡: 14 | Ten, twelve, fourteen!
-卡: 16 | Ten, twelve, fourteen, sixteen!
-卡: 18 | Ten, twelve, fourteen, sixteen, eighteen!
-卡: 20 | Ten, twelve, fourteen, sixteen, eighteen, twenty!
-
-字卡本: 10～100 | Count by Tens
-階段: 大班
-// 翻面說 Thirty. 三十. 再接十個十個數的口訣
-卡: 10 | Let's count by tens!
-卡: 20 | Ten, twenty!
-卡: 30 | Ten, twenty, thirty!
-卡: 40 | Ten, twenty, thirty, forty!
-卡: 50 | Ten, twenty, thirty, forty, fifty!
-卡: 60 | Fifty, sixty!
-卡: 70 | Fifty, sixty, seventy!
-卡: 80 | Fifty, sixty, seventy, eighty!
-卡: 90 | Fifty, sixty, seventy, eighty, ninety!
-卡: 100 | Ninety, one hundred! We did it!
-
-字卡本: 0～100 | Numbers 0-100
-階段: 大班
-// 一行就產生 0～100 的數字卡；上面那排數字變成每十個一格（0、10、20…）
-// 考考我會挑容易搞混的當選項：31 配 13、30
-數字卡: 0～100
-
-【數一數】🍎
-// 放 emoji 的數字卡：正面畫出那麼多個東西，「Let's count! Touch the apples.」小朋友一個一個點著數
-// 數完問「How many apples are there?」三個數字選一個，答對翻面：Eleven. 十一顆蘋果. Eleven apples.
-// 會說 apples、十一顆蘋果 的 emoji 列在 src/utils/cards.ts 的 COUNT_NOUNS（常見的動物、水果、海裡的、小蟲都有）
-
-字卡本: 數一數 1～5 | Let's Count 1-5
-階段: 幼幼班
-// 最簡單的一本：東西少、又大顆，剛開始數數從這裡玩
-卡: 1 | 🍎
-卡: 2 | 🍌
-卡: 3 | 🍓
-卡: 4 | 🍊
-卡: 5 | 🍐
-
-字卡本: 數一數 1～10 | Let's Count 1-10
-階段: 小班
-卡: 1 | 🍎
-卡: 2 | 🐶
-卡: 3 | 🐸
-卡: 4 | 🍌
-卡: 5 | 🐟
-卡: 6 | 🍓
-卡: 7 | 🐞
-卡: 8 | 🐥
-卡: 9 | 🍊
-卡: 10 | 🐝 | https://youtu.be/g9EgE_JtEAw 0:20-0:50
-
-字卡本: 數一數 海洋 1～10 | Sea Count 1-10
-階段: 小班
-// 換一批海裡的動物再數一次，順便認識「第 2 級 海洋動物」的字
-卡: 1 | 🐳
-卡: 2 | 🐬
-卡: 3 | 🦈
-卡: 4 | 🐢
-卡: 5 | 🐙
-卡: 6 | 🦀
-卡: 7 | 🐠
-卡: 8 | 🐚
-卡: 9 | 🦐
-卡: 10 | 🦑
-
-字卡本: 數一數 11～20 | Let's Count 11-20
-階段: 中班
-// 前 10 個排成兩排，看得出 13 是 10 再加 3
-卡: 11 | 🐱
-卡: 12 | 🐘
-卡: 13 | 🐝
-卡: 14 | 🦒
-卡: 15 | 🦛
-卡: 16 | 🐜
-卡: 17 | 🐵
-卡: 18 | 🐷
-卡: 19 | 🦁
-卡: 20 | 🐢
-
-字卡本: 數一數 蟲蟲 11～20 | Bug Count 11-20
-階段: 中班
-卡: 11 | 🐜
-卡: 12 | 🐞
-卡: 13 | 🦋
-卡: 14 | 🐝
-卡: 15 | 🐛
-卡: 16 | 🐌
-卡: 17 | 🦗
-卡: 18 | 🕷️
-卡: 19 | 🪲
-卡: 20 | 🐞
-
-【數字在身邊】🧒
-// 有一點難度：數字在生活裡的哪裡？正面是數字，翻面說 Two. 我有兩隻眼睛. I have two eyes.
-// 說明寫中文，句子寫英文；邊說可以邊讓小朋友摸摸自己的眼睛、數數手指
-
-字卡本: 數字在身邊 1～10 | Numbers Around Me
-階段: 中班～大班
-卡: 1 | 我有一個鼻子 | I have one nose.
-卡: 2 | 我有兩隻眼睛 | I have two eyes.
-卡: 3 | 三輪車有三個輪子 | A tricycle has three wheels.
-卡: 4 | 小狗有四條腿 | A dog has four legs.
-卡: 5 | 一隻手有五根手指 | I have five fingers.
-卡: 6 | 昆蟲有六隻腳 | An insect has six legs.
-卡: 7 | 一個星期有七天 | A week has seven days.
-卡: 8 | 蜘蛛有八隻腳 | A spider has eight legs.
-卡: 9 | 貓有九條命 | A cat has nine lives.
-卡: 10 | 我有十根腳趾 | I have ten toes.
-卡: 12 | 一年有十二個月 | A year has twelve months.
-
-【時間】🕒
-// 四季、星期、月份、時鐘：一年、一週、一天的數字。問的時候不加 the（Where is Monday?）
-
-字卡本: 四季 | Seasons
-階段: 小班
-// 春夏秋冬：看窗外的樹和天氣，說說現在是哪一季
-卡: spring | 春天 | 🌸 | Spring is warm. | Flowers bloom in spring. | Hello, spring!
-卡: summer | 夏天 | 🌞 | Summer is hot. | I swim in summer. | Let's eat watermelon in summer!
-卡: autumn | 秋天 | 🍂 | Autumn is cool. | The leaves fall in autumn. | Crunch, crunch! Autumn leaves.
-卡: winter | 冬天 | ❄️ | Winter is cold. | It snows in winter. | Put on your coat. It's winter!
-
-字卡本: 星期 | Days of the Week
-階段: 中班
-// 圖是「七曜」：月亮日、火、水、木、金、土星日，星期天是太陽日——英文的 Monday 就是 Moon day
-卡: Monday | 星期一 | 🌙 | Today is Monday. | Monday comes after Sunday. | I go to school on Monday.
-卡: Tuesday | 星期二 | 🔥 | Today is Tuesday. | Tuesday comes after Monday. | I go to school on Tuesday.
-卡: Wednesday | 星期三 | 💧 | Today is Wednesday. | Wednesday comes after Tuesday. | I go to school on Wednesday.
-卡: Thursday | 星期四 | 🌳 | Today is Thursday. | Thursday comes after Wednesday. | I go to school on Thursday.
-卡: Friday | 星期五 | 🪙 | Today is Friday. | Friday comes after Thursday. | I go to school on Friday.
-卡: Saturday | 星期六 | 🪐 | Today is Saturday. | Saturday comes after Friday. | I play with my family on Saturday.
-卡: Sunday | 星期天 | ☀️ | Today is Sunday. | Sunday comes after Saturday. | I rest on Sunday.
-
-字卡本: 時鐘 整點 | O'clock
-階段: 大班
-// 看短針指哪裡：指到 3 就是三點鐘。每個鐘點配一件小朋友一天裡會做的事
-卡: one o'clock | 一點鐘 | 🕐 | It's one o'clock. | Tick, tock! It's one o'clock. | One o'clock. Time for a nap.
-卡: two o'clock | 兩點鐘 | 🕑 | It's two o'clock. | Tick, tock! It's two o'clock. | Two o'clock. Let's play.
-卡: three o'clock | 三點鐘 | 🕒 | It's three o'clock. | Tick, tock! It's three o'clock. | Three o'clock. Time for a snack.
-卡: four o'clock | 四點鐘 | 🕓 | It's four o'clock. | Tick, tock! It's four o'clock. | Four o'clock. School is over!
-卡: five o'clock | 五點鐘 | 🕔 | It's five o'clock. | Tick, tock! It's five o'clock. | Five o'clock. Time to go home.
-卡: six o'clock | 六點鐘 | 🕕 | It's six o'clock. | Tick, tock! It's six o'clock. | Six o'clock. Time for dinner.
-卡: seven o'clock | 七點鐘 | 🕖 | It's seven o'clock. | Tick, tock! It's seven o'clock. | Seven o'clock. Time to get up!
-卡: eight o'clock | 八點鐘 | 🕗 | It's eight o'clock. | Tick, tock! It's eight o'clock. | Eight o'clock. Time for breakfast.
-卡: nine o'clock | 九點鐘 | 🕘 | It's nine o'clock. | Tick, tock! It's nine o'clock. | Nine o'clock. Time for school.
-卡: ten o'clock | 十點鐘 | 🕙 | It's ten o'clock. | Tick, tock! It's ten o'clock. | Ten o'clock. Let's draw a picture.
-卡: eleven o'clock | 十一點鐘 | 🕚 | It's eleven o'clock. | Tick, tock! It's eleven o'clock. | Eleven o'clock. Let's play outside.
-卡: twelve o'clock | 十二點鐘 | 🕛 | It's twelve o'clock. | Tick, tock! It's twelve o'clock. | Twelve o'clock. Time for lunch.
-
-字卡本: 月份 | Months
-階段: 大班
-// 一年有十二個月。圖是那個月常見的事：三月花開、五月母親節、九月開學、十月萬聖節
-卡: January | 一月 | ⛄ | It's January. | January is the first month. | It's cold in January.
-卡: February | 二月 | 🧧 | It's February. | February is the second month. | February is a short month.
-卡: March | 三月 | 🌷 | It's March. | March is the third month. | Flowers bloom in March.
-卡: April | 四月 | ☔ | It's April. | April is the fourth month. | It rains in April.
-卡: May | 五月 | 💐 | It's May. | May is the fifth month. | Mother's Day is in May.
-卡: June | 六月 | 🍉 | It's June. | June is the sixth month. | It's hot in June.
-卡: July | 七月 | 🏖️ | It's July. | July is the seventh month. | Let's swim in July.
-卡: August | 八月 | 🌻 | It's August. | August is the eighth month. | Father's Day is in August.
-卡: September | 九月 | 🎒 | It's September. | September is the ninth month. | We go back to school in September.
-卡: October | 十月 | 🎃 | It's October. | October is the tenth month. | Halloween is in October.
-卡: November | 十一月 | 🍂 | It's November. | November is the eleventh month. | The leaves fall in November.
-卡: December | 十二月 | 🎄 | It's December. | December is the last month. | Christmas is in December.
-
-【影片】🎬
-// 數數的兒歌放在《數數》，四季、星期、月份、時鐘放在《時間》。影片放在自己一區，不跟字卡混在一起，小朋友練字卡時才不會分心
-《數數 🔢》
-https://youtu.be/-tpTosF4dN8 | 從 1 數到 10（中文）
-階段: 幼幼班～小班
-https://youtu.be/zQ5bQ6tjl_M | 數到 5 Stomp! Count To Five
-階段: 幼幼班～小班
-https://youtu.be/xNw1SSz18Gg | 手指數數 How Many Fingers?
-階段: 幼幼班～小班
-https://youtu.be/zTBy5G2lk5M | 數到 10 Counting 1 to 10
-階段: 小班
-https://youtu.be/7D4K9oi7oBM | 數數兒歌精選 Top 10 Counting Songs
-階段: 小班～中班
-https://youtu.be/jNeOIPxSq9g | 數 11 到 20 Counting 11 to 20
-階段: 中班
-https://youtu.be/9wj-d1oP0NY | 一起數蟲蟲 Let's Count with Bugs!
-階段: 中班
-https://youtu.be/g9EgE_JtEAw | Count & Move 數到 20（英文）
-階段: 中班～大班
-https://youtu.be/_MVzXKfr6e8 | 邊運動邊數到 20 Count to 20 and Workout
-階段: 中班～大班
-https://youtu.be/8wwydguSKOU | 兩個兩個數 Counting By Twos Song
-階段: 中班～大班
-https://youtu.be/g5RG82acJpU | 十個十個數到 100 Count to 100 by 10
-階段: 大班
-https://youtu.be/F3-AY1B-0qc | 數到 100 Counting to 100 is Fun to Do!
-階段: 大班
-
-《時間 🕒》
-https://youtu.be/4LsInzDH3q0 | 四季 The Seasons Song
-階段: 小班～中班
-https://youtu.be/vcMmiR7jWQc | 星期 Days Of The Week
-階段: 中班
-https://youtu.be/HGgsklW-mtg | 時鐘 Hickory Dickory Dock
-階段: 中班～大班
-https://youtu.be/gtc4c1JlAEM | 月份 The Months Chant
-階段: 大班
+// 寫法和規則（字卡本、階段、句子、正面問什麼……）看同一個資料夾的 README.md
+// 英文字卡每張三句、句型錯開；同一個字在不同字卡本用同一組句子（建置時會自動檢查）
 
 # 英文單字 🔤
 
@@ -679,6 +412,14 @@ https://youtu.be/gtc4c1JlAEM | 月份 The Months Chant
 卡: diamond | 菱形 | 🔶 | Draw a diamond. | The kite is a diamond. | The diamond is shiny.
 卡: moon | 月亮 | 🌙 | Good night, moon. | The moon is bright. | Look at the round moon! | 問:東西
 
+字卡本: 立體形狀 | 3D Shapes
+階段: 大班
+// 形狀 Shapes 是平的，這本是摸得到、會滾的：骰子是正方體、球是球體
+卡: cube | 正方體 | 🎲 | The dice is a cube. | A cube has six faces. | Let's stack the cubes.
+卡: sphere | 球體 | ⚽ | The ball is a sphere. | A sphere can roll. | The Earth is a sphere.
+卡: cone | 圓錐 | 🍦 | The ice cream is in a cone. | A cone has a point on top. | The party hat is a cone.
+卡: cylinder | 圓柱 | 🥫 | The can is a cylinder. | A cylinder can roll. | The drum is a cylinder.
+
 字卡本: 衣服 Clothes
 階段: 小班
 卡: shirt | 上衣 | 👕 | Put on your shirt. | My shirt is blue. | I like your shirt!
@@ -883,6 +624,22 @@ https://youtu.be/gtc4c1JlAEM | 月份 The Months Chant
 卡: wet | 濕 | 💦 | The towel is wet. | I am wet! It's raining. | The grass is wet. | 對:dry
 卡: dry | 乾 | 🌵 | The towel is dry. | The desert is dry. | The cactus lives in a dry place. | 對:wet
 
+字卡本: 相反詞 3 | Opposites 3
+階段: 大班
+// 聽聽看、嚐嚐看、比比看：大聲／安靜、甜／酸、年輕／老、滿／空、醒著／睡著、左／右
+卡: loud | 大聲 | 📢 | The lion's roar is loud. | Too loud! Cover your ears. | The fire truck is loud. | 對:quiet
+卡: quiet | 安靜 | 🤫 | Shh! Be quiet. | The library is quiet. | The baby is sleeping. Be quiet. | 對:loud
+卡: sweet | 甜 | 🍬 | The candy is sweet. | Honey is sweet. | Yum! It's sweet. | 對:sour
+卡: sour | 酸 | 🍋 | The lemon is sour. | Oh, it's so sour! | Sour, sour! Make a funny face. | 對:sweet
+卡: young | 年輕 | 👶 | The baby is young. | The puppy is young. | I am young. | 對:old
+卡: old | 老 | 👵 | Grandma is old. | The tree is very old. | The turtle is very old. | 對:young
+卡: full | 滿 | 🍯 | The jar is full. | My tummy is full. | The cup is full of milk. | 對:empty
+卡: empty | 空 | 🫙 | The jar is empty. | My cup is empty. | The box is empty. | 對:full
+卡: awake | 醒著 | 😃 | I am awake. | The owl is awake at night. | Good morning! Are you awake? | 對:asleep
+卡: asleep | 睡著 | 😴 | The baby is asleep. | Shh! Daddy is asleep. | The cat is asleep on the sofa. | 對:awake
+卡: left | 左 | ⬅️ | Raise your left hand. | Turn left. | Look left. | 對:right
+卡: right | 右 | ➡️ | Raise your right hand. | Turn right. | Look right. | 對:left
+
 字卡本: 節慶 | Festivals
 階段: 中班
 // 照一年裡的順序：新年、元宵、端午、中秋、萬聖節、聖誕節，最後是每個人的生日
@@ -1055,6 +812,8 @@ https://youtu.be/jYAWf8Y91hA | 顏色 I See Something Blue
 階段: 幼幼班
 https://youtu.be/WTeqUejf3D0 | 形狀 Shapes Song 2
 階段: 小班
+https://youtu.be/G79xAbas6Os | 立體形狀 3D Shapes
+階段: 大班
 https://youtu.be/ZanHgPprl-0 | 身體 Head Shoulders Knees & Toes
 階段: 幼幼班
 https://youtu.be/GzrjwOQpAl0 | 交通工具 The Wheels On The Bus
@@ -1130,6 +889,8 @@ https://youtu.be/4C7gkt8yWYE | 相反詞 Opposites Song
 階段: 小班～中班
 https://youtu.be/Qfl9m0sff-4 | 相反詞 Adjectives and Opposites Song
 階段: 中班
+https://youtu.be/y7pxpxpiOJQ | 相反詞 Opposites with Pinkfong（大聲安靜、甜酸）
+階段: 大班
 https://youtu.be/haWRPgqDKn0 | 太空 8 Little Planets
 階段: 中班～大班
 https://youtu.be/D7Pd5TOgRZs | 太空 The Planets Song
@@ -1170,144 +931,4 @@ https://youtu.be/DNZUKm0ApEM | 玩具總動員 You've Got a Friend in Me
 
 // site: 開頭的是網站，會在 App 裡面開，小朋友不會跳出去
 site: https://embrs.github.io/learn-en/ | 每日英文・家庭生活
-階段: 大班
-
-# 中文 ✏️
-// 注音、國字：第一欄是中文字或注音的卡叫「識字卡」，正面只寫那個字，翻面才有圖和說明，一律唸中文，不分語言
-// 注音符號單獨唸，語音不一定唸得準，所以用「唸:」寫一個同音字代替：ㄅ 唸「玻」（ㄅㄛ）
-// 注音的例字挑「圖畫得出來、符號就在字裡」的字；韻母（ㄚㄛㄜ…）的例字不一定從那個符號開頭，聽的是字裡那個音
-
-【注音】🔤
-// 照注音符號的順序，一本幾個，一個一個認
-
-字卡本: 注音 1 ㄅㄆㄇㄈ ㄉㄊㄋㄌ
-階段: 大班
-// 識字卡：看到符號，想一想怎麼唸，點一下翻面聽「ㄅㄛ」和例字。「唸:」是語音要唸的同音字（玻＝ㄅㄛ）
-卡: ㄅ | 唸:玻 | 爸爸 | 👨
-卡: ㄆ | 唸:坡 | 蘋果 | 🍎
-卡: ㄇ | 唸:摸 | 媽媽 | 👩
-卡: ㄈ | 唸:佛 | 飛機 | ✈️
-卡: ㄉ | 唸:得 | 大象 | 🐘
-卡: ㄊ | 唸:特 | 兔子 | 🐰
-卡: ㄋ | 唸:訥 | 牛奶 | 🥛
-卡: ㄌ | 唸:樂 | 老虎 | 🐯
-
-字卡本: 注音 2 ㄍㄎㄏ ㄐㄑㄒ
-階段: 大班
-卡: ㄍ | 唸:哥 | 狗 | 🐶
-卡: ㄎ | 唸:科 | 褲子 | 👖
-卡: ㄏ | 唸:喝 | 花 | 🌸
-卡: ㄐ | 唸:基 | 雞 | 🐔
-卡: ㄑ | 唸:欺 | 氣球 | 🎈
-卡: ㄒ | 唸:西 | 西瓜 | 🍉
-
-字卡本: 注音 3 ㄓㄔㄕㄖ ㄗㄘㄙ
-階段: 大班
-// ㄓㄔㄕㄖ 是捲舌音，ㄗㄘㄙ 不捲舌：豬（ㄓ）和嘴巴（ㄗ）放在一起比比看
-卡: ㄓ | 唸:知 | 豬 | 🐷
-卡: ㄔ | 唸:吃 | 車 | 🚗
-卡: ㄕ | 唸:詩 | 獅子 | 🦁
-卡: ㄖ | 唸:日 | 肉 | 🍖
-卡: ㄗ | 唸:資 | 嘴巴 | 👄
-卡: ㄘ | 唸:雌 | 草莓 | 🍓
-卡: ㄙ | 唸:思 | 松鼠 | 🐿️
-
-字卡本: 注音 4 ㄧㄨㄩ ㄚㄛㄜㄝ
-階段: 大班
-// ㄧㄨㄩ 常常接在別的符號後面，一個人也念得出來；ㄝ 平常很少單獨出現，多半是 ㄧㄝ、ㄩㄝ
-卡: ㄧ | 唸:衣 | 衣服 | 👕
-卡: ㄨ | 唸:屋 | 烏龜 | 🐢
-卡: ㄩ | 唸:魚 | 魚 | 🐟
-卡: ㄚ | 唸:啊 | 阿嬤 | 👵
-卡: ㄛ | 唸:喔 | 公雞喔喔叫 | 🐓
-卡: ㄜ | 唸:鵝 | 肚子餓 | 🤤
-卡: ㄝ | 唸:耶 | 葉子 | 🍃
-
-字卡本: 注音 5 ㄞㄟㄠㄡ ㄢㄣㄤㄥ ㄦ
-階段: 大班
-卡: ㄞ | 唸:哀 | 愛心 | ❤️
-卡: ㄟ | 唸:欸 | 杯子 | 🥤
-卡: ㄠ | 唸:熬 | 貓 | 🐱
-卡: ㄡ | 唸:歐 | 猴子 | 🐵
-卡: ㄢ | 唸:安 | 雨傘 | ☂️
-卡: ㄣ | 唸:恩 | 門 | 🚪
-卡: ㄤ | 唸:昂 | 湯 | 🍲
-卡: ㄥ | 唸:鞥 | 燈 | 💡
-卡: ㄦ | 唸:兒 | 耳朵 | 👂
-
-【國字】✏️
-// 國字從數字和大小開始，大班再認象形字
-
-字卡本: 認識國字 一～十
-階段: 中班
-// 識字卡：正面只有那個字，想一想怎麼唸，點一下翻面聽答案（翻面唸：一。數字一）
-卡: 一 | 數字 1
-卡: 二 | 數字 2
-卡: 三 | 數字 3
-卡: 四 | 數字 4
-卡: 五 | 數字 5
-卡: 六 | 數字 6
-卡: 七 | 數字 7
-卡: 八 | 數字 8
-卡: 九 | 數字 9
-卡: 十 | 數字 10
-
-字卡本: 認識國字 大小上下
-階段: 中班
-// 背面的箭頭、動物是幫忙記的圖：上下左右看箭頭，大小看大象和螞蟻
-卡: 大 | 大象、大家 | 🐘
-卡: 小 | 小鳥、小狗 | 🐜
-卡: 上 | 上面、上學 | ⬆️
-卡: 中 | 中間、中午 | 🎯
-卡: 下 | 下面、下雨 | ⬇️
-卡: 左 | 左手、左邊 | ⬅️
-卡: 右 | 右手、右邊 | ➡️
-
-字卡本: 象形字 1 日月山水火木土田
-階段: 大班
-// 很久很久以前，字是畫出來的：日像太陽、山像三座山。翻面的圖就是那個字原來畫的東西
-卡: 日 | 太陽、生日 | ☀️
-卡: 月 | 月亮、月餅 | 🌙
-卡: 山 | 爬山、山上 | ⛰️
-卡: 水 | 喝水、水果 | 💧
-卡: 火 | 火車、火山 | 🔥
-卡: 木 | 樹木、木頭 | 🌳
-卡: 土 | 土地、泥土 | 🌱
-卡: 田 | 田地、稻田 | 🌾
-
-字卡本: 象形字 2 人和身體
-階段: 大班
-卡: 人 | 大人、好人 | 🧍
-卡: 口 | 嘴巴、門口 | 👄
-卡: 手 | 小手、拍手 | ✋
-卡: 目 | 眼睛 | 👁️
-卡: 耳 | 耳朵 | 👂
-卡: 足 | 腳、足球 | 🦶
-卡: 心 | 愛心、開心 | ❤️
-卡: 牙 | 牙齒、牙刷 | 🦷
-
-字卡本: 象形字 3 動物
-階段: 大班
-卡: 牛 | 牛奶、小牛 | 🐮
-卡: 羊 | 山羊、綿羊 | 🐑
-卡: 犬 | 小狗、警犬 | 🐶
-卡: 馬 | 馬兒、斑馬 | 🐴
-卡: 魚 | 小魚、金魚 | 🐟
-卡: 鳥 | 小鳥、鳥兒 | 🐦
-卡: 虎 | 老虎、虎頭 | 🐯
-
-【影片】🎬
-// 注音、國字的影片，一樣自己一區。中文影片的品質我只能從頻道和標題判斷，請先看過再給小朋友
-
-https://youtu.be/S-H3WJNbf0A | 注音歌 ㄅㄆㄇ（小星星改編）
-階段: 大班
-https://youtu.be/aeO-f8gT7X0 | ㄅㄆㄇㄈ 幼兒注音教學
-階段: 大班
-https://youtu.be/d0nQewoqI5Q | ㄝㄞㄟㄠㄡ ㄢㄣㄤㄥㄦ 注音教學
-階段: 大班
-https://youtu.be/zerPsRKXId0 | ㄅㄆㄇ 兒童注音趴（親子天下）
-階段: 大班
-https://youtu.be/L_4Fg3jpUaM | 上下左右歌
-階段: 中班
-https://youtu.be/5tvvi-MJVeE | 漢字說故事：木（YOYO）
 階段: 大班

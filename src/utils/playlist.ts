@@ -114,6 +114,8 @@ export function parsePlaylist(text: string): ParseResult {
   /** 「字卡本: 名稱 | English name」的英文名稱 */
   let deckTitleEn = ''
   const takenUids = new Set<string>()
+  /** 以前的字卡本識別碼用到哪裡，見 deckHere */
+  const legacyDeckUids = new Set<string>()
   /**
    * 「階段:」要寫到哪一項：每開一個大分類、分區、冊、字卡本、影片，就換成那一項的寫入函式。
    * 字卡本是讀到第一張卡才真的建出來，所以先記在 deckStages，建出來時再帶上。
@@ -245,9 +247,13 @@ export function parsePlaylist(text: string): ParseResult {
     /** 同一個單元的卡集成一本，出現在第一張卡的位置 */
     const deckHere = (cat: Category): VideoItem => {
       if (!currentDeck) {
+        const sectionName = sections.find((s) => s.id === cat.sectionId)?.name ?? ''
         currentDeck = {
           kind: 'deck',
-          uid: makeVideoUid(`deck:${cat.id}:${currentSub?.id ?? ''}:${deckTitle ?? ''}`, takenUids),
+          // 識別碼（星星記在這上面）用名稱組成：中文分區的 id 是照出現順序編的（cat-3），
+          // 前面多一個分區就全部往後挪；用名稱的話，新的分區、字卡本加在哪裡都不影響別本的星星
+          uid: makeVideoUid(`deck:${sectionName}›${cat.name}›${currentSub?.name ?? ''}›${deckTitle ?? ''}`, takenUids),
+          legacyUid: makeVideoUid(`deck:${cat.id}:${currentSub?.id ?? ''}:${deckTitle ?? ''}`, legacyDeckUids),
           id: '',
           title: deckTitle ?? currentSub?.name ?? cat.name,
           ...(deckTitle !== null && deckTitleEn ? { titleEn: deckTitleEn } : {}),
