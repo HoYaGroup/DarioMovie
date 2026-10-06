@@ -7,6 +7,8 @@ import { useDragSort } from '~/composables/useDragSort'
 import { useCollapse } from '~/composables/useCollapse'
 import { useParentGate } from '~/composables/useParentGate'
 import { useDisplay } from '~/composables/useDisplay'
+import { useChildStage } from '~/composables/useChildStage'
+import { STAGES } from '~/utils/stage'
 import { useTheme } from '~/composables/useTheme'
 import PanelSection from '~/components/PanelSection.vue'
 import { isPicture, isEmojiOnly, imageSrc } from '~/utils/cards'
@@ -338,6 +340,48 @@ const sourceSummary = computed(() => {
   return 'playlist.txt 管全部 iPad'
 })
 const { settings: display, setGroupMode } = useDisplay()
+
+/* ============ 孩子的年紀：小朋友端只顯示他這一班 ============ */
+
+const { profile: child, current: childStage, openStages, setBirth, toggleStage } = useChildStage()
+
+/** 出生年的選項：今年往前 8 年；已經存了更早的年份也要留著，不然下拉會變空白 */
+const birthYears = computed(() => {
+  const now = new Date().getFullYear()
+  const years = Array.from({ length: 9 }, (_, i) => now - i)
+  const saved = child.value.birthYear
+  return saved !== null && !years.includes(saved) ? [...years, saved].sort((a, b) => b - a) : years
+})
+
+const childInfo = computed(() => (childStage.value ? STAGES[childStage.value.stage] : null))
+
+/** 設定了出生年度，會說明「現在是幾班、為什麼」 */
+const childNote = computed(() => {
+  const r = childStage.value
+  const info = childInfo.value
+  if (!r || !info) return ''
+  const base = `${r.schoolYear} 學年度，9 月 1 日滿 ${r.age} 歲 → ${info.name}（${info.age}）`
+  if (r.clamped === 'early') return `${base}。還沒到幼幼班的年紀，先顯示幼幼班。`
+  if (r.clamped === 'late') return `${base}。已經超過大班的年紀，先顯示大班。`
+  return base
+})
+
+const childSummary = computed(() => {
+  const info = childInfo.value
+  if (!info) return '還沒設定・四個階段都顯示'
+  const extra = [...openStages.value].filter((id) => id !== childStage.value?.stage).length
+  return `${child.value.birthYear} 年出生・${info.name}${extra ? `＋另外開放 ${extra} 個階段` : ''}`
+})
+
+function onBirthYear(ev: Event) {
+  const v = (ev.target as HTMLSelectElement).value
+  setBirth(v ? Number(v) : null)
+}
+
+function onBirthMonth(ev: Event) {
+  setBirth(child.value.birthYear, Number((ev.target as HTMLSelectElement).value))
+}
+
 const { choice: themeChoice, resolved: themeResolved, setTheme } = useTheme()
 
 /** 分區顏色要跟著主題換，淺色底得用深一點的版本才看得清楚 */
@@ -852,6 +896,57 @@ function onImport() {
         </p>
       </PanelSection>
 
+      <!-- ══════ 孩子的年紀 ══════ -->
+      <PanelSection id="child" title="孩子的年紀" span="all" :summary="childSummary">
+        <p class="hint">
+          設定出生年度，小朋友端的數字、英文單字……每一個主題，就只會顯示適合他這一班的字卡和影片
+          （幼幼班、小班、中班、大班）。每年 8 月新學年開始，會自動換成下一班。想讓他看別班的，在下面另外開放。
+        </p>
+
+        <div class="child-row">
+          <label class="field">
+            <span>出生年（西元）</span>
+            <select class="child-select" :value="child.birthYear ?? ''" aria-label="出生年" @change="onBirthYear">
+              <option value="">還沒設定</option>
+              <option v-for="y in birthYears" :key="y" :value="y">{{ y }} 年（民國 {{ y - 1911 }}）</option>
+            </select>
+          </label>
+          <label v-if="child.birthYear !== null" class="field">
+            <span>出生月份</span>
+            <select class="child-select" :value="child.birthMonth" aria-label="出生月份" @change="onBirthMonth">
+              <option v-for="m in 12" :key="m" :value="m">{{ m }} 月</option>
+            </select>
+          </label>
+        </div>
+
+        <p v-if="childNote" class="hint child-note">📅 {{ childNote }}</p>
+        <p v-else class="hint">還沒設定出生年度：四個階段的教材都會顯示。</p>
+        <p v-if="child.birthYear !== null" class="hint">
+          分班看 9 月 1 日那天滿幾歲，9～12 月出生的算下一屆，所以月份也要選。
+        </p>
+
+        <div class="field" style="margin-top: 18px">
+          <span>小朋友端顯示哪些階段</span>
+          <div class="chip-row">
+            <button
+              v-for="s in STAGES"
+              :key="s.id"
+              class="chip chip-plain"
+              :class="{ 'is-on': openStages.has(s.id) }"
+              :disabled="childStage?.stage === s.id"
+              :aria-pressed="openStages.has(s.id)"
+              @click="toggleStage(s.id)"
+            >
+              {{ s.emoji }} {{ s.name }} {{ s.age }}<template v-if="childStage?.stage === s.id">（目前）</template>
+            </button>
+          </div>
+        </div>
+        <p class="hint">
+          亮色的就是現在開放的。孩子這一班一直開著；想讓他提前玩下一班、或回頭複習，點那一班就開放，再點一次就收起來。
+          沒標年紀的（自己加的影片、娛樂）一直都看得到。這裡只影響小朋友端，上面的「目前片單」一直看得到全部。
+        </p>
+      </PanelSection>
+
       <!-- ══════ 觀看時間 ══════ -->
       <PanelSection id="time" title="觀看時間" span="all" :summary="timeSummary">
         <div class="time-grid">
@@ -1327,6 +1422,26 @@ site: https://example.com | 某個學習網站
   border-color: transparent;
   color: var(--bg);
 }
+/* 孩子這一班一直開著，不能關：看起來是開的，但不是可以按的樣子 */
+.chip:disabled { cursor: default; }
+.chip:disabled:active { transform: none; }
+
+/* ---------- 孩子的年紀 ---------- */
+.child-row { display: flex; flex-wrap: wrap; gap: 0 16px; }
+.child-row .field { flex: 1 1 200px; max-width: 280px; }
+.child-select {
+  width: 100%;
+  padding: 12px 14px;
+  font-family: inherit;
+  font-size: 16px;
+  color: var(--text);
+  background: var(--bg);
+  border: 2px solid var(--line);
+  border-radius: 14px;
+  outline: none;
+}
+.child-select:focus { border-color: var(--accent); }
+.child-note { color: var(--text); font-weight: 600; }
 
 /* ---------- 拖曳把手 ---------- */
 .grip {

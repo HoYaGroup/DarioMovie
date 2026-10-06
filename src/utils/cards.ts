@@ -1,4 +1,4 @@
-import { parseVideoId, type Card, type CardClip, type VideoItem } from './youtube'
+import { parseVideoId, type AskKind, type Card, type CardClip, type VideoItem } from './youtube'
 
 /**
  * 字卡的解析與顯示輔助。
@@ -9,13 +9,22 @@ import { parseVideoId, type Card, type CardClip, type VideoItem } from './youtub
  *   卡: dog | 狗 | cards/dog.jpg
  *   卡: 11 | 🍎 | https://youtu.be/xxxxxxxxxxx 0:35-0:42
  *   卡: 1 | 一支鉛筆 one pencil | cards/shapes/1-q.webp | cards/shapes/1.webp
+ *   卡: ㄅ | 唸:玻 | 爸爸 | 👨
+ *   卡: snowman | 雪人 | ⛄ | 問:東西
+ *   卡: big | 大 | 🐘 | 對:small
  *
  * 第一欄是卡片上最大的字，後面幾欄看內容自動判斷是什麼：
  *   ‧ 有 youtu 字樣的是影片片段，後面可以接「開始-結束」時間
  *   ‧ 只有 emoji，或是圖片網址／路徑的是圖；寫兩張的話，第一張是正面、第二張是背面
  *   ‧ 有英文、而且用 . ! ? 結尾的是句子，翻面時接在單字後面唸；寫好幾句（每句一欄）就輪流唸
+ *   ‧ 「唸:」開頭的是語音要怎麼唸這個字（注音符號用同音字代替）
+ *   ‧ 「問:」開頭的是這張卡自己的正面問法（東西、顏色、形狀、心情、動作、誰、哪裡、天氣……），
+ *     沒寫就照字卡本的名稱決定；同一本裡有幾張不適用的（天氣裡的雪人）才需要寫
+ *   ‧ 「對:」開頭的是相反詞的另一半（對:small）：正面問「Is it big or small?」，兩個字誰先講每次換
  *   ‧ 其他的是說明（英文、中文都可以寫在一起）
  * 所以欄位順序寫錯、少寫一欄都沒關係，不會整張卡壞掉。
+ *
+ * 第一欄是中文字或注音的卡叫「識字卡」（isZhCard）：正面只寫那個字，圖和說明在背面，一律用中文。
  */
 
 const RE_EMOJI_ONLY = /^(?:\p{Extended_Pictographic}|\p{Regional_Indicator}|[\u{FE0F}\u{200D}\u{1F3FB}-\u{1F3FF}]|\s)+$/u
@@ -24,6 +33,15 @@ const RE_IMAGE_EXT = /\.(?:png|jpe?g|webp|gif|svg|avif)(?:\?.*)?$/i
 const RE_SENTENCE = /[A-Za-z].*[.!?]["'”’)]?$/
 /** 以前用來指定開頭音的 KK 音標（/ju/）：現在不唸口訣了，舊的片單寫了也略過 */
 const RE_KK = /(?:^|\s)\/[^/\s]+\/(?=\s|$)/g
+/** 唸:玻 */
+const RE_SAY = /^(?:唸|念|讀|say)\s*[:：]\s*(.+)$/i
+/** 問:東西 */
+const RE_ASK = /^(?:問|ask)\s*[:：]\s*(.+)$/i
+/** 對:small */
+const RE_PAIR = /^(?:對|pair)\s*[:：]\s*(.+)$/i
+/** 識字卡：卡片上的字全是中文字或注音符號（含注音擴充區） */
+const RE_ZH_WORD = /^[\p{Script=Han}㄀-ㄯㆠ-ㆿ]+$/u
+const RE_BOPOMOFO = /^[㄀-ㄯㆠ-ㆿ]+$/
 
 /** 數字卡最多畫幾個東西，再多就數不清楚了 */
 const MAX_COUNT = 20
@@ -88,9 +106,28 @@ export function parseCard(text: string): { card: Card | null; issue: string } {
   let image = ''
   let backImage = ''
   let clip: CardClip | null = null
+  let say = ''
+  let ask: AskKind | undefined
+  let pair = ''
   let issue = ''
 
   for (const field of rest) {
+    const said = field.match(RE_SAY)
+    if (said) {
+      say = said[1]!.trim()
+      continue
+    }
+    const asked = field.match(RE_ASK)
+    if (asked) {
+      ask = parseAskKind(asked[1]!)
+      if (!ask) issue = `「問:」後面的「${asked[1]!.trim()}」看不懂，這張卡先照字卡本的問法`
+      continue
+    }
+    const paired = field.match(RE_PAIR)
+    if (paired) {
+      pair = paired[1]!.trim()
+      continue
+    }
     if (/youtu/i.test(field)) {
       clip = parseClip(field)
       if (!clip) issue = '影片網址看不懂，這張卡先不放影片'
@@ -111,7 +148,33 @@ export function parseCard(text: string): { card: Card | null; issue: string } {
     if (text) meaning = meaning ? `${meaning} ${text}` : text
   }
 
-  return { card: { word, meaning, sentences, image, backImage, clip }, issue }
+  return {
+    card: {
+      word, meaning, sentences, image, backImage, clip,
+      ...(say ? { say } : {}),
+      ...(ask ? { ask } : {}),
+      ...(pair ? { pair } : {}),
+    },
+    issue,
+  }
+}
+
+/**
+ * 識字卡：卡片上的字是中文字或注音（山、ㄅ）。小朋友要認的是字本身，所以正面只寫字、不放圖，
+ * 圖和說明留到背面；中文字沒有英文，不管上面選哪個語言一律用中文。
+ */
+export function isZhCard(card: Card): boolean {
+  return RE_ZH_WORD.test(card.word.trim())
+}
+
+/** 注音符號（ㄅ）：題目要說「這個注音」，不是「這個字」 */
+export function isBopomofoCard(card: Card): boolean {
+  return RE_BOPOMOFO.test(card.word.trim())
+}
+
+/** 識字卡怎麼唸：片單有寫「唸:」就唸那個（ㄅ 唸成玻），沒寫就唸卡片上的字 */
+export function zhReading(card: Card): string {
+  return card.say?.trim() || card.word
 }
 
 /** 數字卡：卡片上的字全是數字（3、13、100） */
@@ -324,11 +387,79 @@ const PLURAL = new Set([
 ])
 
 /**
- * 單元名稱裡有這些字的字卡本，卡片上是動作、心情，不是「一個東西」：
- * 問的時候不加 the（Where is happy? / Can you find run?），也不說 a（This is sad.）。
+ * 單元名稱裡有這些字的字卡本，卡片上是動作、心情、相反詞、時間、禮貌的話，或是卡通角色的名字
+ * （Woody、Poli），不是「一個東西」：問的時候不加 the（Where is happy? / Where is Monday?），也不說 a（This is sad.）。
  */
 export function isBareDeck(title: string): boolean {
-  return /動作|心情|Actions?|Feelings?/i.test(title)
+  return /動作|心情|相反|四季|星期|月份|時鐘|習慣|過馬路|禮貌|波力|汪汪隊|玩具總動員|Actions?|Feelings?|Opposites?|Seasons?|Days|Months?|O'clock|Habits?|Cross Safely|Manners|Magic Words|Robocar Poli|PAW Patrol|Toy Story/i.test(title)
+}
+
+/**
+ * 卡片正面問什麼，要問得跟答案對得上：顏色的答案是 red，問「What is this?」只問到一半，
+ * 要問「What color is this?」。預設看字卡本的名稱決定（askKindOf），沒有特別的就問 What is this?；
+ * 同一本裡不適用的卡（天氣裡的雪人、雨傘），在那張卡寫「問:東西」改掉。
+ * 相反詞不用這張表，每張卡自己組「Is it big or small?」（pairQuestion）。
+ */
+export const FRONT_QUESTIONS: Record<AskKind, { en: string; zh: string }> = {
+  thing: { en: 'What is this?', zh: '這是什麼？' },
+  color: { en: 'What color is this?', zh: '這是什麼顏色？' },
+  shape: { en: 'What shape is this?', zh: '這是什麼形狀？' },
+  feeling: { en: 'How does he feel?', zh: '他的心情怎麼樣？' },
+  action: { en: 'What is he doing?', zh: '他在做什麼？' },
+  should: { en: 'What should we do?', zh: '我們應該怎麼做？' },
+  say: { en: 'What do you say?', zh: '這時候要說什麼？' },
+  like: { en: 'What is it like?', zh: '它是什麼樣子？' },
+  who: { en: 'Who is this?', zh: '這是誰？' },
+  where: { en: 'Where is this?', zh: '這是哪裡？' },
+  weather: { en: "How's the weather?", zh: '天氣怎麼樣？' },
+  season: { en: 'What season is it?', zh: '現在是哪一季？' },
+  day: { en: 'What day is it?', zh: '今天是星期幾？' },
+  month: { en: 'What month is it?', zh: '這是幾月？' },
+  time: { en: 'What time is it?', zh: '現在幾點鐘？' },
+}
+
+/** 字卡本的名稱 → 正面問哪一種問題 */
+export function askKindOf(title: string): AskKind {
+  const t = (re: RegExp) => re.test(title)
+  if (t(/顏色|Colors?/i)) return 'color'
+  if (t(/形狀|Shapes?/i)) return 'shape'
+  if (t(/心情|Feelings?/i)) return 'feeling'
+  if (t(/動作|Actions?/i)) return 'action'
+  if (t(/習慣|過馬路|Habits?|Cross Safely/i)) return 'should'
+  if (t(/禮貌|Magic Words|Manners/i)) return 'say'
+  if (t(/相反|Opposites?/i)) return 'like'
+  if (t(/家人|職業|波力|汪汪隊|玩具總動員|Family|Jobs|Robocar Poli|PAW Patrol|Toy Story/i)) return 'who'
+  if (t(/地方|Places?/i)) return 'where'
+  if (t(/天氣|Weather/i)) return 'weather'
+  if (t(/四季|Seasons?/i)) return 'season'
+  if (t(/星期|Days/i)) return 'day'
+  if (t(/月份|Months?/i)) return 'month'
+  if (t(/時鐘|O'clock/i)) return 'time'
+  return 'thing'
+}
+
+/** 片單「問:」後面寫的字 → 問法；中文名稱、英文代號（thing、color……）都收，看不懂回 undefined */
+const ASK_NAMES: Record<string, AskKind> = {
+  東西: 'thing', 顏色: 'color', 形狀: 'shape', 心情: 'feeling', 動作: 'action', 該做什麼: 'should', 說什麼: 'say',
+  樣子: 'like', 誰: 'who', 哪裡: 'where', 天氣: 'weather', 季節: 'season', 星期: 'day', 月份: 'month', 幾點: 'time',
+}
+
+export function parseAskKind(text: string): AskKind | undefined {
+  const s = text.trim()
+  if (s in ASK_NAMES) return ASK_NAMES[s]
+  const key = s.toLowerCase()
+  return key in FRONT_QUESTIONS ? (key as AskKind) : undefined
+}
+
+/**
+ * 相反詞正面的問題：Is it big or small?／它是大還是小？
+ * 兩個字誰先講由 swap 決定（每次翻到這張卡換一次），才不會學到「第一個講的就是答案」。
+ */
+export function pairQuestion(card: Card, partner: Card, swap: boolean): { en: string; zh: string } {
+  const [a, b] = swap ? [partner, card] : [card, partner]
+  const en = (c: Card) => speechOf(c).en || c.word
+  const zhName = (c: Card) => speechOf(c).zh || c.word
+  return { en: `Is it ${en(a)} or ${en(b)}?`, zh: `它是${zhName(a)}還是${zhName(b)}？` }
 }
 
 /**

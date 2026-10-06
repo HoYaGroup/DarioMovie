@@ -4,7 +4,7 @@ import { categoryColor, type Card, type CardClip, type VideoItem } from '~/utils
 import {
   countOf, countNounOf, isPicture, imageSrc, speechOf, isAbcDeck, initialOf, cardsOf, thisIs, isNumberCard,
   numberLabels, sentencesOf, enNumber, zhNumber, englishOf, askOf, askZhOf, ASK_STYLES, isBareDeck, englishTitle,
-  chineseTitle,
+  chineseTitle, isZhCard, isBopomofoCard, zhReading, askKindOf, FRONT_QUESTIONS, pairQuestion,
 } from '~/utils/cards'
 import { canSpeak, speak, stopSpeaking, chimeRight, chimeWrong, type SpeechPart, type SpeechText } from '~/utils/speech'
 import { useLibrary } from '~/composables/useLibrary'
@@ -28,12 +28,18 @@ const { starsOf, addStar } = useCardStars()
 const { online } = useOnline()
 const { lang: cardLang, setLang } = useCardLang()
 
+const cards = computed<Card[]>(() => cardsOf(props.deck))
+/** 整本都是中文字、注音（識字卡）：不管上面選哪個語言一律用中文，語言切換也用不到 */
+const zhDeck = computed(() => cards.value.length > 0 && cards.value.every(isZhCard))
+/** 這一本實際用的語言：識字卡本固定中文，其他照上面的選擇 */
+const lang = computed(() => (zhDeck.value ? 'zh' : cardLang.value))
+
 /** 全英文：卡片、語音、按鈕都不出現中文 */
-const englishOnly = computed(() => cardLang.value === 'en')
+const englishOnly = computed(() => lang.value === 'en')
 /** 全中文：卡片、語音都不出現英文 */
-const chineseOnly = computed(() => cardLang.value === 'zh')
+const chineseOnly = computed(() => lang.value === 'zh')
 /** 中英：中文說明＋英文單字（蘋果，apple），不唸英文句子 */
-const mixed = computed(() => cardLang.value === 'mix')
+const mixed = computed(() => lang.value === 'mix')
 /** 中文的部分：全英文時變成空字串，speak 會自動略過 */
 const zhPart = (text: string) => (englishOnly.value ? '' : text)
 /** 英文的部分：全中文時變成空字串 */
@@ -55,11 +61,12 @@ function switchLang(next: 'zh' | 'mix' | 'en') {
   stopSpeaking()
 }
 
-const cards = computed<Card[]>(() => cardsOf(props.deck))
 /** 這本是 ABC 字母卡（單元名稱裡有 ABC）：照 A～Z 排、卡片上標出開頭字母 */
 const isAbc = computed(() => isAbcDeck(props.deck.title))
 /** 動作、心情這類字卡本：問的時候不加 the（Where is happy?） */
 const bareDeck = computed(() => isBareDeck(props.deck.title))
+/** 正面問什麼：顏色問 What color is this?、形狀問 What shape is this?…… */
+const askKind = computed(() => askKindOf(props.deck.title))
 /** 整本都是數字卡：上面放一排數字，今天教到哪裡就直接跳過去 */
 const isNumberDeck = computed(() => cards.value.length > 0 && cards.value.every(isNumberCard))
 const stars = computed(() => starsOf(props.deck.uid))
@@ -82,8 +89,10 @@ const zh = (text: string): SpeechText => ({ text, lang: 'zh-TW' })
  *   中文：蘋果。／一。像一支鉛筆。／十一。十一隻貓。
  *   中英：蘋果，apple。／一，one。像一支鉛筆，like a pencil。／十一，eleven。十一隻貓，eleven cats。
  * 英文句子只有 English 唸；中英只唸單字，小朋友專心把中文和英文對起來。
+ * 識字卡（中文字、注音）不分語言，一律唸中文：日。太陽、生日。
  */
 function answerParts(c: Card, withSentence = true): SpeechText[] {
+  if (isZhCard(c)) return zhCardParts(c)
   if (isNumberCard(c)) {
     const n = Number(c.word)
     const num = zhNumber(n)
@@ -126,7 +135,12 @@ function nextSentence() {
   const prev = sentenceTurns.value[key]
   sentenceTurn.value = prev === undefined ? Math.floor(Math.random() * 12) : prev + 1
   sentenceTurns.value[key] = sentenceTurn.value
+  // 相反詞問「Is it big or small?」，兩個字誰先講每翻到一張卡就隨機換，不會學到「第一個講的就是答案」
+  pairSwap.value = Math.random() < 0.5
 }
+
+/** 相反詞的問句裡，這張卡的字排在後面（Is it small or big?） */
+const pairSwap = ref(false)
 
 /** 這張卡這一次要唸、要寫在背面的那一句 */
 function sentenceFor(c: Card): string {
@@ -139,8 +153,14 @@ function say(c: Card) {
   speak(answerParts(c))
 }
 
+/** 識字卡唸出來：先唸字（注音唸同音字），再唸說明——日。太陽、生日。 */
+function zhCardParts(c: Card): SpeechText[] {
+  return [zh(zhReading(c)), zh(c.meaning)]
+}
+
 /** 這張卡叫什麼，考考我答對時說：Cat.／貓。／貓，cat。數字形狀卡連形狀一起說 */
 function nameParts(c: Card): SpeechText[] {
+  if (isZhCard(c)) return zhCardParts(c)
   if (isNumberCard(c)) {
     const n = Number(c.word)
     if (isPicture(c)) return answerParts(c, false)
@@ -154,8 +174,20 @@ function nameParts(c: Card): SpeechText[] {
   return [en(name.en || c.word)]
 }
 
+/** 識字卡的題目開頭，三種問法輪流：哪一個是…／找找看…／請點出… */
+const ZH_SYMBOL_LEADS = ['哪一個是', '找找看', '請點出']
+
+/**
+ * 識字卡「這是…」「找找看…」：那個字（注音唸同音字）前面停一下，才聽得出它是要認的字，
+ * 不會跟前一句黏在一起，變成「你找得到摸嗎」。
+ */
+function zhSymbolLine(lead: string, c: Card): SpeechPart[] {
+  return [zh(lead), { pause: 350 }, zh(zhReading(c))]
+}
+
 /** 「這是…」：This is a horse.／這是馬。／這是馬，horse。點錯時說一次；小朋友再點那張點錯的，也是唸這句 */
-function thisIsParts(c: Card): SpeechText[] {
+function thisIsParts(c: Card): SpeechPart[] {
+  if (isZhCard(c)) return zhSymbolLine('這是', c)
   const zhName = isNumberCard(c) ? zhNumber(Number(c.word)) : (speechOf(c).zh || c.word)
   const enName = englishOf(c)
   if (chineseOnly.value || (mixed.value && !enName)) return [zh(`這是${zhName}。`)]
@@ -165,6 +197,7 @@ function thisIsParts(c: Card): SpeechText[] {
 
 /** 點錯的選項下面貼的小標籤：hippo／河馬／河馬 hippo；four／四／四 four */
 function captionOf(c: Card): string {
+  if (isZhCard(c)) return [c.word, c.meaning].filter(Boolean).join(' ')
   if (isNumberCard(c)) {
     const n = Number(c.word)
     return [zhPart(zhNumber(n)), enPart(enNumber(n))].filter(Boolean).join(' ')
@@ -188,6 +221,8 @@ function badgeOf(c: Card): string {
 const index = ref(0)
 const flipped = ref(false)
 const card = computed(() => cards.value[index.value])
+/** 現在這張是識字卡：正面只寫字，圖和說明在背面 */
+const zhCard = computed(() => !!card.value && isZhCard(card.value))
 const count = computed(() => (card.value ? countOf(card.value) : null))
 
 /** 數東西的卡：放了 emoji 的 1～20，正面畫出那麼多個讓小朋友點著數；有自己的圖的（數字形狀卡）就直接看圖 */
@@ -215,7 +250,7 @@ function backImageOf(c: Card): string {
 
 /** 背面的大字：全中文時單字卡寫中文（蘋果），其他寫卡片上的字（apple、7） */
 function backWordOf(c: Card): string {
-  return chineseOnly.value && !isNumberCard(c) ? (speechOf(c).zh.replace(/，/g, '、') || c.word) : c.word
+  return chineseOnly.value && !isNumberCard(c) && !isZhCard(c) ? (speechOf(c).zh.replace(/，/g, '、') || c.word) : c.word
 }
 const isLast = computed(() => index.value === cards.value.length - 1)
 
@@ -223,9 +258,17 @@ const isLast = computed(() => index.value === cards.value.length - 1)
  * 正面要小朋友做什麼：唸出來，也寫在卡片下面。全英文用英文說，中文、中英用中文說：
  *   數東西的卡：Let's count! Touch the apples.／我們來數蘋果！一顆一顆點。
  *   數字卡：What number is this?／這是數字幾？
- *   單字卡：What is this?／這是什麼？
+ *   單字卡：問得跟答案對得上——What is this?（東西）、What color is this?（顏色）、
+ *           What shape is this?（形狀）、How does he feel?（心情）、Who is this?（家人、卡通角色）……
+ *           預設看字卡本的名稱（askKindOf），這張卡自己寫了「問:」就用它的（天氣裡的雪人問 What is this?）
+ *   相反詞：Is it big or small?／它是大還是小？（每張卡用「對:」指定另一半，誰先講每次換）
+ *   識字卡：這個字怎麼唸？／這個注音怎麼唸？
  */
 function frontAsk(c: Card): { say: SpeechText; main: string; sub: string } {
+  if (isZhCard(c)) {
+    const ask = isBopomofoCard(c) ? '這個注音怎麼唸？' : '這個字怎麼唸？'
+    return { say: zh(ask), main: ask, sub: '點一下翻面' }
+  }
   if (isCounting(c)) {
     const noun = countNounOf(c)
     if (!englishOnly.value) {
@@ -242,9 +285,13 @@ function frontAsk(c: Card): { say: SpeechText; main: string; sub: string } {
       ? { say: en('What number is this?'), main: 'What number is this?', sub: '' }
       : { say: zh('這是數字幾？'), main: '這是數字幾？', sub: '點一下翻面' }
   }
+  // 相反詞：Is it big or small?（對不到另一半就退回字卡本的問法）
+  const partner = c.pair ? cards.value.find((x) => x.word.toLowerCase() === c.pair!.toLowerCase()) : undefined
+  // 這張卡自己有寫「問:」就用它的，沒有才看字卡本
+  const q = partner ? pairQuestion(c, partner, pairSwap.value) : FRONT_QUESTIONS[c.ask ?? askKind.value]
   return englishOnly.value
-    ? { say: en('What is this?'), main: 'What is this?', sub: '' }
-    : { say: zh('這是什麼？'), main: '這是什麼？', sub: '點一下翻面' }
+    ? { say: en(q.en), main: q.en, sub: '' }
+    : { say: zh(q.zh), main: q.zh, sub: '點一下翻面' }
 }
 
 /** 數完之後的題目：How many apples are there?／有幾顆蘋果？ */
@@ -644,9 +691,10 @@ const pictureQuiz = computed(() => question.value?.kind === 'picture')
  * 題目怎麼問：Where is the cat? / Can you find number seven? / Can you touch the glasses?
  * 看圖選數字問 What number is this? 卡片沒有英文的話，只好用中文問。
  */
-function promptParts(q: Question): SpeechText[] {
+function promptParts(q: Question): SpeechPart[] {
   if (q.kind === 'picture') return [line('這是數字幾？', 'What number is this?')]
   const c = cards.value[q.answer]!
+  if (isZhCard(c)) return zhSymbolLine(ZH_SYMBOL_LEADS[q.style % ASK_STYLES]!, c)
   if (chineseOnly.value) return [zh(askZhOf(c, q.style))]
   // 中英：中文問、英文單字——哪一個是… apple？／找找看… apple／apple… 在哪裡？
   if (mixed.value) {
@@ -772,19 +820,19 @@ function nextQuestion() {
  * 數字卡沒有自己的圖（🍎 只是拿來數的），就畫數字；沒有圖的卡寫字。
  */
 function optionFace(c: Card, kind: QuizKind): string {
-  if (kind === 'picture' || (isNumberCard(c) && !isPicture(c))) return c.word
+  if (kind === 'picture' || isZhCard(c) || (isNumberCard(c) && !isPicture(c))) return c.word
   return c.image || c.word
 }
 
-/** 選項要不要用 <img> 畫 */
+/** 選項要不要用 <img> 畫（識字卡的選項就是那個字） */
 function optionIsImage(c: Card, kind: QuizKind): boolean {
-  return kind !== 'picture' && isPicture(c)
+  return kind !== 'picture' && !isZhCard(c) && isPicture(c)
 }
 
 /** 沒有語音的裝置（例如部分電視）只好把題目寫出來 */
 const promptText = computed(() => {
   const q = question.value
-  return q ? promptParts(q).map((p) => p.text).join(' ') : ''
+  return q ? promptParts(q).flatMap((p) => ('text' in p ? [p.text] : [])).join(' ') : ''
 })
 
 /* ---------- 影片片段：只播老師教這個字的那幾秒 ---------- */
@@ -869,7 +917,7 @@ onBeforeUnmount(() => {
       </span>
 
       <!-- 中文／中英／English：記在這台裝置上，每一本字卡都照這個設定 -->
-      <div class="lang-toggle" role="group" aria-label="字卡語言">
+      <div v-if="!zhDeck" class="lang-toggle" role="group" aria-label="字卡語言">
         <button
           v-for="l in LANGS"
           :key="l.id"
@@ -970,8 +1018,8 @@ onBeforeUnmount(() => {
                   <span v-if="counted.includes(i)" class="count-badge">{{ counted.indexOf(i) + 1 }}</span>
                 </button>
               </div>
-              <img v-else-if="isPicture(card)" class="face-img" :src="imageSrc(card.image)" alt="" draggable="false">
-              <span v-else-if="card.image" class="face-emoji">{{ card.image }}</span>
+              <img v-else-if="isPicture(card) && !zhCard" class="face-img" :src="imageSrc(card.image)" alt="" draggable="false">
+              <span v-else-if="card.image && !zhCard" class="face-emoji">{{ card.image }}</span>
               <span v-else class="face-word" :style="{ '--len': card.word.length }">{{ card.word }}</span>
 
               <!-- 數完了：How many apples are there? 三個數字選一個 -->
@@ -1021,7 +1069,7 @@ onBeforeUnmount(() => {
                 <span v-if="numberSentence(card)" class="back-sub back-sentence">{{ numberSentence(card) }}</span>
               </template>
               <template v-else>
-                <span v-if="card.meaning && mixed" class="back-meaning">{{ card.meaning }}</span>
+                <span v-if="card.meaning && (mixed || zhCard)" class="back-meaning">{{ card.meaning }}</span>
                 <span v-if="englishOnly && sentenceFor(card)" class="back-sub">{{ sentenceFor(card) }}</span>
               </template>
             </div>

@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { computed, watch, onMounted, onBeforeUnmount, nextTick, ref } from 'vue'
 import { thumbUrl, categoryColor, formatTime, type Card, type VideoItem } from '~/utils/youtube'
-import { countOf, isPicture, imageSrc, cardsOf } from '~/utils/cards'
+import { countOf, isPicture, imageSrc, cardsOf, isZhCard } from '~/utils/cards'
 import { humanMinutes, countdown, useWatchTime } from '~/composables/useWatchTime'
 import { useLibrary } from '~/composables/useLibrary'
+import { useChildStage } from '~/composables/useChildStage'
 import { useDisplay } from '~/composables/useDisplay'
 import { useContinueWatching } from '~/composables/useContinueWatching'
 import { useTheme } from '~/composables/useTheme'
@@ -20,9 +21,14 @@ const emit = defineEmits<{
 }>()
 
 const {
-  sections, categories, appTitle, groupsIn, countIn, categoriesIn, countInSection, syncStatus,
+  categories, appTitle, syncStatus,
   videos, looseVideosIn, videosInSub,
 } = useLibrary()
+// 小朋友端只看得到適合孩子這一班的（和家長另外開放的）；家長設定頁還是看得到全部
+const {
+  visibleSections: sections, visibleCategoriesIn: categoriesIn, visibleCountInSection: countInSection,
+  visibleCountIn: countIn, visibleGroupsIn: groupsIn, isVideoVisible,
+} = useChildStage()
 const { hasLimit, remainingSeconds, isLimitReached, isResting, restRemainingSeconds } = useWatchTime()
 const { settings: display, lastGroupOf, rememberGroup } = useDisplay()
 const { entry: continueEntry, isResumable, clear: clearContinue } = useContinueWatching()
@@ -58,23 +64,25 @@ function deckPeek(video: VideoItem): Card[] {
   return cardsOf(video).slice(0, 3)
 }
 
-/** 封面小卡上寫的字（沒有圖的卡） */
+/** 封面小卡上寫的字（數字卡、識字卡露出字，其他卡露出圖；沒有圖的卡寫字） */
 function peekText(c: Card): string {
-  return countOf(c) !== null ? c.word : (c.image || c.word)
+  return countOf(c) !== null || isZhCard(c) ? c.word : (c.image || c.word)
 }
 
 /** 上次看到一半、值得問要不要接續的那支影片；找不到（可能被刪了）或已經快看完就不問 */
 const continueVideo = computed(() => {
   const e = continueEntry.value
   if (!e || !isResumable(e)) return null
-  return videos.value.find((v) => v.uid === e.uid) ?? null
+  const video = videos.value.find((v) => v.uid === e.uid)
+  // 家長把那一班收起來了，就不用再問要不要接著看
+  return video && isVideoVisible(video) ? video : null
 })
 
 const continueTimeLabel = computed(() => (continueEntry.value ? formatTime(continueEntry.value.positionSec) : ''))
 
 /** 重建這支影片當初所在的那份清單，接續播放也一樣照這份清單循環 */
 function queueFor(video: VideoItem): VideoItem[] {
-  return video.subId ? videosInSub(video.subId) : looseVideosIn(video.categoryId)
+  return (video.subId ? videosInSub(video.subId) : looseVideosIn(video.categoryId)).filter(isVideoVisible)
 }
 
 function resumeContinueWatching() {
@@ -486,7 +494,7 @@ onBeforeUnmount(cancelHold)
                 class="deck-peek"
                 :style="{ '--o': ci - (deckPeek(video).length - 1) / 2, '--plen': [...peekText(c)].length }"
               >
-                <img v-if="isPicture(c)" :src="imageSrc(c.image)" alt="">
+                <img v-if="isPicture(c) && !isZhCard(c)" :src="imageSrc(c.image)" alt="">
                 <template v-else>{{ peekText(c) }}</template>
               </span>
               <span v-if="starsOf(video.uid)" class="deck-stars">⭐ {{ starsOf(video.uid) }}</span>

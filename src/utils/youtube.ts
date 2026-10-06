@@ -1,3 +1,5 @@
+import type { StageId } from './stage'
+
 /** 片單裡的一筆可以是 YouTube 影片、一個網站，或是一本字卡 */
 export type ItemKind = 'video' | 'site' | 'deck'
 
@@ -28,7 +30,27 @@ export interface Card {
   backImage: string
   /** 老師在影片裡教這個字的那一段，沒有就是 null */
   clip: CardClip | null
+  /**
+   * 語音要怎麼唸這個字，可以沒有（沒有就唸卡片上的字）。
+   * 注音符號單獨一個字，語音引擎不一定唸得準，所以 ㄅ 寫成「唸:玻」，唸出來就是「ㄅㄛ」。
+   */
+  say?: string
+  /**
+   * 這張卡自己的正面問法（片單寫「問:東西」）。沒寫就照字卡本的名稱決定；
+   * 同一本裡有幾張不適用那個問法（天氣裡的雪人、雨傘）時，用它改成別的。
+   */
+  ask?: AskKind
+  /** 相反詞的另一半（片單寫「對:small」）：正面問「Is it big or small?」 */
+  pair?: string
 }
+
+/**
+ * 卡片正面問什麼，要問得跟答案對得上：顏色的答案是 red，問「What is this?」只問到一半，
+ * 要問「What color is this?」（問句寫在 utils/cards.ts 的 FRONT_QUESTIONS）。
+ */
+export type AskKind =
+  | 'thing' | 'color' | 'shape' | 'feeling' | 'action' | 'should' | 'say' | 'like'
+  | 'who' | 'where' | 'weather' | 'season' | 'day' | 'month' | 'time'
 
 /** 影片在片單中的資料形狀 */
 export interface VideoItem {
@@ -59,6 +81,12 @@ export interface VideoItem {
    * null 表示不歸任何子分區，會排在該分區最前面、不帶小標題。
    */
   subId: string | null
+  /**
+   * 適合哪幾班（0 幼幼班、1 小班、2 中班、3 大班），片單裡用「階段: 小班～中班」指定。
+   * 孩子的年紀設定好之後，小朋友端只顯示適合他這一班的（和家長另外開放的）。
+   * 沒寫就沿用單元、分區、大分類的；全都沒寫就是不分年齡，一直顯示。
+   */
+  stages?: StageId[]
 }
 
 /**
@@ -69,6 +97,8 @@ export interface Section {
   id: string
   name: string
   emoji: string
+  /** 適合哪幾班；沒寫就是不分年齡（見 VideoItem.stages） */
+  stages?: StageId[]
 }
 
 /** 分區，例如「Little Kids (上)」「故事影片」 */
@@ -78,6 +108,8 @@ export interface Category {
   sectionId: string
   name: string
   emoji: string
+  /** 適合哪幾班；沒寫就沿用大分類的 */
+  stages?: StageId[]
 }
 
 /**
@@ -88,6 +120,8 @@ export interface SubCategory {
   id: string
   categoryId: string
   name: string
+  /** 適合哪幾班；沒寫就沿用分區的 */
+  stages?: StageId[]
 }
 
 /** 存進 localStorage 的整包資料 */

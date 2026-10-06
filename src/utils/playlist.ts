@@ -3,6 +3,7 @@ import {
   type Section, type Category, type SubCategory, type VideoItem, type LibraryData,
 } from './youtube'
 import { parseCard, numberCards, NUMBER_MAX } from './cards'
+import { parseStages, type StageId } from './stage'
 
 /**
  * 純文字片單的解析器。
@@ -20,6 +21,10 @@ import { parseCard, numberCards, NUMBER_MAX } from './cards'
  *   卡: cat | 貓 | 🐱         字卡，同一個單元裡的卡會集成一本（寫法見 utils/cards.ts）
  *   字卡本: 數字像什麼          開一本新的字卡，不另外分一層，同一區的好幾本排在同一個畫面
  *                              | 後面可以寫英文名稱（字卡本: 數字像什麼 | Number Shapes），全英文模式顯示
+ *   階段: 小班～中班            寫在上面任何一項的下面（大分類、分區、冊、字卡本、影片都可以）：
+ *                              這一項適合哪幾班（幼幼班、小班、中班、大班；可以寫 幼幼班、小班 或 小班～大班）。
+ *                              家長設定了孩子的出生年度，小朋友端就只顯示適合他這一班的（和家長另外開放的）；
+ *                              項目自己沒寫就沿用冊、分區、大分類的，都沒寫的一直顯示
  *   // 這行是註解            也可以用 ; 開頭
  *
  * 每一筆都歸到它上面最近的那一層。大分類和冊都可以省略。
@@ -47,6 +52,9 @@ const RE_CARD = /^(?:字?卡|card)\s*[:：]\s*(.*)$/i
  * 同一個分區裡的好幾本會排在同一個畫面，點一下就打開，不用再多點一排標籤
  */
 const RE_DECK = /^(?:字卡本|deck)\s*[:：]\s*(.+)$/i
+
+/** 階段: 小班～中班（寫在它要管的那一項下面） */
+const RE_STAGE = /^(?:階段|stage)\s*[:：]\s*(.+)$/i
 
 /** 一次產生一串數字卡：數字卡: 0～100 */
 const RE_NUMBERS = /^(?:數字卡|numbers)\s*[:：]\s*(\d+)\s*[-~～到]\s*(\d+)\s*(?:\|\s*(\S+))?\s*$/i
@@ -106,6 +114,15 @@ export function parsePlaylist(text: string): ParseResult {
   /** 「字卡本: 名稱 | English name」的英文名稱 */
   let deckTitleEn = ''
   const takenUids = new Set<string>()
+  /**
+   * 「階段:」要寫到哪一項：每開一個大分類、分區、冊、字卡本、影片，就換成那一項的寫入函式。
+   * 字卡本是讀到第一張卡才真的建出來，所以先記在 deckStages，建出來時再帶上。
+   */
+  let setStages: ((stages: StageId[]) => void) | null = null
+  let deckStages: StageId[] | undefined
+  const stagesOf = (item: { stages?: StageId[] }) => {
+    setStages = (stages) => { item.stages = stages }
+  }
 
   /** 檔案沒寫大分類時，所有分區都歸到一個隱形的預設分類 */
   function ensureSection(): Section {
@@ -129,6 +146,18 @@ export function parsePlaylist(text: string): ParseResult {
     if (!line) return
     if (line.startsWith('//') || line.startsWith(';')) return
 
+    // ---- 階段：管上面最近的那一項 ----
+    {
+      const m = line.match(RE_STAGE)
+      if (m) {
+        const stages = parseStages(m[1]!)
+        if (!stages) warnings.push(`第 ${lineNo} 行：看不懂階段「${m[1]!.trim()}」（要寫幼幼班、小班、中班、大班），已略過。`)
+        else if (!setStages) warnings.push(`第 ${lineNo} 行：這個階段上面還沒有大分類、分區或影片，已略過。`)
+        else setStages(stages)
+        return
+      }
+    }
+
     // ---- 大分類 ----
     for (const re of RE_SECTION) {
       const m = line.match(re)
@@ -148,6 +177,8 @@ export function parsePlaylist(text: string): ParseResult {
         currentSub = null
         currentDeck = null
         deckTitle = null
+        deckStages = undefined
+        stagesOf(currentSection)
         return
       }
     }
@@ -176,6 +207,8 @@ export function parsePlaylist(text: string): ParseResult {
         currentSub = null
         currentDeck = null
         deckTitle = null
+        deckStages = undefined
+        stagesOf(currentCat)
         return
       }
     }
@@ -202,6 +235,8 @@ export function parsePlaylist(text: string): ParseResult {
         }
         currentDeck = null
         deckTitle = null
+        deckStages = undefined
+        stagesOf(currentSub)
         return
       }
     }
@@ -219,6 +254,7 @@ export function parsePlaylist(text: string): ParseResult {
           categoryId: cat.id,
           subId: currentSub?.id ?? null,
           cards: [],
+          ...(deckStages ? { stages: deckStages } : {}),
         }
         videos.push(currentDeck)
       }
@@ -237,6 +273,12 @@ export function parsePlaylist(text: string): ParseResult {
         deckTitle = stripEmoji(name) || name
         deckTitleEn = en
         currentDeck = null
+        // 下面的「階段:」是管這本字卡的；字卡本要等讀到第一張卡才建出來，先記著
+        deckStages = undefined
+        setStages = (stages) => {
+          deckStages = stages
+          if (currentDeck) currentDeck.stages = stages
+        }
         return
       }
     }
@@ -286,7 +328,7 @@ export function parsePlaylist(text: string): ParseResult {
           return
         }
         const url = m[1]!
-        videos.push({
+        const site: VideoItem = {
           kind: 'site',
           url,
           uid: makeVideoUid(`site-${videos.length}`, takenUids),
@@ -294,7 +336,9 @@ export function parsePlaylist(text: string): ParseResult {
           title: rest.join('|').trim() || url.replace(/^https?:\/\//, '').replace(/\/$/, ''),
           categoryId: currentCat.id,
           subId: currentSub?.id ?? null,
-        })
+        }
+        videos.push(site)
+        stagesOf(site)
         return
       }
     }
@@ -323,13 +367,15 @@ export function parsePlaylist(text: string): ParseResult {
       return
     }
 
-    videos.push({
+    const video: VideoItem = {
       uid: makeVideoUid(id, takenUids),
       id,
       title: titleParts.join('|').trim(),
       categoryId: currentCat.id,
       subId: currentSub?.id ?? null,
-    })
+    }
+    videos.push(video)
+    stagesOf(video)
   })
 
   return { sections, categories, subCategories, videos, warnings }

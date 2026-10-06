@@ -5,6 +5,7 @@ import { useTheme, THEME_COLORS } from '~/composables/useTheme'
 import { useLibrary } from '~/composables/useLibrary'
 import { useWatchTime } from '~/composables/useWatchTime'
 import { useDisplay } from '~/composables/useDisplay'
+import { useChildStage } from '~/composables/useChildStage'
 import { useContinueWatching } from '~/composables/useContinueWatching'
 import { useParentGate } from '~/composables/useParentGate'
 import { warmUpYouTubeApi } from '~/composables/useYouTubePlayer'
@@ -20,6 +21,7 @@ type Screen = 'library' | 'watch' | 'site' | 'cards' | 'parent'
 const { appTitle, init } = useLibrary()
 const { init: initWatchTime, resetSession } = useWatchTime()
 const { init: initDisplay } = useDisplay()
+const { init: initChild } = useChildStage()
 const { init: initContinueWatching } = useContinueWatching()
 const { init: initTheme, resolved: themeResolved } = useTheme()
 const { requestAccess } = useParentGate()
@@ -42,6 +44,7 @@ onMounted(() => {
   init()
   initWatchTime()
   initDisplay()
+  initChild()
   initContinueWatching()
   initTheme()
   // 先把 YouTube 的指令碼載進來，小朋友點下去才不用等
