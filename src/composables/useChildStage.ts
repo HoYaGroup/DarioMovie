@@ -163,7 +163,7 @@ export function useChildStage() {
   return {
     profile, current, openStages, init,
     setBirth, toggleStage,
-    isVideoVisible,
+    stagesOf, isVideoVisible,
     visibleSections, visibleCategoriesIn, visibleCountIn, visibleCountInSection, visibleGroupsIn,
   }
 }

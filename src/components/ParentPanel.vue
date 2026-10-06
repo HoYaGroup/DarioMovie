@@ -4,12 +4,15 @@ import { thumbUrl, categoryColor } from '~/utils/youtube'
 import { humanMinutes, countdown, dayKey, type BreakMode, useWatchTime } from '~/composables/useWatchTime'
 import { useLibrary } from '~/composables/useLibrary'
 import { useDragSort } from '~/composables/useDragSort'
+import { useDragToTarget } from '~/composables/useDragToTarget'
 import { useCollapse } from '~/composables/useCollapse'
 import { useParentGate } from '~/composables/useParentGate'
 import { useDisplay } from '~/composables/useDisplay'
 import { useChildStage } from '~/composables/useChildStage'
-import { STAGES } from '~/utils/stage'
+import { STAGES, stagesLabel, type StageId } from '~/utils/stage'
+import type { VideoItem } from '~/utils/youtube'
 import { useTheme } from '~/composables/useTheme'
+import { useState } from '~/composables/useState'
 import PanelSection from '~/components/PanelSection.vue'
 import { isPicture, isEmojiOnly, imageSrc } from '~/utils/cards'
 import { useOnline, isOfflineCapable, countCached, downloadForOffline } from '~/composables/useOffline'
@@ -21,17 +24,20 @@ const {
   canUndo, lastAction, undo,
   syncFromPlaylist, playlistUrl,
   categoriesIn, countInSection, subsIn, countIn, groupsIn,
-  addVideo, removeVideo, renameVideo, setVideoPlace, reorderVideos,
+  addVideo, removeVideo, renameVideo, setVideoPlace, setVideoStages, reorderVideos,
   addSection, renameSection, removeSection, reorderSections, setCategorySection,
   addCategory, renameCategory, removeCategory, reorderCategories,
   addSubCategory, renameSubCategory, removeSubCategory, reorderSubCategories,
   setAppTitle, exportJson, importJson,
 } = useLibrary()
 
+const { profile: child, current: childStage, openStages, setBirth, toggleStage, stagesOf } = useChildStage()
+
 const drag = useDragSort()
 const { init: initCollapse, expandAll, collapseAll, isCollapsed, toggle: toggleCollapse } = useCollapse()
 
-onMounted(initCollapse)
+// 在 setup 就收起來，不等 onMounted：不然上一次開著的面板會先閃一下才收回去
+initCollapse()
 
 type Msg = { text: string; kind: '' | 'ok' | 'err' }
 const blank: Msg = { text: '', kind: '' }
@@ -98,11 +104,9 @@ const catSummary = computed(() => {
   return `${secPart}${categories.value.length} 個分區・${subCategories.value.length} 個細分`
 })
 
-/** 分區卡片的收合，每張卡片各自記住 */
+/** 大分類、分區卡片的收合，跟面板一樣進設定頁全部收起 */
+const secKey = (id: string) => `sec:${id}`
 const catKey = (id: string) => `cat:${id}`
-
-/** 「全部展開／收起」要一併處理動態產生的分區卡片 */
-const allCatKeys = computed(() => categories.value.map((c) => catKey(c.id)))
 
 /**
  * 正在搬家的分區。
@@ -209,21 +213,122 @@ function onUndo() {
 
 /* ============ 片單 ============ */
 
-/** 片單只排有影片的分區，空的分區排進去只會占位置 */
-const filledCategories = computed(() => categories.value.filter((c) => countIn(c.id) > 0))
+/**
+ * 片單只看某一班：學習庫有好幾百筆，全部攤開很難找，選「幼幼班」就只列幼幼班的。
+ * 'none' 是沒標年紀的（自己加的影片、娛樂）。只影響這裡的清單，小朋友端看的是「孩子的年紀」。
+ */
+type ListStage = StageId | 'all' | 'none'
+const listStage = useState<ListStage>('panel.listStage', () => 'all')
+
+/** 正在改年齡的那一筆。改到跟篩選不合也先留在畫面上，不然一按就消失，家長會以為按錯 */
+const stageEditingUid = ref<string | null>(null)
+
+function setListStage(s: ListStage) {
+  listStage.value = s
+  stageEditingUid.value = null
+}
+
+function toggleStageEdit(uid: string) {
+  stageEditingUid.value = stageEditingUid.value === uid ? null : uid
+}
+
+function onToggleVideoStage(video: VideoItem, id: StageId) {
+  const now = stagesOf(video) ?? []
+  setVideoStages(video.uid, now.includes(id) ? now.filter((x) => x !== id) : [...now, id])
+}
+
+/**
+ * 按住影片的縮圖或標題，拖到上面那排班級膠囊放開，就換成那一班（取代原本的設定）。
+ * 適合好幾班的還是用標題下的小標籤勾。
+ */
+const {
+  dragging: stageDragging, pos: stageDragPos, overTarget: stageDropOver, start: startStageDrag,
+} = useDragToTarget<VideoItem>((video, target) => {
+  const next: StageId[] = target === 'none' ? [] : [Number(target) as StageId]
+  if (stagesLabel(stagesOf(video)) === stagesLabel(next)) return
+  setVideoStages(video.uid, next)
+  undoMsg.value = { text: `已把「${video.title}」改成${stagesLabel(next)}，弄錯了按右上角的復原。`, kind: 'ok' }
+})
+
+function matchesListStage(v: VideoItem): boolean {
+  const f = listStage.value
+  if (f === 'all') return true
+  const st = stagesOf(v)
+  return f === 'none' ? !st : !!st?.includes(f)
+}
+
+const isListed = (v: VideoItem) => v.uid === stageEditingUid.value || matchesListStage(v)
+
+/** 篩選膠囊上的數字：每一班有幾筆，一筆適合好幾班就每班都算 */
+const stageCounts = computed(() => {
+  const n: Record<ListStage, number> = { all: videos.value.length, none: 0, 0: 0, 1: 0, 2: 0, 3: 0 }
+  for (const v of videos.value) {
+    const st = stagesOf(v)
+    if (!st) n.none++
+    else st.forEach((s) => n[s]++)
+  }
+  return n
+})
+
+/** 每個分區底下篩過的分組；整組都不合的單元、整區都不合的分區不出現 */
+const listGroups = computed(() => {
+  const out = new Map<string, ReturnType<typeof groupsIn>>()
+  for (const c of categories.value) {
+    const groups = groupsIn(c.id)
+      .map((g) => ({ ...g, videos: g.videos.filter(isListed) }))
+      .filter((g) => g.videos.length)
+    if (groups.length) out.set(c.id, groups)
+  }
+  return out
+})
+
+const listedCountIn = (categoryId: string) =>
+  (listGroups.value.get(categoryId) ?? []).reduce((n, g) => n + g.videos.length, 0)
+
+const listedTotal = computed(() => categories.value.reduce((n, c) => n + listedCountIn(c.id), 0))
+
+const listBadge = computed(() =>
+  listStage.value === 'all' ? `${videos.value.length} 部` : `${listedTotal.value} / ${videos.value.length} 部`,
+)
+
+/**
+ * 片單照大分類分段，跟小朋友端一樣；不然四個主題都有「🎬 影片」，分不出是哪一個的。
+ * 只排有影片的分區，空的分區排進去只會占位置。
+ */
+const listSections = computed(() =>
+  sections.value
+    .map((sec) => {
+      const cats = categoriesIn(sec.id).filter((c) => listGroups.value.has(c.id))
+      return { sec, cats, count: cats.reduce((n, c) => n + listedCountIn(c.id), 0) }
+    })
+    .filter((g) => g.cats.length),
+)
 const emptyCategories = computed(() => categories.value.filter((c) => countIn(c.id) === 0))
+
+/**
+ * 片單裡的大分類、分區也能收合，跟面板一樣一進設定頁全部收起：
+ * 先看到幾個大分類和各有幾部，要找哪一區再點開。上面的「全部展開」會一起打開。
+ */
+const listSecKey = (id: string) => `list-sec:${id}`
+const listCatKey = (id: string) => `list-cat:${id}`
+/** 只有一個大分類時不顯示大分類標題，沒東西可以點，分區直接列出來 */
+const catsShownIn = (ls: { sec: { id: string }; cats: typeof categories.value }) =>
+  sections.value.length > 1 && isCollapsed(listSecKey(ls.sec.id)) ? [] : ls.cats
+const groupsShownIn = (categoryId: string) =>
+  isCollapsed(listCatKey(categoryId)) ? [] : listGroups.value.get(categoryId) ?? []
 
 const listRef = ref<HTMLElement | null>(null)
 const editingId = ref<string | null>(null)
 const editingText = ref('')
-const editInputRef = ref<HTMLInputElement | null>(null)
+/** 輸入框在 v-for 裡，Vue 給的是陣列；同一時間只會有一個在改，拿第一個就好 */
+const editInputRef = ref<HTMLInputElement[]>([])
 
 async function startEdit(uid: string, title: string) {
   editingId.value = uid
   editingText.value = title
   await nextTick()
-  editInputRef.value?.focus()
-  editInputRef.value?.select()
+  editInputRef.value[0]?.focus()
+  editInputRef.value[0]?.select()
 }
 
 function commitEdit() {
@@ -252,7 +357,14 @@ function dragVideo(ev: PointerEvent, categoryId: string, subId: string | null, i
     key,
     index,
     getRows: () => [...(listRef.value?.querySelectorAll(`[data-vid-row="${key}"]`) ?? [])] as HTMLElement[],
-    onMove: (from, to) => reorderVideos(categoryId, subId, from, to),
+    // 只看某一班時畫面上只有一部分，畫面上的第幾個要換算回整組裡的第幾個
+    onMove: (from, to) => {
+      const all = videos.value.filter((v) => v.categoryId === categoryId && (v.subId ?? null) === subId)
+      const shown = all.filter(isListed)
+      const a = all.indexOf(shown[from]!)
+      const b = all.indexOf(shown[to]!)
+      if (a >= 0 && b >= 0) reorderVideos(categoryId, subId, a, b)
+    },
   })
 }
 
@@ -342,8 +454,6 @@ const sourceSummary = computed(() => {
 const { settings: display, setGroupMode } = useDisplay()
 
 /* ============ 孩子的年紀：小朋友端只顯示他這一班 ============ */
-
-const { profile: child, current: childStage, openStages, setBirth, toggleStage } = useChildStage()
 
 /** 出生年的選項：今年往前 8 年；已經存了更早的年份也要留著，不然下拉會變空白 */
 const birthYears = computed(() => {
@@ -506,8 +616,8 @@ function onImport() {
         <button class="text-btn accent" :disabled="syncing" @click="onSync">
           {{ syncing ? '同步中…' : '同步片單' }}
         </button>
-        <button class="text-btn" @click="expandAll(allCatKeys)">全部展開</button>
-        <button class="text-btn" @click="collapseAll(allCatKeys)">全部收起</button>
+        <button class="text-btn" @click="expandAll">全部展開</button>
+        <button class="text-btn" @click="collapseAll">全部收起</button>
         <button class="icon-btn" aria-label="關閉設定" @click="emit('close')">
           <svg viewBox="0 0 24 24"><path d="M19 6.4 17.6 5 12 10.6 6.4 5 5 6.4 10.6 12 5 17.6 6.4 19 12 13.4 17.6 19 19 17.6 13.4 12z" /></svg>
         </button>
@@ -516,15 +626,112 @@ function onImport() {
 
     <div class="panel-body">
       <!-- 片單檔案的同步結果，沒事就不顯示 -->
-      <div v-if="showSyncBanner" class="sync-banner" :class="syncStatus.state">
+      <div v-if="showSyncBanner" class="sync-banner" :class="[syncStatus.state, { 'has-discarded': syncStatus.discarded }]">
         <span class="sync-msg">{{ syncStatus.message }}</span>
         <button v-if="syncStatus.state !== 'syncing'" class="ghost-btn small" @click="onSync">
           重新讀取
         </button>
       </div>
 
+      <!-- ══════ 觀看時間 ══════ -->
+      <PanelSection id="time" title="觀看時間" span="wide" :summary="timeSummary">
+        <div class="time-grid">
+          <div class="time-settings">
+            <!-- 正在休息時，家長可以直接結束 -->
+            <div v-if="isResting" class="resting-now">
+              <span class="resting-label">正在休息中</span>
+              <span class="resting-count">{{ restText }}</span>
+              <button class="ghost-btn small" @click="onEndRest">結束休息</button>
+            </div>
+
+            <label class="field">
+              <span>每天最多看幾分鐘（0 = 不限制）</span>
+              <input v-model="dailyInput" type="text" inputmode="numeric" placeholder="60">
+            </label>
+
+            <div class="field">
+              <span>什麼時候要休息</span>
+              <div class="chip-row">
+                <button
+                  class="chip chip-plain"
+                  :class="{ 'is-on': modeInput === 'time' }"
+                  @click="modeInput = 'time'"
+                >
+                  每看一段時間
+                </button>
+                <button
+                  class="chip chip-plain"
+                  :class="{ 'is-on': modeInput === 'video' }"
+                  @click="modeInput = 'video'"
+                >
+                  每部影片看完
+                </button>
+                <button
+                  class="chip chip-plain"
+                  :class="{ 'is-on': modeInput === 'off' }"
+                  @click="modeInput = 'off'"
+                >
+                  不休息
+                </button>
+              </div>
+            </div>
+
+            <label v-if="modeInput === 'time'" class="field">
+              <span>每看幾分鐘休息一次</span>
+              <input v-model="everyInput" type="text" inputmode="numeric" placeholder="15">
+            </label>
+
+            <label v-if="modeInput !== 'off'" class="field">
+              <span>每次休息幾分鐘</span>
+              <input v-model="restInput" type="text" inputmode="numeric" placeholder="3">
+            </label>
+
+            <button class="ghost-btn" @click="onSaveTime">儲存設定</button>
+            <p class="msg" :class="timeMsg.kind" role="status">{{ timeMsg.text }}</p>
+
+            <div class="btn-row">
+              <button class="ghost-btn" @click="onGrantExtra">今天多給 15 分</button>
+              <button class="ghost-btn" @click="onResetToday">今天歸零</button>
+            </div>
+          </div>
+
+          <div class="time-stats">
+            <div class="stat">
+              <span class="stat-num">{{ humanMinutes(todaySeconds) }}</span>
+              <span class="stat-label">
+                今天已看<template v-if="hasLimit">，上限 {{ settings.dailyLimitMin }} 分鐘</template>
+              </span>
+            </div>
+
+            <!-- 最近 7 天。單一序列，所以不需要圖例；數字直接標在柱子上 -->
+            <div class="chart" role="img" :aria-label="chartAria">
+              <div v-if="hasLimit" class="limit-line" :style="{ bottom: limitPct }">
+                <span class="limit-tag">上限</span>
+              </div>
+
+              <div v-for="d in days" :key="d.key" class="col">
+                <span v-if="d.seconds >= 30" class="col-val">{{ Math.round(d.seconds / 60) }}</span>
+                <div
+                  v-if="d.seconds > 0"
+                  class="bar"
+                  :class="{ 'is-over': isOver(d.seconds) }"
+                  :style="{ height: barPct(d.seconds) }"
+                  :title="`${d.label} 看了 ${humanMinutes(d.seconds)}`"
+                />
+                <span class="col-label" :class="{ 'is-today': d.key === todayK }">{{ d.label }}</span>
+              </div>
+            </div>
+
+            <p class="hint">
+              超過上限的日子會標成紅色。iPad 鎖屏或切到別的 App 的時間不會被計入；
+              休息的倒數也存在裝置裡，關掉 App 再開一樣要休息完。
+            </p>
+          </div>
+        </div>
+      </PanelSection>
+
       <!-- ══════ 新增影片 ══════ -->
-      <PanelSection id="add" class="panel-add" title="新增影片">
+      <PanelSection id="add" title="新增影片" summary="貼 YouTube 網址加進片單">
         <div class="add-grid">
           <label class="field">
             <span>YouTube 網址或影片 ID</span>
@@ -598,6 +805,326 @@ function onImport() {
         </div>
       </PanelSection>
 
+      <!-- ══════ 片單 ══════ -->
+      <PanelSection id="list" title="目前片單" span="all" :badge="listBadge">
+        <template #header-extra>
+          <button
+            class="undo-btn"
+            :disabled="!canUndo"
+            :title="canUndo ? `復原「${lastAction}」` : '目前沒有可以復原的動作'"
+            @click="onUndo"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.5 8c-2.65 0-5.05 1-6.9 2.6L2 7v9h9l-3.62-3.62A7.95 7.95 0 0 1 12.5 11c2.97 0 5.52 1.72 6.75 4.22l2.37-.78A10.5 10.5 0 0 0 12.5 8Z" /></svg>
+            <span class="undo-label">{{ canUndo ? `復原「${lastAction}」` : '沒有可復原的動作' }}</span>
+          </button>
+        </template>
+
+        <p v-if="undoMsg.text" class="msg" :class="undoMsg.kind" role="status">{{ undoMsg.text }}</p>
+
+        <!--
+          只看某一班，清單才不會一次攤開好幾百筆。
+          這排固定在上面，也是拖曳的目標：把影片拖到某一班放開就換成那一班（「全部」不能放）
+        -->
+        <div
+          class="chip-row stage-filter"
+          :class="{ 'is-drop-ready': stageDragging }"
+          role="group"
+          aria-label="只看哪一班"
+        >
+          <button
+            class="chip chip-plain chip-all"
+            :class="{ 'is-on': listStage === 'all' }"
+            :aria-pressed="listStage === 'all'"
+            @click="setListStage('all')"
+          >
+            全部 <span class="chip-count">{{ stageCounts.all }}</span>
+          </button>
+          <button
+            v-for="s in STAGES"
+            :key="s.id"
+            class="chip chip-plain"
+            :class="{ 'is-on': listStage === s.id, 'is-drop-over': stageDropOver === String(s.id) }"
+            :data-drop="s.id"
+            :aria-pressed="listStage === s.id"
+            @click="setListStage(s.id)"
+          >
+            {{ s.emoji }} {{ s.name }} <span class="chip-count">{{ stageCounts[s.id] }}</span>
+          </button>
+          <button
+            v-if="stageCounts.none || listStage === 'none' || stageDragging"
+            class="chip chip-plain"
+            :class="{ 'is-on': listStage === 'none', 'is-drop-over': stageDropOver === 'none' }"
+            data-drop="none"
+            :aria-pressed="listStage === 'none'"
+            @click="setListStage('none')"
+          >
+            不分年齡 <span class="chip-count">{{ stageCounts.none }}</span>
+          </button>
+        </div>
+
+        <div ref="listRef" class="lists">
+          <template v-for="ls in listSections" :key="ls.sec.id">
+            <h3 v-if="sections.length > 1" class="list-sec-title">
+              <button
+                class="list-toggle"
+                :aria-expanded="!isCollapsed(listSecKey(ls.sec.id))"
+                @click="toggleCollapse(listSecKey(ls.sec.id))"
+              >
+                <svg class="caret" :class="{ 'is-open': !isCollapsed(listSecKey(ls.sec.id)) }" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.3 6 8 7.4l4.6 4.6L8 16.6 9.3 18l6-6z" /></svg>
+                {{ ls.sec.emoji }} {{ ls.sec.name }}
+                <span class="group-count">{{ ls.count }}</span>
+                <!-- 收起時列出裡面有哪些分區，不用打開就知道要找的在不在這裡 -->
+                <span v-if="isCollapsed(listSecKey(ls.sec.id))" class="list-peek">
+                  {{ ls.cats.map((c) => c.name).join('・') }}
+                </span>
+              </button>
+            </h3>
+
+            <div v-for="cat in catsShownIn(ls)" :key="cat.id" class="cat-group">
+              <h3
+                class="cat-group-title"
+                :style="{ color: catColor(cat.id) }"
+              >
+                <button
+                  class="list-toggle"
+                  :aria-expanded="!isCollapsed(listCatKey(cat.id))"
+                  @click="toggleCollapse(listCatKey(cat.id))"
+                >
+                  <svg class="caret" :class="{ 'is-open': !isCollapsed(listCatKey(cat.id)) }" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.3 6 8 7.4l4.6 4.6L8 16.6 9.3 18l6-6z" /></svg>
+                  {{ cat.emoji }} {{ cat.name }}
+                  <span class="group-count">{{ listedCountIn(cat.id) }}</span>
+                </button>
+              </h3>
+
+              <div v-for="group in groupsShownIn(cat.id)" :key="group.id ?? '_loose'" class="sub-group">
+                <h4 v-if="group.name" class="sub-group-title">{{ group.name }}</h4>
+                <h4 v-else class="sub-group-title is-loose">（未分冊）</h4>
+
+                <ul class="video-list">
+                  <li
+                    v-for="(video, vi) in group.videos"
+                    :key="video.uid"
+                    :data-vid-row="`vid:${cat.id}:${group.id ?? '_'}`"
+                    class="video-item"
+                    :class="{
+                      'is-dragging': drag.isDragging(`vid:${cat.id}:${group.id ?? '_'}`, vi),
+                      'is-stage-dragged': stageDragging?.uid === video.uid,
+                    }"
+                  >
+                    <button class="grip" aria-label="拖曳排序影片" @pointerdown="dragVideo($event, cat.id, group.id, vi)">
+                      <svg viewBox="0 0 10 16"><circle cx="3" cy="3" r="1.3" /><circle cx="7" cy="3" r="1.3" /><circle cx="3" cy="8" r="1.3" /><circle cx="7" cy="8" r="1.3" /><circle cx="3" cy="13" r="1.3" /><circle cx="7" cy="13" r="1.3" /></svg>
+                    </button>
+
+                    <!-- 網站與字卡沒有 YouTube 縮圖，別去抓空網址 -->
+                    <!-- 縮圖和標題按住可以拖到上面的班級 -->
+                    <div
+                      v-if="video.kind === 'site' || video.kind === 'deck'"
+                      class="row-site-icon drag-src"
+                      aria-hidden="true"
+                      @pointerdown="startStageDrag($event, video)"
+                      @contextmenu.prevent
+                    >
+                      {{ video.kind === 'site' ? '🔗' : '🃏' }}
+                    </div>
+                    <img
+                      v-else
+                      class="drag-src"
+                      :src="thumbUrl(video.id)"
+                      alt=""
+                      draggable="false"
+                      @pointerdown="startStageDrag($event, video)"
+                      @contextmenu.prevent
+                    >
+
+                    <div class="it-main">
+                      <input
+                        v-if="editingId === video.uid"
+                        ref="editInputRef"
+                        v-model="editingText"
+                        class="edit-input"
+                        type="text"
+                        @blur="commitEdit"
+                        @keyup.enter="commitEdit"
+                      >
+                      <div
+                        v-else
+                        class="it-title drag-src"
+                        @click="startEdit(video.uid, video.title)"
+                        @pointerdown="startStageDrag($event, video)"
+                        @contextmenu.prevent
+                      >
+                        {{ video.title || '影片' }}
+                      </div>
+
+                      <!-- 平常只是一個小標籤，按了才展開四班的開關，清單才不會滿滿都是按鈕 -->
+                      <button
+                        class="stage-tag"
+                        :class="{ 'is-none': !stagesOf(video), 'is-on': stageEditingUid === video.uid }"
+                        :aria-expanded="stageEditingUid === video.uid"
+                        :aria-label="`適合：${stagesLabel(stagesOf(video))}，點一下修改`"
+                        @click="toggleStageEdit(video.uid)"
+                      >
+                        {{ stagesLabel(stagesOf(video)) }}
+                      </button>
+                    </div>
+
+                    <select
+                      class="place-select"
+                      :value="placeValue(video.categoryId, video.subId)"
+                      aria-label="搬到其他分區或冊"
+                      @change="onChangePlace(video.uid, ($event.target as HTMLSelectElement).value)"
+                    >
+                      <optgroup v-for="c in categories" :key="c.id" :label="`${c.emoji} ${c.name}`">
+                        <option :value="placeValue(c.id, null)">（未分冊）</option>
+                        <option v-for="s in subsIn(c.id)" :key="s.id" :value="placeValue(c.id, s.id)">
+                          {{ s.name }}
+                        </option>
+                      </optgroup>
+                    </select>
+
+                    <button class="row-del" aria-label="刪除" @click="onRemoveVideo(video.uid, video.title)">
+                      <svg viewBox="0 0 24 24"><path d="M19 6.4 17.6 5 12 10.6 6.4 5 5 6.4 10.6 12 5 17.6 6.4 19 12 13.4 17.6 19 19 17.6 13.4 12z" /></svg>
+                    </button>
+
+                    <div v-if="stageEditingUid === video.uid" class="stage-edit" role="group" aria-label="適合哪幾班">
+                      <button
+                        v-for="s in STAGES"
+                        :key="s.id"
+                        class="chip chip-plain chip-sm"
+                        :class="{ 'is-on': stagesOf(video)?.includes(s.id) }"
+                        :aria-pressed="!!stagesOf(video)?.includes(s.id)"
+                        @click="onToggleVideoStage(video, s.id)"
+                      >
+                        {{ s.emoji }} {{ s.name }}
+                      </button>
+                      <button class="stage-done" @click="stageEditingUid = null">完成</button>
+                      <span class="stage-edit-hint">都不選＝不分年齡，一直看得到</span>
+                    </div>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </template>
+        </div>
+
+        <p v-if="!videos.length" class="hint empty">
+          還沒有任何影片，先用上面的「新增影片」加一部吧。
+        </p>
+        <p v-else-if="!listSections.length" class="hint empty">
+          這一班目前沒有東西。
+        </p>
+        <p v-if="emptyCategories.length && listStage === 'all'" class="hint">
+          還沒有影片的分區：{{ emptyCategories.map((c) => `${c.emoji} ${c.name}`).join('、') }}
+        </p>
+        <p class="hint">
+          上面那排可以只看某一班的；每一筆標題下面的小標籤是它適合哪幾班，點一下就能改。
+          也可以<strong>按住縮圖或標題一下，拖到上面那排的某一班放開</strong>，就換成那一班。
+          這裡改的只存在這台裝置，片單檔案改過之後會以檔案的「階段:」為準。
+        </p>
+        <p class="hint">
+          點標題可以改名字；右邊的選單可以把影片搬到別的分區或冊；按住把手可以拖曳排序。
+          改錯了就按右上角的「復原」，可以連按一路退回去（最多 15 步）。
+          從片單檔案同步也算一步，所以同步後發現不對也退得回來。
+        </p>
+      </PanelSection>
+
+      <!-- ══════ 孩子的年紀 ══════ -->
+      <PanelSection id="child" title="孩子的年紀" span="wide" :summary="childSummary">
+        <p class="hint">
+          設定出生年度，小朋友端的數字、英文單字……每一個主題，就只會顯示適合他這一班的字卡和影片
+          （幼幼班、小班、中班、大班）。每年 8 月新學年開始，會自動換成下一班。想讓他看別班的，在下面另外開放。
+        </p>
+
+        <div class="child-row">
+          <label class="field">
+            <span>出生年（西元）</span>
+            <select class="child-select" :value="child.birthYear ?? ''" aria-label="出生年" @change="onBirthYear">
+              <option value="">還沒設定</option>
+              <option v-for="y in birthYears" :key="y" :value="y">{{ y }} 年（民國 {{ y - 1911 }}）</option>
+            </select>
+          </label>
+          <label v-if="child.birthYear !== null" class="field">
+            <span>出生月份</span>
+            <select class="child-select" :value="child.birthMonth" aria-label="出生月份" @change="onBirthMonth">
+              <option v-for="m in 12" :key="m" :value="m">{{ m }} 月</option>
+            </select>
+          </label>
+        </div>
+
+        <p v-if="childNote" class="hint child-note">📅 {{ childNote }}</p>
+        <p v-else class="hint">還沒設定出生年度：四個階段的教材都會顯示。</p>
+        <p v-if="child.birthYear !== null" class="hint">
+          分班看 9 月 1 日那天滿幾歲，9～12 月出生的算下一屆，所以月份也要選。
+        </p>
+
+        <div class="field" style="margin-top: 18px">
+          <span>小朋友端顯示哪些階段</span>
+          <div class="chip-row">
+            <button
+              v-for="s in STAGES"
+              :key="s.id"
+              class="chip chip-plain"
+              :class="{ 'is-on': openStages.has(s.id) }"
+              :disabled="childStage?.stage === s.id"
+              :aria-pressed="openStages.has(s.id)"
+              @click="toggleStage(s.id)"
+            >
+              {{ s.emoji }} {{ s.name }} {{ s.age }}<template v-if="childStage?.stage === s.id">（目前）</template>
+            </button>
+          </div>
+        </div>
+        <p class="hint">
+          亮色的就是現在開放的。孩子這一班一直開著；想讓他提前玩下一班、或回頭複習，點那一班就開放，再點一次就收起來。
+          沒標年紀的（自己加的影片、娛樂）一直都看得到。這裡只影響小朋友端，上面的「目前片單」一直看得到全部。
+        </p>
+      </PanelSection>
+
+      <!-- ══════ 離線使用 ══════ -->
+      <PanelSection id="offline" title="離線使用" :summary="offlineSummary">
+        <ul class="offline-status">
+          <li>
+            <span>網路</span>
+            <strong>{{ online ? '連線中' : '📴 沒有網路' }}</strong>
+          </li>
+          <li>
+            <span>App 本身</span>
+            <strong :class="appOffline ? 'ok' : 'warn'">{{ appOffline ? '✅ 沒網路也打得開' : '⚠️ 還沒準備好' }}</strong>
+          </li>
+          <li>
+            <span>字卡圖片</span>
+            <strong v-if="cachedCount === null">檢查中…</strong>
+            <strong v-else :class="missingImages ? 'warn' : 'ok'">
+              {{ missingImages ? '⚠️' : '✅' }} {{ cachedCount }} / {{ cardImages.length }} 張存在這台裝置
+            </strong>
+          </li>
+        </ul>
+
+        <p v-if="!appOffline" class="hint warn">
+          請在有網路的地方把 App 完全關掉、再打開一次，讓它把離線要用的東西裝好，再回來這裡看。
+        </p>
+
+        <button
+          class="ghost-btn wide"
+          :disabled="downloading || (missingImages > 0 && !online)"
+          @click="missingImages ? onDownloadOffline() : checkOffline()"
+        >
+          <template v-if="downloading">下載中… {{ downloadDone }} / {{ cardImages.length }}</template>
+          <template v-else-if="missingImages">把字卡圖片全部存到這台裝置</template>
+          <template v-else>重新檢查</template>
+        </button>
+
+        <p class="hint">
+          <strong>出門前</strong>在有網路的地方打開 App 一次，這裡三項都打勾就可以帶出門。
+          沒網路時字卡、數一數、考考我都照常；影片和網站要網路，片單上會變淡。
+          想確認的話，開飛航模式再打開 App 試一次。
+        </p>
+        <p class="hint">
+          <strong>語音</strong>：Android 平板請到「設定 → 系統 → 語言 → 文字轉語音輸出」，
+          按 Google 語音服務旁的齒輪 →「安裝語音資料」，下載<strong>英文（美國）</strong>和<strong>中文（台灣）</strong>，
+          沒網路時才唸得出來（各家平板的選單名稱略有不同）。iPad 的語音本來就在裝置上，不用設定。
+        </p>
+      </PanelSection>
+
       <!-- ══════ 分區管理（大分類 → 分區 → 冊）══════ -->
       <PanelSection
         id="categories"
@@ -620,7 +1147,7 @@ function onImport() {
             :key="sec.id"
             data-sec-block
             class="sec-block"
-            :class="{ 'is-dragging': drag.isDragging('sec', si) }"
+            :class="{ 'is-dragging': drag.isDragging('sec', si), 'is-collapsed': isCollapsed(secKey(sec.id)) }"
           >
             <!-- 大分類本身 -->
             <div class="sec-row">
@@ -644,13 +1171,27 @@ function onImport() {
 
               <span class="cat-count">{{ categoriesIn(sec.id).length }} 區・{{ countInSection(sec.id) }} 部</span>
 
+              <!-- 大分類預設收起：先看到幾個大分類，要改哪一個再打開；收起來也比較好拖曳排序 -->
+              <button
+                class="caret-btn"
+                :aria-expanded="!isCollapsed(secKey(sec.id))"
+                :aria-label="isCollapsed(secKey(sec.id)) ? '展開這個大分類' : '收起這個大分類'"
+                @click="toggleCollapse(secKey(sec.id))"
+              >
+                <svg
+                  class="caret"
+                  :class="{ 'is-open': !isCollapsed(secKey(sec.id)) }"
+                  viewBox="0 0 24 24"
+                ><path d="M9.3 6 8 7.4l4.6 4.6L8 16.6 9.3 18l6-6z" /></svg>
+              </button>
+
               <button class="row-del" aria-label="刪除大分類" @click="onRemoveSection(sec.id, sec.name)">
                 <svg viewBox="0 0 24 24"><path d="M19 6.4 17.6 5 12 10.6 6.4 5 5 6.4 10.6 12 5 17.6 6.4 19 12 13.4 17.6 19 19 17.6 13.4 12z" /></svg>
               </button>
             </div>
 
             <!-- 這個大分類底下的分區 -->
-            <div class="cat-list">
+            <div v-show="!isCollapsed(secKey(sec.id))" class="cat-list">
               <div
                 v-for="(cat, ci) in categoriesIn(sec.id)"
                 :key="cat.id"
@@ -795,253 +1336,9 @@ function onImport() {
         <p class="msg" :class="catMsg.kind" role="status">{{ catMsg.text }}</p>
         <p class="hint">
           名稱和圖示直接點就能改，離開輸入框自動儲存。
-          冊很多的時候，可以用分區右邊的箭頭把整張卡片收起來。
+          大分類和分區預設都收起來，按右邊的箭頭打開；收起來的大分類比較好拖曳排序。
           刪除細分時裡面的影片會退回分區底下，不會被刪掉。
         </p>
-      </PanelSection>
-
-      <!-- ══════ 片單 ══════ -->
-      <PanelSection id="list" title="目前片單" span="all" :badge="`${videos.length} 部`">
-        <template #header-extra>
-          <button
-            class="undo-btn"
-            :disabled="!canUndo"
-            :title="canUndo ? `復原「${lastAction}」` : '目前沒有可以復原的動作'"
-            @click="onUndo"
-          >
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.5 8c-2.65 0-5.05 1-6.9 2.6L2 7v9h9l-3.62-3.62A7.95 7.95 0 0 1 12.5 11c2.97 0 5.52 1.72 6.75 4.22l2.37-.78A10.5 10.5 0 0 0 12.5 8Z" /></svg>
-            <span class="undo-label">{{ canUndo ? `復原「${lastAction}」` : '沒有可復原的動作' }}</span>
-          </button>
-        </template>
-
-        <p v-if="undoMsg.text" class="msg" :class="undoMsg.kind" role="status">{{ undoMsg.text }}</p>
-
-        <div ref="listRef" class="lists">
-          <div v-for="cat in filledCategories" :key="cat.id" class="cat-group">
-            <h3
-              class="cat-group-title"
-              :style="{ color: catColor(cat.id) }"
-            >
-              {{ cat.emoji }} {{ cat.name }}
-              <span class="group-count">{{ countIn(cat.id) }}</span>
-            </h3>
-
-            <div v-for="group in groupsIn(cat.id)" :key="group.id ?? '_loose'" class="sub-group">
-              <h4 v-if="group.name" class="sub-group-title">{{ group.name }}</h4>
-              <h4 v-else class="sub-group-title is-loose">（未分冊）</h4>
-
-              <ul class="video-list">
-                <li
-                  v-for="(video, vi) in group.videos"
-                  :key="video.uid"
-                  :data-vid-row="`vid:${cat.id}:${group.id ?? '_'}`"
-                  class="video-item"
-                  :class="{ 'is-dragging': drag.isDragging(`vid:${cat.id}:${group.id ?? '_'}`, vi) }"
-                >
-                  <button class="grip" aria-label="拖曳排序影片" @pointerdown="dragVideo($event, cat.id, group.id, vi)">
-                    <svg viewBox="0 0 10 16"><circle cx="3" cy="3" r="1.3" /><circle cx="7" cy="3" r="1.3" /><circle cx="3" cy="8" r="1.3" /><circle cx="7" cy="8" r="1.3" /><circle cx="3" cy="13" r="1.3" /><circle cx="7" cy="13" r="1.3" /></svg>
-                  </button>
-
-                  <!-- 網站與字卡沒有 YouTube 縮圖，別去抓空網址 -->
-                  <div v-if="video.kind === 'site'" class="row-site-icon" aria-hidden="true">🔗</div>
-                  <div v-else-if="video.kind === 'deck'" class="row-site-icon" aria-hidden="true">🃏</div>
-                  <img v-else :src="thumbUrl(video.id)" alt="">
-
-                  <input
-                    v-if="editingId === video.uid"
-                    ref="editInputRef"
-                    v-model="editingText"
-                    class="edit-input"
-                    type="text"
-                    @blur="commitEdit"
-                    @keyup.enter="commitEdit"
-                  >
-                  <div v-else class="it-title" @click="startEdit(video.uid, video.title)">
-                    {{ video.title || '影片' }}
-                  </div>
-
-                  <select
-                    class="place-select"
-                    :value="placeValue(video.categoryId, video.subId)"
-                    aria-label="搬到其他分區或冊"
-                    @change="onChangePlace(video.uid, ($event.target as HTMLSelectElement).value)"
-                  >
-                    <optgroup v-for="c in categories" :key="c.id" :label="`${c.emoji} ${c.name}`">
-                      <option :value="placeValue(c.id, null)">（未分冊）</option>
-                      <option v-for="s in subsIn(c.id)" :key="s.id" :value="placeValue(c.id, s.id)">
-                        {{ s.name }}
-                      </option>
-                    </optgroup>
-                  </select>
-
-                  <button class="row-del" aria-label="刪除" @click="onRemoveVideo(video.uid, video.title)">
-                    <svg viewBox="0 0 24 24"><path d="M19 6.4 17.6 5 12 10.6 6.4 5 5 6.4 10.6 12 5 17.6 6.4 19 12 13.4 17.6 19 19 17.6 13.4 12z" /></svg>
-                  </button>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
-
-        <p v-if="!filledCategories.length" class="hint empty">
-          還沒有任何影片，先用上面的「新增影片」加一部吧。
-        </p>
-        <p v-if="emptyCategories.length" class="hint">
-          還沒有影片的分區：{{ emptyCategories.map((c) => `${c.emoji} ${c.name}`).join('、') }}
-        </p>
-        <p class="hint">
-          點標題可以改名字；右邊的選單可以把影片搬到別的分區或冊；按住把手可以拖曳排序。
-          改錯了就按右上角的「復原」，可以連按一路退回去（最多 15 步）。
-          從片單檔案同步也算一步，所以同步後發現不對也退得回來。
-        </p>
-      </PanelSection>
-
-      <!-- ══════ 孩子的年紀 ══════ -->
-      <PanelSection id="child" title="孩子的年紀" span="all" :summary="childSummary">
-        <p class="hint">
-          設定出生年度，小朋友端的數字、英文單字……每一個主題，就只會顯示適合他這一班的字卡和影片
-          （幼幼班、小班、中班、大班）。每年 8 月新學年開始，會自動換成下一班。想讓他看別班的，在下面另外開放。
-        </p>
-
-        <div class="child-row">
-          <label class="field">
-            <span>出生年（西元）</span>
-            <select class="child-select" :value="child.birthYear ?? ''" aria-label="出生年" @change="onBirthYear">
-              <option value="">還沒設定</option>
-              <option v-for="y in birthYears" :key="y" :value="y">{{ y }} 年（民國 {{ y - 1911 }}）</option>
-            </select>
-          </label>
-          <label v-if="child.birthYear !== null" class="field">
-            <span>出生月份</span>
-            <select class="child-select" :value="child.birthMonth" aria-label="出生月份" @change="onBirthMonth">
-              <option v-for="m in 12" :key="m" :value="m">{{ m }} 月</option>
-            </select>
-          </label>
-        </div>
-
-        <p v-if="childNote" class="hint child-note">📅 {{ childNote }}</p>
-        <p v-else class="hint">還沒設定出生年度：四個階段的教材都會顯示。</p>
-        <p v-if="child.birthYear !== null" class="hint">
-          分班看 9 月 1 日那天滿幾歲，9～12 月出生的算下一屆，所以月份也要選。
-        </p>
-
-        <div class="field" style="margin-top: 18px">
-          <span>小朋友端顯示哪些階段</span>
-          <div class="chip-row">
-            <button
-              v-for="s in STAGES"
-              :key="s.id"
-              class="chip chip-plain"
-              :class="{ 'is-on': openStages.has(s.id) }"
-              :disabled="childStage?.stage === s.id"
-              :aria-pressed="openStages.has(s.id)"
-              @click="toggleStage(s.id)"
-            >
-              {{ s.emoji }} {{ s.name }} {{ s.age }}<template v-if="childStage?.stage === s.id">（目前）</template>
-            </button>
-          </div>
-        </div>
-        <p class="hint">
-          亮色的就是現在開放的。孩子這一班一直開著；想讓他提前玩下一班、或回頭複習，點那一班就開放，再點一次就收起來。
-          沒標年紀的（自己加的影片、娛樂）一直都看得到。這裡只影響小朋友端，上面的「目前片單」一直看得到全部。
-        </p>
-      </PanelSection>
-
-      <!-- ══════ 觀看時間 ══════ -->
-      <PanelSection id="time" title="觀看時間" span="all" :summary="timeSummary">
-        <div class="time-grid">
-          <div class="time-settings">
-            <!-- 正在休息時，家長可以直接結束 -->
-            <div v-if="isResting" class="resting-now">
-              <span class="resting-label">正在休息中</span>
-              <span class="resting-count">{{ restText }}</span>
-              <button class="ghost-btn small" @click="onEndRest">結束休息</button>
-            </div>
-
-            <label class="field">
-              <span>每天最多看幾分鐘（0 = 不限制）</span>
-              <input v-model="dailyInput" type="text" inputmode="numeric" placeholder="60">
-            </label>
-
-            <div class="field">
-              <span>什麼時候要休息</span>
-              <div class="chip-row">
-                <button
-                  class="chip chip-plain"
-                  :class="{ 'is-on': modeInput === 'time' }"
-                  @click="modeInput = 'time'"
-                >
-                  每看一段時間
-                </button>
-                <button
-                  class="chip chip-plain"
-                  :class="{ 'is-on': modeInput === 'video' }"
-                  @click="modeInput = 'video'"
-                >
-                  每部影片看完
-                </button>
-                <button
-                  class="chip chip-plain"
-                  :class="{ 'is-on': modeInput === 'off' }"
-                  @click="modeInput = 'off'"
-                >
-                  不休息
-                </button>
-              </div>
-            </div>
-
-            <label v-if="modeInput === 'time'" class="field">
-              <span>每看幾分鐘休息一次</span>
-              <input v-model="everyInput" type="text" inputmode="numeric" placeholder="15">
-            </label>
-
-            <label v-if="modeInput !== 'off'" class="field">
-              <span>每次休息幾分鐘</span>
-              <input v-model="restInput" type="text" inputmode="numeric" placeholder="3">
-            </label>
-
-            <button class="ghost-btn" @click="onSaveTime">儲存設定</button>
-            <p class="msg" :class="timeMsg.kind" role="status">{{ timeMsg.text }}</p>
-
-            <div class="btn-row">
-              <button class="ghost-btn" @click="onGrantExtra">今天多給 15 分</button>
-              <button class="ghost-btn" @click="onResetToday">今天歸零</button>
-            </div>
-          </div>
-
-          <div class="time-stats">
-            <div class="stat">
-              <span class="stat-num">{{ humanMinutes(todaySeconds) }}</span>
-              <span class="stat-label">
-                今天已看<template v-if="hasLimit">，上限 {{ settings.dailyLimitMin }} 分鐘</template>
-              </span>
-            </div>
-
-            <!-- 最近 7 天。單一序列，所以不需要圖例；數字直接標在柱子上 -->
-            <div class="chart" role="img" :aria-label="chartAria">
-              <div v-if="hasLimit" class="limit-line" :style="{ bottom: limitPct }">
-                <span class="limit-tag">上限</span>
-              </div>
-
-              <div v-for="d in days" :key="d.key" class="col">
-                <span v-if="d.seconds >= 30" class="col-val">{{ Math.round(d.seconds / 60) }}</span>
-                <div
-                  v-if="d.seconds > 0"
-                  class="bar"
-                  :class="{ 'is-over': isOver(d.seconds) }"
-                  :style="{ height: barPct(d.seconds) }"
-                  :title="`${d.label} 看了 ${humanMinutes(d.seconds)}`"
-                />
-                <span class="col-label" :class="{ 'is-today': d.key === todayK }">{{ d.label }}</span>
-              </div>
-            </div>
-
-            <p class="hint">
-              超過上限的日子會標成紅色。iPad 鎖屏或切到別的 App 的時間不會被計入；
-              休息的倒數也存在裝置裡，關掉 App 再開一樣要休息完。
-            </p>
-          </div>
-        </div>
       </PanelSection>
 
       <!-- ══════ 畫面設定 ══════ -->
@@ -1140,54 +1437,8 @@ function onImport() {
         <p class="msg" :class="pinMsg.kind" role="status">{{ pinMsg.text }}</p>
       </PanelSection>
 
-      <!-- ══════ 離線使用 ══════ -->
-      <PanelSection id="offline" title="離線使用" :summary="offlineSummary">
-        <ul class="offline-status">
-          <li>
-            <span>網路</span>
-            <strong>{{ online ? '連線中' : '📴 沒有網路' }}</strong>
-          </li>
-          <li>
-            <span>App 本身</span>
-            <strong :class="appOffline ? 'ok' : 'warn'">{{ appOffline ? '✅ 沒網路也打得開' : '⚠️ 還沒準備好' }}</strong>
-          </li>
-          <li>
-            <span>字卡圖片</span>
-            <strong v-if="cachedCount === null">檢查中…</strong>
-            <strong v-else :class="missingImages ? 'warn' : 'ok'">
-              {{ missingImages ? '⚠️' : '✅' }} {{ cachedCount }} / {{ cardImages.length }} 張存在這台裝置
-            </strong>
-          </li>
-        </ul>
-
-        <p v-if="!appOffline" class="hint warn">
-          請在有網路的地方把 App 完全關掉、再打開一次，讓它把離線要用的東西裝好，再回來這裡看。
-        </p>
-
-        <button
-          class="ghost-btn wide"
-          :disabled="downloading || (missingImages > 0 && !online)"
-          @click="missingImages ? onDownloadOffline() : checkOffline()"
-        >
-          <template v-if="downloading">下載中… {{ downloadDone }} / {{ cardImages.length }}</template>
-          <template v-else-if="missingImages">把字卡圖片全部存到這台裝置</template>
-          <template v-else>重新檢查</template>
-        </button>
-
-        <p class="hint">
-          <strong>出門前</strong>在有網路的地方打開 App 一次，這裡三項都打勾就可以帶出門。
-          沒網路時字卡、數一數、考考我都照常；影片和網站要網路，片單上會變淡。
-          想確認的話，開飛航模式再打開 App 試一次。
-        </p>
-        <p class="hint">
-          <strong>語音</strong>：Android 平板請到「設定 → 系統 → 語言 → 文字轉語音輸出」，
-          按 Google 語音服務旁的齒輪 →「安裝語音資料」，下載<strong>英文（美國）</strong>和<strong>中文（台灣）</strong>，
-          沒網路時才唸得出來（各家平板的選單名稱略有不同）。iPad 的語音本來就在裝置上，不用設定。
-        </p>
-      </PanelSection>
-
       <!-- ══════ 片單來源 ══════ -->
-      <PanelSection id="source" title="片單來源" span="all" :summary="sourceSummary">
+      <PanelSection id="source" title="片單來源" span="2" :summary="sourceSummary">
         <div class="source-grid">
           <!-- 主檔：改這個檔案，所有 iPad 一起更新 -->
           <div class="source-col">
@@ -1277,6 +1528,19 @@ site: https://example.com | 某個學習網站
         </div>
       </PanelSection>
     </div>
+
+    <!-- 拖到班級時跟著手指的小卡；pointer-events: none，才不會擋到底下的膠囊 -->
+    <div
+      v-if="stageDragging"
+      class="drag-ghost"
+      :style="{ transform: `translate(${stageDragPos.x}px, ${stageDragPos.y}px)` }"
+      aria-hidden="true"
+    >
+      <span class="drag-ghost-title">{{ stageDragging.title || '影片' }}</span>
+      <span class="drag-ghost-to">
+        → {{ stageDropOver === null ? '拖到上面的班級' : stageDropOver === 'none' ? '不分年齡' : STAGES[Number(stageDropOver)]!.name }}
+      </span>
+    </div>
   </section>
 </template>
 
@@ -1305,7 +1569,13 @@ site: https://example.com | 某個學習網站
 .text-btn.accent { color: var(--accent); }
 .text-btn:disabled { opacity: .5; }
 
-/* ---------- 版面：窄螢幕單欄，越寬越多欄，並讓大面板橫跨 ---------- */
+/*
+  ---------- 版面：窄螢幕單欄，越寬越多欄，並讓大面板橫跨 ----------
+  面板照常用程度排：觀看時間、新增影片在第一排。
+  寬度搭配好了兩欄、三欄都不會留空格，調順序或寬度時要兩種都對一下：
+    三欄：時間(2) 新增(1) / 片單(全) / 孩子(2) 離線(1) / 分區(2) 畫面(1) / 密碼(1) 來源(2)
+    兩欄：時間 新增 / 片單 / 孩子 離線 / 分區 / 畫面 密碼 / 來源
+*/
 .panel-body {
   flex: 1;
   overflow-y: auto;
@@ -1329,21 +1599,13 @@ site: https://example.com | 某個學習網站
   /* 兩欄時大面板直接占滿整列，才不會被壓得太窄 */
   .panel-body > :deep(.span-2),
   .panel-body > :deep(.span-all) { grid-column: 1 / -1; }
-
-  /* 兩欄時「新增影片」旁邊沒東西可放，就整列占滿並把欄位並排 */
-  .panel-add { grid-column: 1 / -1; }
-  .add-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
-  .add-grid > .wide { grid-column: 1 / -1; }
 }
 
 @media (min-width: 1200px) {
   .panel-body { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .panel-body > :deep(.span-2) { grid-column: span 2; }
+  .panel-body > :deep(.span-2),
+  .panel-body > :deep(.span-wide) { grid-column: span 2; }
   .panel-body > :deep(.span-all) { grid-column: 1 / -1; }
-
-  /* 三欄時新增影片回到一欄寬，欄位也回到單欄 */
-  .panel-add { grid-column: span 1; }
-  .add-grid { grid-template-columns: minmax(0, 1fr); }
 }
 
 /* ---------- 新增影片 ---------- */
@@ -1507,7 +1769,9 @@ site: https://example.com | 某個學習網站
 .sync-banner.updated { border-color: var(--ok); }
 .sync-banner.error { border-color: var(--danger); }
 .sync-banner.missing,
-.sync-banner.offline { border-color: var(--accent); }
+.sync-banner.offline,
+/* 檔案蓋掉了家長在這台裝置上的修改：要讓家長注意到 */
+.sync-banner.has-discarded { border-color: var(--accent); }
 
 .format-sample {
   margin: 0 0 14px;
@@ -1558,6 +1822,7 @@ code {
   gap: 8px;
   margin-bottom: 12px;
 }
+.sec-block.is-collapsed .sec-row { margin-bottom: 0; }
 
 .sec-name {
   flex: 1;
@@ -1780,17 +2045,64 @@ code {
   display: grid;
   /* 分區並排：面板很寬時一列才不會只放一部影片、右邊空一大段 */
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 520px), 1fr));
-  gap: 28px 30px;
+  /* 預設全部收起，一條一條的標題不用隔太開 */
+  gap: 14px 30px;
   align-items: start;
+  margin-bottom: 18px;
 }
 
+/* 大分類的段落標題橫跨整列，底下的分區照樣並排 */
+.list-sec-title {
+  grid-column: 1 / -1;
+  margin: 10px 0 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 19px;
+  font-weight: 800;
+}
+.list-sec-title:first-child { margin-top: 0; }
+
 .cat-group-title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 800;
+}
+.cat-group-title + .sub-group { margin-top: 10px; }
+
+/* 大分類、分區的標題整條都能點開收起 */
+.list-toggle {
+  width: 100%;
   display: flex;
   align-items: center;
   gap: 10px;
-  margin: 0 0 12px;
-  font-size: 17px;
-  font-weight: 800;
+  padding: 8px 6px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.list-toggle:active { background: var(--bg-card); }
+/* 分區收起時是一條細框，看得出是可以點的 */
+.cat-group-title .list-toggle { padding: 9px 12px; border: 1px solid var(--line); }
+.list-toggle .caret {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  fill: var(--text-dim);
+  transition: transform .18s ease;
+}
+.list-toggle .caret.is-open { transform: rotate(90deg); }
+.list-peek {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .group-count {
@@ -1822,6 +2134,8 @@ code {
 
 .video-item {
   display: flex;
+  /* 展開年齡開關時要換到下一行 */
+  flex-wrap: wrap;
   align-items: center;
   gap: 11px;
   padding: 8px 10px;
@@ -1850,9 +2164,132 @@ code {
   background: #0f0d24;
 }
 
-.it-title {
+/* 只看某一班的篩選列：清單很長，固定在上面，往下捲還是點得到、拖得到 */
+.stage-filter {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  margin: 4px 0 10px;
+  padding: 10px 0;
+  background: var(--bg-soft);
+  /* 固定在上面會一直佔位置，膠囊收小一點：iPad 直向才排得進一行 */
+  gap: 7px;
+}
+.stage-filter .chip { padding: 9px 14px; }
+
+/* 拖曳中：可以放的膠囊用虛線框提示，「全部」不能放就變淡 */
+.stage-filter.is-drop-ready .chip[data-drop] { border-style: dashed; border-color: var(--accent); }
+.stage-filter.is-drop-ready .chip-all { opacity: .35; }
+.stage-filter .chip.is-drop-over {
+  background: var(--accent);
+  border-style: solid;
+  color: var(--on-accent);
+  transform: scale(1.08);
+}
+
+/* 縮圖和標題按住可以拖：不要讓 iPad 跳出選字、存圖片的選單，也不要用系統的拖曳 */
+.drag-src {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+.video-item.is-stage-dragged { opacity: .4; }
+
+.drag-ghost {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 100;
+  /* 放在手指右下方，不要蓋住手指正在找的那顆膠囊 */
+  margin: 18px 0 0 18px;
+  max-width: 260px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 9px 13px;
+  border: 2px solid var(--accent);
+  border-radius: 12px;
+  background: var(--bg-card);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, .45);
+  pointer-events: none;
+}
+.drag-ghost-title {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 14px;
+  font-weight: 700;
+}
+.drag-ghost-to { font-size: 13px; font-weight: 700; color: var(--accent); }
+.chip-count {
+  margin-left: 3px;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  opacity: .7;
+}
+
+/* 標題和它下面的年齡標籤疊成一欄 */
+.it-main {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+}
+.it-main .edit-input { align-self: stretch; }
+
+.stage-tag {
+  min-height: 28px;
+  padding: 3px 11px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-dim);
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.stage-tag:active { transform: scale(.95); }
+/* 沒標年紀的淡一點，一眼看得出哪些還沒分 */
+.stage-tag.is-none { border-style: dashed; opacity: .75; }
+.stage-tag.is-on { border-color: var(--accent); color: var(--accent); opacity: 1; }
+
+/* 展開的四班開關：自己占一行，對齊標題 */
+.stage-edit {
+  flex-basis: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+  /* 把手 30 + 縮圖 88 + 兩個間距 11 */
+  margin-left: 140px;
+  padding: 4px 0 2px;
+}
+.chip-sm { padding: 7px 13px; font-size: 14px; }
+.stage-done {
+  padding: 7px 14px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.stage-done:active { transform: scale(.95); }
+.stage-edit-hint {
+  flex-basis: 100%;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.it-title {
+  align-self: stretch;
   font-size: 15px;
   font-weight: 600;
   line-height: 1.4;
@@ -1863,7 +2300,7 @@ code {
   -webkit-box-orient: vertical;
   cursor: text;
 }
-.edit-input { flex: 1; min-width: 0; border-color: var(--accent); }
+.edit-input { border-color: var(--accent); }
 
 .place-select {
   flex: none;
@@ -2029,8 +2466,10 @@ code {
 }
 
 @media (max-width: 620px) {
-  .video-item { flex-wrap: wrap; }
   .place-select { max-width: none; flex: 1; }
+  .stage-edit { margin-left: 0; }
+  /* 手機上一行排不下，至少別疊成三行把清單擠掉 */
+  .stage-filter .chip { padding: 7px 11px; font-size: 14px; }
   .undo-btn {
   display: flex;
   align-items: center;
@@ -2088,6 +2527,7 @@ code {
     margin-left: auto;
   }
   .cat-row > .caret-btn,
+  .sec-row > .caret-btn,
   .sec-row > .row-del,
   .cat-row > .row-del { order: 11; }
 

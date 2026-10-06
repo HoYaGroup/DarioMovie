@@ -5,6 +5,7 @@ import {
 } from '~/utils/youtube'
 import { computed } from 'vue'
 import { parsePlaylist, hashText } from '~/utils/playlist'
+import type { StageId } from '~/utils/stage'
 import { useState } from './useState'
 import { useCardStars } from './useCardStars'
 import appConfig from '../app.config'
@@ -17,6 +18,7 @@ const PLAYLIST_FILE = 'playlist.txt'
 
 const HISTORY_KEY = 'kidtube.history'
 const HISTORY_LIMIT = 15   // 最多留幾步，免得 localStorage 一直長大
+const SYNC_LABEL = '從片單檔案同步'
 
 /** 一次修改前的完整快照，用來復原 */
 export interface HistoryEntry {
@@ -30,6 +32,8 @@ export interface SyncStatus {
   state: 'idle' | 'syncing' | 'updated' | 'same' | 'missing' | 'offline' | 'error'
   message: string
   warnings: string[]
+  /** 這次同步蓋掉了幾個在這台裝置上做的修改（拖到班級、改名、搬移…） */
+  discarded?: number
 }
 
 /**
@@ -172,6 +176,13 @@ export function useLibrary() {
     }
   }
 
+  /** 上次從檔案同步之後，在這台裝置上又做了幾步修改（歷史只留 15 步，所以最多算到 15） */
+  function localEditsSinceSync(): number {
+    let n = 0
+    for (let i = history.value.length - 1; i >= 0 && history.value[i]!.label !== SYNC_LABEL; i--) n++
+    return n
+  }
+
   function clearHistory() {
     history.value = []
     persistHistory()
@@ -279,21 +290,30 @@ export function useLibrary() {
       return syncStatus.value
     }
 
+    // 上次同步之後在這台裝置上改過的東西，這次會被檔案蓋掉。
+    // 以前是靜靜蓋掉，家長會以為自己拖到班級沒有成功，所以要算出來講清楚
+    const discarded = localEditsSinceSync()
+
     sections.value = parsed.sections
     categories.value = parsed.categories
     subCategories.value = parsed.subCategories
     videos.value = parsed.videos
     useCardStars().adoptLegacy(parsed.videos)
-    persist('從片單檔案同步')
+    persist(SYNC_LABEL)
     try { localStorage.setItem(SYNC_KEY, hash) } catch { /* 略過 */ }
 
     const secPart = parsed.sections.length > 1 ? `${parsed.sections.length} 個大分類、` : ''
     const deckCount = parsed.videos.filter((v) => v.kind === 'deck').length
     const deckPart = deckCount ? `、${deckCount} 本字卡` : ''
+    const discardedPart = discarded
+      ? `這台裝置上手動改的 ${discarded} 個地方（拖到班級、改名、搬移…）已經換成檔案的內容；`
+        + '要留著的請寫進片單檔案，或按「目前片單」的復原退回同步前。'
+      : ''
     syncStatus.value = {
       state: 'updated',
-      message: `已從片單檔案更新：${secPart}${parsed.categories.length} 個分區、${parsed.videos.length - deckCount} 部影片${deckPart}。`,
+      message: `已從片單檔案更新：${secPart}${parsed.categories.length} 個分區、${parsed.videos.length - deckCount} 部影片${deckPart}。${discardedPart}`,
       warnings: parsed.warnings,
+      discarded,
     }
     backfillTitles()
     return syncStatus.value
@@ -498,6 +518,18 @@ export function useLibrary() {
     hit.categoryId = categoryId
     hit.subId = sub?.id ?? null
     persist(`搬移影片「${hit.title}」`)
+  }
+
+  /**
+   * 設定這一筆適合哪幾班。傳空的表示不分年齡（拿掉自己的設定，沿用單元、分區的）。
+   * 跟其他在 iPad 上的調整一樣，片單檔案改過之後會以檔案為準。
+   */
+  function setVideoStages(uid: string, stages: StageId[]) {
+    const hit = videos.value.find((v) => v.uid === uid)
+    if (!hit) return
+    if (stages.length) hit.stages = [...new Set(stages)].sort((a, b) => a - b)
+    else delete hit.stages
+    persist(`改「${hit.title}」適合的班級`)
   }
 
   /**
@@ -774,7 +806,7 @@ export function useLibrary() {
     init, syncFromPlaylist, playlistUrl,
     categoriesIn, countInSection, subsIn, videosIn, looseVideosIn, videosInSub, countIn, groupsIn,
     addSection, renameSection, removeSection, reorderSections, setCategorySection,
-    addVideo, removeVideo, renameVideo, setVideoPlace, reorderVideos,
+    addVideo, removeVideo, renameVideo, setVideoPlace, setVideoStages, reorderVideos,
     addCategory, renameCategory, removeCategory, reorderCategories,
     addSubCategory, renameSubCategory, removeSubCategory, reorderSubCategories,
     setAppTitle, exportJson, importJson,

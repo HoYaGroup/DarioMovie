@@ -41,6 +41,21 @@ export function parseStages(text: string): StageId[] | undefined {
   return [...new Set(names.map(idOf))].sort()
 }
 
+/**
+ * 適合哪幾班 → 給家長看的短字，寫法跟片單的「階段:」一樣，看到什麼就能照抄回檔案：
+ *   [1]        → 小班
+ *   [1, 2, 3]  → 小班～大班
+ *   [0, 2]     → 幼幼班、中班
+ *   沒有       → 不分年齡
+ */
+export function stagesLabel(stages: readonly StageId[] | undefined): string {
+  if (!stages?.length) return '不分年齡'
+  const sorted = [...stages].sort((a, b) => a - b)
+  const names = sorted.map((id) => STAGES[id].name)
+  const contiguous = sorted.every((id, i) => i === 0 || id === sorted[i - 1]! + 1)
+  return contiguous && sorted.length > 1 ? `${names[0]}～${names.at(-1)}` : names.join('、')
+}
+
 export interface StageResult {
   /** 這一學年的班級 */
   stage: StageId

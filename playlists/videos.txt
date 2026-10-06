@@ -28,7 +28,7 @@
 # 學習 🎓
 
 【Little Kids (上)】🐰
-
+階段: 幼幼班
 
 《第 1 課》
 https://www.youtube.com/watch?v=bOx1NrfSjts | LK01 1-1 主本
@@ -67,6 +67,7 @@ https://www.youtube.com/watch?v=wODrx7dB-3k | LK01 7-3 字母
 
 
 【Just say it】🧸
+階段: 小班
 
 https://www.youtube.com/watch?v=rA6trE_vcE8 | Just say it - Week 1
 https://www.youtube.com/watch?v=dBZ6YQI8sds | Just say it - Week 2
@@ -75,7 +76,7 @@ https://www.youtube.com/watch?v=D0rePBoi448 | Just say it - Week 4
 
 
 【Kiddy (上)】🐶
-
+階段: 小班
 
 《第 1 課》
 https://www.youtube.com/watch?v=kdD15ObEFEI | KD 01 1-1 主本
@@ -117,6 +118,7 @@ https://www.youtube.com/watch?v=TSrbB1MZzp4 | KD 01 7-3 字母
 
 // 這一區沒有分冊，26 課直接照順序排。要分冊的話，
 // 在想分開的地方插一行《第一單元》之類的就好。
+階段: 小班
 https://www.youtube.com/watch?v=yrzdPfnXusc | B上 就醬說英文 1-1
 https://www.youtube.com/watch?v=eMhuNXZcK8A | B上 就醬說英文 1-2
 https://www.youtube.com/watch?v=hodNrU-_TPU | B上 就醬說英文 2
@@ -150,8 +152,13 @@ https://www.youtube.com/watch?v=ypDHAg5MX4I | B上 就醬說英文 26
 
 // 學校教材裡 SF01～SF06 有些節慶影片是同一支重複用的，
 // 所以下面會看到相同的網址出現好幾次 —— 這是正常的，App 支援。
+//
+// 階段：父親節（8/8）剛好是新學年開始，所以從那一冊的 Father's Day 起算下一班。
+// 「階段:」只管它正上方那一行（冊標題或那一支影片），不會往下延續，
+// 所以 Father's Day 自己標一次，後面的冊再各自標。
 
 《SF01》
+階段: 小班
 https://www.youtube.com/watch?v=h4xJyVyBdFg | SF01 8 感恩節
 https://www.youtube.com/watch?v=NMIiGnWIR9Q | SF01 8 聖誕節
 https://www.youtube.com/watch?v=I18J0voYug4 | SF01 8 中秋節
@@ -160,14 +167,18 @@ https://www.youtube.com/watch?v=EJuD5OCuYtM | SF01 8 新年
 https://www.youtube.com/watch?v=DaIrNxYjOF0 | SF01 8 元宵
 
 《SF02》
+// 這一冊是小班，最後的 Father's Day 下面另外標了中班
+階段: 小班
 https://www.youtube.com/watch?v=8vDGs5mxrN0 | SF02 8 Children's Day
 https://www.youtube.com/watch?v=n7lswV4cPtw | SF02 8 情人節
 https://www.youtube.com/watch?v=3UFO668O_mM | SF02 8 Easter
 https://www.youtube.com/watch?v=al1dQn_WKeI | SF02 8 Mother's day
 https://www.youtube.com/watch?v=_Gi0CEn2FBM | SF02 8 Dragon boat
 https://www.youtube.com/watch?v=X7c_DCLJhDo | SF02 8 Father's Day
+階段: 中班
 
 《SF03》
+階段: 中班
 https://www.youtube.com/watch?v=h4xJyVyBdFg | SF03 8 感恩節
 https://www.youtube.com/watch?v=I18J0voYug4 | SF03 8 中秋節
 https://www.youtube.com/watch?v=KF4tVitOh2w | SF03 8 萬聖節
@@ -176,14 +187,17 @@ https://www.youtube.com/watch?v=EJuD5OCuYtM | SF03 8 新年
 https://www.youtube.com/watch?v=DaIrNxYjOF0 | SF03 8 元宵
 
 《SF04》
+階段: 中班
 https://www.youtube.com/watch?v=8vDGs5mxrN0 | SF04 8 Children's Day
 https://www.youtube.com/watch?v=n7lswV4cPtw | SF04 8 情人節
 https://www.youtube.com/watch?v=3UFO668O_mM | SF04 8 Easter
 https://www.youtube.com/watch?v=al1dQn_WKeI | SF04 8 Mother's day
 https://www.youtube.com/watch?v=_Gi0CEn2FBM | SF04 8 Dragon boat
 https://www.youtube.com/watch?v=X7c_DCLJhDo | SF04 8 Father's Day
+階段: 大班
 
 《SF05》
+階段: 大班
 https://www.youtube.com/watch?v=h4xJyVyBdFg | SF05 8 感恩節
 https://www.youtube.com/watch?v=I18J0voYug4 | SF05 8 中秋節
 https://www.youtube.com/watch?v=KF4tVitOh2w | SF05 8 萬聖節
@@ -192,6 +206,7 @@ https://www.youtube.com/watch?v=EJuD5OCuYtM | SF05 8 新年
 https://www.youtube.com/watch?v=DaIrNxYjOF0 | SF05 8 元宵
 
 《SF06》
+階段: 大班
 https://www.youtube.com/watch?v=8vDGs5mxrN0 | SF06 8 Children's Day 兒童節
 https://www.youtube.com/watch?v=n7lswV4cPtw | SF06 8 情人節
 https://www.youtube.com/watch?v=3UFO668O_mM | SF06 8 Easter
@@ -207,6 +222,8 @@ https://www.youtube.com/watch?v=X7c_DCLJhDo | SF06 8 Father's Day
 // 學校的幼幼班兒歌教材，跟學校 YouTube 播放清單的順序一樣（01 上學去 → 11 新年）
 // https://www.youtube.com/playlist?list=PLs7dlM_zimeMzTE7BdIuNRc4fyT-E4ITl
 // 之後發②、③的話，在下面另外開一個《喵喵歡樂唱②》就好
+// 階段寫在分區這一層，之後加的②、③也會跟著是幼幼班
+階段: 幼幼班
 
 《喵喵歡樂唱①》
 https://www.youtube.com/watch?v=G5JHXLTNG_0 | 上學去

@@ -13,8 +13,11 @@ const props = defineProps<{
   badge?: string
   /** 收起時顯示的一行摘要，讓家長不用展開就知道現在的設定 */
   summary?: string
-  /** 版面寬度：'2' 佔兩欄、'all' 佔整列 */
-  span?: '2' | 'all'
+  /**
+   * 版面寬度：'2' 佔兩欄（兩欄版面時就是整列）、'all' 佔整列、
+   * 'wide' 三欄時佔兩欄、兩欄時只佔一欄（旁邊還能並排一個小面板）
+   */
+  span?: '2' | 'all' | 'wide'
 }>()
 
 const { isCollapsed, toggle } = useCollapse()
@@ -22,7 +25,7 @@ const collapsed = computed(() => isCollapsed(props.id))
 </script>
 
 <template>
-  <div class="panel" :class="[span === '2' && 'span-2', span === 'all' && 'span-all']">
+  <div class="panel" :class="span && `span-${span}`">
     <h2>
       <button
         class="panel-toggle"
@@ -37,7 +40,8 @@ const collapsed = computed(() => isCollapsed(props.id))
         <span v-if="collapsed && summary" class="panel-summary">{{ summary }}</span>
       </button>
 
-      <slot name="header-extra" />
+      <!-- 復原鈕、拖曳提示這些只有打開時用得到，收起時拿掉，標題列才整齊 -->
+      <slot v-if="!collapsed" name="header-extra" />
     </h2>
 
     <div v-show="!collapsed" class="panel-content">
