@@ -61,6 +61,9 @@ const restDone = ref(false)
 
 const restText = computed(() => countdown(restRemainingSeconds.value))
 
+/** 額度用完、休息中、休息完等小朋友按「繼續看」——這三種畫面都蓋著遮罩，影片不准在底下偷偷播 */
+const blocked = computed(() => overlay.value === 'limit' || isResting.value || restDone.value)
+
 /** 記住看到哪裡，重開 App 時片單畫面才能問要不要接續播放；節流到每 5 秒存一次，離開時再補存一次 */
 let lastSavedAt = 0
 function saveProgress() {
@@ -167,6 +170,14 @@ watch(isResting, (resting, was) => {
   } else if (was) {
     restDone.value = true
   }
+})
+
+/**
+ * 保險：遮罩蓋著的時候不管怎麼被叫醒（換片自動播放、拖進度條、緩衝完自動接著播），
+ * 只要播放器回報「正在播」就立刻再停一次，不會出現看不到畫面卻聽得到聲音的情況。
+ */
+watch([status, blocked], ([s, b]) => {
+  if (b && s === 'playing') pause()
 })
 
 function continueWatching() {
@@ -324,10 +335,10 @@ async function toggleFullscreen() {
         </div>
       </div>
 
-      <!-- 暫停時整面遮蔽：YouTube 在暫停狀態可能浮出 "More videos" 網格 -->
+      <!-- 暫停時整面遮蔽：YouTube 在暫停狀態可能浮出 "More videos" 網格；點一下就繼續播，所以圖示畫播放鍵 -->
       <div v-else-if="status === 'paused'" class="veil" @click="toggle">
         <div class="veil-badge">
-          <svg viewBox="0 0 24 24"><path d="M8 5h3v14H8zM13 5h3v14h-3z" /></svg>
+          <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
         </div>
         <p>暫停中</p>
       </div>
@@ -354,12 +365,12 @@ async function toggleFullscreen() {
       </button>
 
       <!-- 窄螢幕比較少用，跟播放速度／重複放同一頁；夠寬的桌面視窗仍維持原本位置 -->
-      <button class="ctrl-btn ctrl-page-b" aria-label="倒退 10 秒" @click="onSeekBack">
+      <button class="ctrl-btn ctrl-page-b" aria-label="倒退 10 秒" :disabled="blocked" @click="onSeekBack">
         <svg viewBox="0 0 24 24"><path d="M12 5V1L7 6l5 5V7a6 6 0 1 1-6 6H4a8 8 0 1 0 8-8z" /></svg>
         <span>10秒</span>
       </button>
 
-      <button v-if="queue.length > 1" class="ctrl-btn ctrl-page-a" aria-label="上一首" @click="playPrev">
+      <button v-if="queue.length > 1" class="ctrl-btn ctrl-page-a" aria-label="上一首" :disabled="blocked" @click="playPrev">
         <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z" /></svg>
       </button>
 
@@ -368,12 +379,12 @@ async function toggleFullscreen() {
         拿掉能讓控制列更寬鬆。電視遙控器沒有「點畫面」這個手勢，一定要留一個看得到、
         能被遙控器移入焦點的播放鈕，所以只在電視模式才顯示。
       -->
-      <button v-if="isTv" ref="playBtnRef" class="ctrl-btn ctrl-play ctrl-page-a" aria-label="播放或暫停" @click="toggle">
+      <button v-if="isTv" ref="playBtnRef" class="ctrl-btn ctrl-play ctrl-page-a" aria-label="播放或暫停" :disabled="blocked" @click="toggle">
         <svg v-if="isPlaying" viewBox="0 0 24 24"><path d="M8 5h3v14H8zM13 5h3v14h-3z" /></svg>
         <svg v-else viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
       </button>
 
-      <button v-if="queue.length > 1" class="ctrl-btn ctrl-page-a" aria-label="下一首" @click="playNext">
+      <button v-if="queue.length > 1" class="ctrl-btn ctrl-page-a" aria-label="下一首" :disabled="blocked" @click="playNext">
         <svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z" /></svg>
       </button>
 
@@ -391,6 +402,7 @@ async function toggleFullscreen() {
           max="1000"
           step="1"
           :value="seekValue"
+          :disabled="blocked"
           aria-label="播放進度"
           @input="onSeekInput"
           @change="onSeekChange"
@@ -402,7 +414,7 @@ async function toggleFullscreen() {
         <svg viewBox="0 0 24 24"><path d="M15.4 5.4 16.8 6.8 10.6 13l6.2 6.2-1.4 1.4L7.8 13z" /></svg>
       </button>
 
-      <button class="ctrl-btn ctrl-speed ctrl-page-b" aria-label="播放速度" @click="cycleSpeed">
+      <button class="ctrl-btn ctrl-speed ctrl-page-b" aria-label="播放速度" :disabled="blocked" @click="cycleSpeed">
         <span class="rate-label">{{ speedLabel }}</span>
       </button>
 
@@ -411,6 +423,7 @@ async function toggleFullscreen() {
         :class="{ 'is-active': repeat }"
         aria-label="重複播放這一部"
         :aria-pressed="repeat"
+        :disabled="blocked"
         @click="toggleRepeat"
       >
         <svg viewBox="0 0 24 24"><path d="M17 1l4 4-4 4V6H7a4 4 0 0 0-4 4v1H1v-1a6 6 0 0 1 6-6h10V1zM7 23l-4-4 4-4v3h10a4 4 0 0 0 4-4v-1h2v1a6 6 0 0 1-6 6H7v3z" /></svg>
@@ -583,6 +596,9 @@ async function toggleFullscreen() {
 .ctrl-btn:active { transform: scale(.92); background: var(--line); }
 .ctrl-btn svg { width: 26px; height: 26px; fill: currentColor; }
 
+/* 休息或額度用完時，除了「返回」和全螢幕，其他控制鈕都暫時停用，看得出來按不下去 */
+.ctrl-btn:disabled { opacity: .35; pointer-events: none; }
+
 .ctrl-back { background: var(--accent-2); color: var(--on-accent-2); }
 
 /* 重複播放開啟時反白，小朋友一眼看出目前是開的 */
@@ -645,6 +661,7 @@ async function toggleFullscreen() {
   background: var(--accent);
   box-shadow: 0 2px 8px rgba(0, 0, 0, .5);
 }
+.seek:disabled { opacity: .35; cursor: default; }
 .seek::-moz-range-track { height: 12px; border-radius: 6px; background: var(--line); }
 .seek::-moz-range-thumb { width: 30px; height: 30px; border: 0; border-radius: 50%; background: var(--accent); }
 
