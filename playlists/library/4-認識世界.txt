@@ -4,8 +4,13 @@
 //
 // 寫法和規則（字卡本、階段、句子、正面問什麼……）看同一個資料夾的 README.md
 // 跟「英文單字」一樣是中英雙語的字卡（照字卡上方選的語言唸），差別在照「認識什麼」分，不是照單字難度分。
-// 幼兒園課綱的六大領域都放一點：植物和動物（認知）、五感（身體）、冷靜下來（情緒）、好朋友（社會）、
-// 台灣小吃和世界各國（文化）、美勞時間（美感）
+// 幼兒園課綱的六大領域都放一點：
+//   身體動作與健康：五感、一天作息、洗手步驟、健康小習慣、看醫生、不舒服、安全守則、地震怎麼辦
+//   認知：植物、動物寶寶、動物住哪裡、恐龍、地形、科學小幫手、環保好習慣
+//   語文：每本字卡都是中英雙語，說的、聽的都是日常句子
+//   社會：好朋友、親戚朋友、超市購物、台灣好地方、世界各國、七大洲、台灣小吃
+//   情緒：冷靜下來
+//   美感：美勞時間
 
 # 認識世界 🌏
 
@@ -13,7 +18,7 @@
 // 摸得到、看得到的植物和動物：去公園、去動物園的時候拿出來對照
 
 字卡本: 植物 | Plants
-階段: 小班
+階段: 幼幼班～小班
 // 從種子到大樹：Plant a seed. → The sprout grows up. → The tree is tall.
 卡: seed | 種子 | 🫘 | Plant a seed. | The seed is small. | The seed grows into a plant.
 卡: sprout | 嫩芽 | 🌱 | Look, a little sprout! | The sprout grows up, up, up. | Water the sprout.
@@ -27,7 +32,7 @@
 卡: bamboo | 竹子 | 🎋 | The panda eats bamboo. | The bamboo is tall. | The bamboo is green.
 
 字卡本: 動物寶寶 | Animal Babies
-階段: 中班
+階段: 小班～中班
 // 動物寶寶有自己的名字：小狗是 puppy、小貓是 kitten。句子先說「A baby dog is a puppy.」把大的小的連起來
 // chick 的句子跟「鳥類」那本同一組
 卡: puppy | 小狗 | 🐶 | A baby dog is a puppy. | The puppy wags its tail. | Woof! The puppy wants to play.
@@ -41,7 +46,7 @@
 卡: joey | 小袋鼠 | 🦘 | A baby kangaroo is a joey. | The joey lives in mom's pocket. | Peekaboo, joey!
 
 字卡本: 動物住哪裡 | Animal Homes
-階段: 中班～大班
+階段: 小班～大班
 // 每張卡是一個家，句子說誰住在這裡：The spider lives in a web.。nest 的句子跟「ABC 圖卡」同一組
 卡: nest | 鳥巢 | 🪺 | The bird is in the nest. | There are eggs in the nest. | The bird makes a nest.
 卡: web | 蜘蛛網 | 🕸️ | The spider lives in a web. | The spider makes a web. | Look! A bug is in the web.
@@ -53,11 +58,61 @@
 卡: desert | 沙漠 | 🏜️ | The camel lives in the desert. | The desert is hot and dry. | There is lots of sand in the desert.
 卡: farm | 農場 | 🌾 | The cow lives on the farm. | The farmer works on the farm. | Let's visit the farm!
 
+字卡本: 恐龍 | Dinosaurs
+階段: 小班～中班
+// 好久好久以前的大動物：博物館裡看得到骨頭和蛋。volcano 的句子跟「ABC 圖卡」同一組
+卡: T. rex | 暴龍 | 🦖 | The T. rex has sharp teeth. | Roar! The T. rex is big. | The T. rex walks on two legs.
+卡: long-neck dinosaur | 長頸龍 | 🦕 | The long-neck dinosaur is very tall. | It eats leaves from the trees. | The long-neck dinosaur has a long tail.
+卡: plant-eater | 草食恐龍 | 🌿 | The plant-eater eats leaves. | The plant-eater is gentle. | Plant-eaters eat grass and leaves.
+卡: meat-eater | 肉食恐龍 | 🍖 | The meat-eater has sharp teeth. | Look out! A meat-eater. | The meat-eater eats meat.
+卡: dinosaur egg | 恐龍蛋 | 🥚 | Look at the big egg! | The dinosaur egg is big. | Crack! A baby dinosaur comes out.
+卡: footprint | 腳印 | 🐾 | Look at the footprints! | The footprint is big. | Follow the footprints.
+卡: fossil | 化石 | 🦴 | Look, a fossil! | The fossil is very old. | The scientist finds a fossil.
+卡: volcano | 火山 | 🌋 | The volcano is very hot! | The volcano is a big mountain. | Look! Smoke from the volcano.
+卡: museum | 博物館 | 🏛️ | Let's go to the museum. | The museum has dinosaur bones. | Shh! Be quiet in the museum.
+
+字卡本: 地形 | Landforms
+階段: 小班～大班
+// 去郊遊會看到的大地：山、河、海、島。mountain、sea、desert、forest、volcano 的句子跟別的字卡本同一組
+卡: mountain | 山 | ⛰️ | Let's climb the mountain. | The mountain is very high. | I see a big mountain.
+卡: river | 河 | 🏞️ | The river runs to the sea. | Fish swim in the river. | Let's cross the river.
+卡: sea | 大海 | 🌊 | Fish live in the sea. | The sea is big and blue. | The whale lives in the sea.
+卡: island | 小島 | 🏝️ | The island is in the sea. | I see a palm tree on the island. | Let's go to the island!
+卡: waterfall | 瀑布 | 💦 | The waterfall is high. | Splash! The waterfall is loud. | Water falls down the waterfall.
+卡: cave | 山洞 | 🕳️ | The bear sleeps in the cave. | The cave is dark. | Let's go into the cave with a flashlight.
+卡: forest | 森林 | 🌲 | The bear lives in the forest. | The forest has many trees. | The owl lives in the forest.
+卡: desert | 沙漠 | 🏜️ | The camel lives in the desert. | The desert is hot and dry. | There is lots of sand in the desert.
+卡: volcano | 火山 | 🌋 | The volcano is very hot! | The volcano is a big mountain. | Look! Smoke from the volcano.
+
+字卡本: 科學小幫手 | Science Tools
+階段: 中班～大班
+// 探索、做實驗用的東西。thermometer 的句子跟「看醫生」同一組，light bulb 的句子跟「生活用品 ABC」同一組
+卡: magnet | 磁鐵 | 🧲 | The magnet sticks to metal. | Pull! The magnet is strong. | What does the magnet pick up?
+卡: magnifying glass | 放大鏡 | 🔍 | Look through the magnifying glass. | The magnifying glass makes it big. | I see a tiny ant with the magnifying glass.
+卡: microscope | 顯微鏡 | 🔬 | Look through the microscope. | The microscope shows tiny things. | The scientist uses a microscope.
+卡: test tube | 試管 | 🧪 | Pour water into the test tube. | The test tube is made of glass. | Mix, mix, mix in the test tube!
+卡: battery | 電池 | 🔋 | The toy needs a battery. | The battery gives power. | Put the battery in the robot.
+卡: scale | 磅秤 | ⚖️ | Weigh it on the scale. | Which one is heavy on the scale? | The scale tells us how heavy it is.
+卡: thermometer | 體溫計 | 🌡️ | Check your temperature with the thermometer. | Beep, beep! The thermometer is done. | No fever! The thermometer says 36.
+卡: light bulb | 燈泡 | 💡 | Turn on the light. | The light bulb is bright. | I have an idea!
+
+字卡本: 環保好習慣 | Green Habits
+階段: 小班～大班
+// 愛護地球從小事做起：垃圾分類、關燈、省水。卡片上是做法，問「What should we do?」，問的時候不加 the
+卡: recycle | 資源回收 | ♻️ | Let's recycle. | Recycle paper and bottles. | Put it in the recycle bin.
+卡: turn off the light | 隨手關燈 | 💡 | Turn off the light. | Save energy. Turn off the light. | Click! The light is off.
+卡: save water | 節約用水 | 🚿 | Save water. | Turn off the water. | Water is precious.
+卡: put trash in the bin | 垃圾丟進垃圾桶 | 🗑️ | Put trash in the bin. | Keep our park clean. | Don't litter!
+卡: plant a tree | 種樹 | 🌱 | Let's plant a tree. | Trees give us clean air. | Water the little tree.
+卡: bring your own bag | 自備購物袋 | 🛍️ | Bring your own bag. | Use a cloth bag. | Say no to plastic bags!
+卡: ride a bike | 騎腳踏車 | 🚲 | Ride a bike, not a car. | Bikes are good for the Earth. | Let's ride a bike to the park.
+卡: finish your food | 吃光光不浪費 | 🍚 | Finish your food. | Don't waste food. | Clean plate, happy Earth!
+
 【我自己】🧒
 // 我的身體會感覺、我的心情會變：認識自己，也學會照顧自己
 
 字卡本: 五感 | Five Senses
-階段: 小班～中班
+階段: 幼幼班～中班
 // 正面是眼睛、耳朵，問「What can you do with it?」（中文：可以用它做什麼？），答案是 see、hear。問的時候不加 the
 卡: see | 看 | 👀 | I see with my eyes. | Look! What do you see? | I can see a rainbow.
 卡: hear | 聽 | 👂 | I hear with my ears. | Shh! What do you hear? | I can hear a bird.
@@ -66,7 +121,7 @@
 卡: touch | 摸 | ✋ | I touch with my hands. | Touch it. Is it soft? | The teddy bear feels soft.
 
 字卡本: 冷靜下來 | Calm Down
-階段: 小班～中班
+階段: 幼幼班～中班
 // 接在「心情 Feelings」後面學：生氣、難過的時候可以怎麼做。卡片上是做法，問「What should we do?」
 卡: take a deep breath | 深呼吸 | 🌬️ | Take a deep breath. | Breathe in, breathe out. | Smell the flower, blow out the candle.
 卡: count to ten | 數到十 | 🔟 | Count to ten. | One, two, three... ten. | Count slowly. I feel better.
@@ -74,6 +129,88 @@
 卡: talk about it | 說出來 | 🗣️ | Tell me how you feel. | I feel angry. Can you help me? | Use your words.
 卡: ask for help | 找大人幫忙 | 🙋 | Ask a grown-up for help. | Can you help me, please? | It's okay to ask for help.
 卡: take a break | 休息一下 | 😌 | Take a break. | Sit in a quiet place. | Rest for a little while.
+
+字卡本: 一天作息 | Daily Routine
+階段: 幼幼班～中班
+// 從起床到睡覺的一天：照順序一張一張念，一天在做什麼就會說了。take a bath、go to bed 的句子跟「好習慣」同一組。問「What is he doing?」，問的時候不加 the
+卡: wake up | 起床 | ⏰ | Wake up! It's morning. | Rise and shine! | Good morning! Time to wake up.
+卡: get dressed | 穿衣服 | 👕 | Get dressed, please. | Put on your shirt and pants. | I can get dressed by myself!
+卡: eat breakfast | 吃早餐 | 🥞 | Let's eat breakfast. | I eat breakfast at home. | Yum! Breakfast is ready.
+卡: go to school | 去上學 | 🚌 | Time to go to school. | I go to school by bus. | Bye-bye, Mom! I'm going to school.
+卡: eat lunch | 吃午餐 | 🍱 | Let's eat lunch. | I eat lunch at school. | Lunch time! Wash your hands.
+卡: take a nap | 睡午覺 | 😴 | Time to take a nap. | Close your eyes and rest. | Shh! Everyone is taking a nap.
+卡: go home | 回家 | 🏠 | School is over. Let's go home! | Mommy picks me up. | Home, sweet home!
+卡: eat dinner | 吃晚餐 | 🍲 | Time for dinner. | We eat dinner together. | Yum! I like dinner.
+卡: take a bath | 洗澡 | 🛁 | Time for a bath! | Splash, splash, splash! | Wash your hair and your toes.
+卡: go to bed | 睡覺 | 🛏️ | Time for bed. | Close your eyes. Good night! | Sleep tight.
+
+字卡本: 洗手步驟 | Hand Washing Steps
+階段: 幼幼班～小班
+// 洗手一步一步來。卡片上是要做的事，問「What should we do?」，問的時候不加 the。「好習慣」的 wash hands 有一首洗手歌可以一起唱
+卡: wet your hands | 弄濕雙手 | 💧 | Wet your hands. | Turn on the water. | Wet your hands with water.
+卡: use soap | 擠肥皂 | 🧼 | Use some soap. | Pump the soap. | Soap makes bubbles!
+卡: rub your hands | 搓一搓 | 🤲 | Rub, rub, rub your hands. | Rub your palms together. | Rub for twenty seconds.
+卡: scrub your fingers | 搓指縫 | 🖐️ | Scrub between your fingers. | Scrub, scrub, scrub your fingers. | Don't forget your thumbs!
+卡: rinse your hands | 沖乾淨 | 🚰 | Rinse your hands. | Wash the soap away. | Rinse, rinse, rinse!
+卡: dry your hands | 擦乾 | 🧻 | Dry your hands. | Dry your hands with a towel. | Now your hands are clean!
+
+字卡本: 健康小習慣 | Healthy Habits
+階段: 幼幼班～中班
+// 讓身體長得壯的小事。卡片上是做法，問「What should we do?」，問的時候不加 the
+卡: eat vegetables | 吃青菜 | 🥦 | Eat your vegetables. | Eat green and orange vegetables. | Vegetables help me grow.
+卡: eat fruit | 吃水果 | 🍎 | Eat some fruit. | An apple a day! | Fruit is sweet and healthy.
+卡: exercise | 運動 | 🤸 | Let's exercise! | Jump, jump, jump! | Exercise makes me strong.
+卡: sleep early | 早點睡 | 🛌 | Go to bed early. | Sleep makes me grow. | Good night! Sleep early.
+卡: cover your cough | 咳嗽要遮住 | 🤧 | Cover your cough. | Cough into your elbow. | Cover your mouth.
+卡: wear sunscreen | 擦防曬 | 🧴 | Wear sunscreen. | Put sunscreen on your face. | The sun is strong today.
+卡: play outside | 到戶外玩 | 🌳 | Let's play outside. | Get some fresh air. | Run and jump in the park.
+卡: sit up straight | 坐好 | 🪑 | Sit up straight. | Back straight, feet down. | Sit nicely at the table.
+
+字卡本: 看醫生 | At the Doctor
+階段: 幼幼班～大班
+// 生病或打預防針的時候會碰到的人和東西。doctor、band-aid、hospital 的句子跟別的字卡本同一組
+卡: doctor | 醫生 | 🧑‍⚕️ | The doctor helps me feel better. | Say ahh for the doctor. | I want to be a doctor.
+卡: nurse | 護理師 | 👩‍⚕️ | The nurse helps the doctor. | The nurse is kind. | Thank you, nurse!
+卡: hospital | 醫院 | 🏥 | The doctor works at the hospital. | The ambulance goes to the hospital. | Get well soon!
+卡: thermometer | 體溫計 | 🌡️ | Check your temperature with the thermometer. | Beep, beep! The thermometer is done. | No fever! The thermometer says 36.
+卡: stethoscope | 聽診器 | 🩺 | The doctor listens with a stethoscope. | Breathe in, breathe out. | Listen to my heart with the stethoscope.
+卡: medicine | 藥 | 💊 | Take your medicine. | The medicine helps me get well. | Take medicine with water.
+卡: shot | 打針 | 💉 | The doctor gives me a shot. | Ouch! It's just a little shot. | Be brave. The shot is quick.
+卡: band-aid | OK繃 | 🩹 | I have a band-aid. | The band-aid helps my knee. | Ouch! May I have a band-aid, please?
+卡: mask | 口罩 | 😷 | Wear a mask. | The mask covers my nose and mouth. | Put on your mask when you are sick.
+
+字卡本: 不舒服 | Not Feeling Well
+階段: 幼幼班～大班
+// 身體哪裡不舒服要會說，大人才知道怎麼幫你。卡片上是症狀，問「How does he feel?」，問的時候不加 the
+卡: fever | 發燒 | 🥵 | I have a fever. | My head is hot. | The doctor checks my fever.
+卡: cough | 咳嗽 | 😷 | I have a cough. | Cough into your elbow. | Cough, cough! I'm sick.
+卡: sneeze | 打噴嚏 | 🤧 | Achoo! I sneeze. | Cover your nose when you sneeze. | Bless you!
+卡: runny nose | 流鼻水 | 👃 | I have a runny nose. | Use a tissue for your runny nose. | Sniff, sniff!
+卡: headache | 頭痛 | 🤕 | I have a headache. | My head hurts. | I need to rest.
+卡: stomachache | 肚子痛 | 🤢 | I have a stomachache. | My tummy hurts. | Let's see the doctor.
+卡: toothache | 牙齒痛 | 🦷 | I have a toothache. | My tooth hurts. | Let's see the dentist.
+
+字卡本: 安全守則 | Safety Rules
+階段: 幼幼班～中班
+// 在家、在外面都要記得的規則。卡片上是該做的事，問「What should we do?」，問的時候不加 the
+卡: don't touch | 不要亂碰 | 🚫 | Don't touch! It's hot. | Don't touch the plug. | Don't touch the sharp knife.
+卡: hold the handrail | 扶好扶手 | 🪜 | Hold the handrail. | Hold on tight. | Walk down the stairs slowly.
+卡: stay with a grown-up | 跟著大人 | 👨‍👧 | Stay with a grown-up. | Hold my hand in a crowd. | Don't go away alone.
+卡: say no to strangers | 不跟陌生人走 | 🙅 | Say no to strangers. | Don't go with strangers. | Go to a grown-up for help.
+卡: call for help | 大聲求救 | 📣 | Call for help. | Shout, "Help!" | Tell a grown-up.
+卡: don't put it in your mouth | 不要放進嘴巴 | 🙊 | Don't put it in your mouth. | Small things are not food. | Spit it out, please.
+卡: stay away from fire | 遠離火 | 🔥 | Stay away from fire. | Fire is hot! | Only grown-ups use fire.
+
+字卡本: 地震怎麼辦 | Earthquake Drill
+階段: 幼幼班～大班
+// 學校的防災演練：趴下、掩護、穩住。卡片上是該做的事，問「What should we do?」，問的時候不加 the
+卡: drop | 趴下 | 🧎 | Drop down! | Drop to the floor. | Drop, cover, and hold on.
+卡: cover your head | 保護頭 | 🙇 | Cover your head. | Cover your head with your hands. | Keep your head safe.
+卡: hold on | 抓緊桌腳 | 🪑 | Hold on to the table leg. | Hold on tight. | Stay under the table.
+卡: stay calm | 保持冷靜 | 😌 | Stay calm. | Take a deep breath. | We are safe together.
+卡: line up quietly | 安靜排隊 | 🚸 | Line up quietly. | Walk, don't run. | Follow your teacher.
+卡: go outside | 到空地 | 🏞️ | Go outside to the open space. | Walk to the playground. | Stay together outside.
+卡: listen to the teacher | 聽老師的話 | 🧑‍🏫 | Listen to the teacher. | Follow the teacher. | The teacher will help us.
 
 【一起生活】🏘️
 // 跟朋友、家人一起：怎麼當好朋友、我們吃什麼、一起畫畫
@@ -91,7 +228,7 @@
 卡: wait in line | 排隊 | 🧍 | Wait in line. | Stand in line, please. | One by one, in a line.
 
 字卡本: 台灣小吃 | Taiwanese Food
-階段: 小班～中班
+階段: 幼幼班～中班
 // 我們每天吃的東西：早餐店、便利商店、夜市都看得到。圖是最接近的 emoji（飯糰是三角飯糰、香腸用熱狗的圖）
 卡: bubble tea | 珍珠奶茶 | 🧋 | I like bubble tea. | The bubbles are chewy. | Bubble tea is from Taiwan!
 卡: dumpling | 水餃 | 🥟 | Yum, a dumpling! | Dip the dumpling in the sauce. | Let's make dumplings.
@@ -105,7 +242,7 @@
 卡: shaved ice | 剉冰 | 🍧 | Shaved ice is cold. | I want mango shaved ice! | Yum! Shaved ice on a hot day.
 
 字卡本: 美勞時間 | Art Time
-階段: 小班
+階段: 幼幼班～小班
 // 畫畫、剪貼用的東西。scissors、pencil 的句子跟「生活用品 ABC」同一組
 卡: crayon | 蠟筆 | 🖍️ | Draw with a crayon. | My crayon is red. | Color the picture with crayons.
 卡: paintbrush | 水彩筆 | 🖌️ | Dip the paintbrush in the paint. | Paint with a paintbrush. | Wash the paintbrush.
@@ -115,8 +252,45 @@
 卡: pencil | 鉛筆 | ✏️ | Draw with a pencil. | My pencil is yellow. | Write your name with a pencil.
 卡: picture | 畫 | 🖼️ | Look at my picture! | I drew a picture for you. | Hang the picture on the wall.
 
+字卡本: 親戚朋友 | Relatives and Friends
+階段: 幼幼班～中班
+// 爸爸媽媽以外，常常見面的人。台灣的叫法比英文細：uncle 是叔叔、舅舅、伯伯，aunt 是阿姨、姑姑。問「Who is this?」
+// teacher、classmate 的句子跟「教室裡」同一組
+卡: uncle | 叔叔、舅舅 | 🧔 | Hello, Uncle! | My uncle is funny. | Uncle gives me a big hug.
+卡: aunt | 阿姨、姑姑 | 👩‍🦰 | Hello, Auntie! | My aunt is nice. | Auntie makes yummy food.
+卡: cousin | 表兄弟姊妹、堂兄弟姊妹 | 🧒 | Hello, cousin! | My cousin is my friend. | I play with my cousin.
+卡: grandparents | 阿公阿嬤 | 👴👵 | I love my grandparents. | My grandparents live far away. | Let's visit our grandparents.
+卡: twins | 雙胞胎 | 👯 | We are twins! | The twins look the same. | My twin sister likes to dance.
+卡: friend | 朋友 | 👫 | Hello, friend! | A friend plays with me. | You are my good friend.
+卡: classmate | 同學 | 🧑‍🤝‍🧑 | Hello, classmate! | My classmate is kind. | I play with my classmates.
+卡: teacher | 老師 | 🧑‍🏫 | Good morning, teacher! | The teacher reads us a story. | Listen to the teacher.
+
+字卡本: 超市購物 | Shopping
+階段: 小班～大班
+// 跟大人去超市：推車、挑東西、付錢。圖是最接近的 emoji
+卡: shopping cart | 購物車 | 🛒 | Push the shopping cart. | The shopping cart is big. | Put the milk in the shopping cart.
+卡: basket | 籃子 | 🧺 | Carry the basket. | The basket is full of apples. | Put the eggs in the basket.
+卡: shopping bag | 購物袋 | 🛍️ | Here is your shopping bag. | The shopping bag is full. | Put the food in the shopping bag.
+卡: price tag | 價錢牌 | 🏷️ | Look at the price tag. | How much is it? Check the price tag. | The price tag says ten dollars.
+卡: money | 錢 | 💰 | I have some money. | Money is for buying things. | Save your money in the piggy bank.
+卡: coin | 硬幣 | 🪙 | The coin is round. | I have a coin. | Put the coin in the piggy bank.
+卡: wallet | 皮夾 | 👛 | Mommy has a wallet. | The wallet has money in it. | Where is my wallet?
+卡: cashier | 收銀員 | 🧑‍💼 | The cashier says hello. | Pay the cashier. | Thank you, cashier!
+卡: receipt | 發票 | 🧾 | Here is your receipt. | The receipt shows the price. | Keep the receipt, please.
+
 【世界】🌏
 // 每個國家怎麼說 hello。圖是國旗（iPad、手機、電視都看得到；Windows 的瀏覽器會顯示成兩個英文字母）
+
+字卡本: 台灣好地方 | Places in Taiwan
+階段: 小班～中班
+// 我們住的台灣有哪些好地方。卡片上是地名，問「Where is this?」，問的時候不加 the。圖是最接近的 emoji
+卡: Taipei 101 | 台北101 | 🏙️ | Taipei 101 is very tall. | Look! Taipei 101 is in Taipei. | Let's go up Taipei 101.
+卡: Sun Moon Lake | 日月潭 | 🏞️ | Sun Moon Lake is in Nantou. | The water at Sun Moon Lake is blue. | Let's go to Sun Moon Lake!
+卡: Alishan | 阿里山 | 🌲 | Alishan has many tall trees. | The sunrise at Alishan is pretty. | Let's take the small train in Alishan.
+卡: Jade Mountain | 玉山 | 🗻 | Jade Mountain is the highest mountain in Taiwan. | Jade Mountain is very high. | Snow falls on Jade Mountain.
+卡: Kenting | 墾丁 | 🏖️ | Kenting has a beautiful beach. | Let's swim in Kenting. | The sun is hot in Kenting.
+卡: Jiufen | 九份 | 🏮 | Jiufen has red lanterns. | Let's walk in Jiufen. | Jiufen is on a mountain by the sea.
+卡: Tamsui | 淡水 | 🌅 | The sunset in Tamsui is pretty. | Let's watch the sunset in Tamsui. | Tamsui has a river and a pier.
 
 字卡本: 世界各國 | Around the World
 階段: 大班
@@ -133,32 +307,61 @@
 卡: America | 美國 | 🇺🇸 | Hi! Hello from America. | America is very big. | People speak English in America.
 卡: Australia | 澳洲 | 🇦🇺 | G'day! Hello from Australia. | Australia has kangaroos. | Koalas live in Australia.
 
+字卡本: 世界各國 2 | Around the World 2
+階段: 大班
+// 接在「世界各國」後面。卡片上是國家的名字，問「Where is this?」，問的時候不加 the。句子第一句是那個國家的 hello
+卡: China | 中國 | 🇨🇳 | Ni hao! Hello from China. | China has pandas. | The Great Wall is in China.
+卡: England | 英國 | 🇬🇧 | Hello! Hello from England. | England has a big clock, Big Ben. | It rains a lot in England.
+卡: Germany | 德國 | 🇩🇪 | Hallo! Hello from Germany. | Germany has big castles. | Germany has yummy sausages.
+卡: Italy | 義大利 | 🇮🇹 | Ciao! Hello from Italy. | Italy has pizza and pasta. | Italy looks like a boot.
+卡: Canada | 加拿大 | 🇨🇦 | Hello! Hello from Canada. | Canada has snow and maple trees. | Bears live in Canada.
+卡: Mexico | 墨西哥 | 🇲🇽 | Hola! Hello from Mexico. | Mexico has tacos. | Let's eat tacos in Mexico!
+卡: Egypt | 埃及 | 🇪🇬 | Marhaba! Hello from Egypt. | Egypt has pyramids. | Camels walk in the desert in Egypt.
+卡: Vietnam | 越南 | 🇻🇳 | Xin chao! Hello from Vietnam. | Vietnam has yummy noodles. | Let's go to Vietnam!
+卡: Singapore | 新加坡 | 🇸🇬 | Hello! Hello from Singapore. | Singapore has the Merlion. | Singapore is small but busy.
+卡: New Zealand | 紐西蘭 | 🇳🇿 | Kia ora! Hello from New Zealand. | New Zealand has many sheep. | Kiwis live in New Zealand.
+
+字卡本: 七大洲 | Continents
+階段: 大班
+// 世界分成七大洲，每個洲挑一種住在那裡的動物。卡片上是洲的名字，問「Where is this?」，問的時候不加 the
+卡: Asia | 亞洲 | 🐼 | Asia is the biggest continent. | Pandas live in Asia. | Taiwan is in Asia.
+卡: Africa | 非洲 | 🦁 | Africa is hot and sunny. | Lions live in Africa. | Giraffes and zebras live in Africa.
+卡: Europe | 歐洲 | 🏰 | Europe has old castles. | France and Italy are in Europe. | Let's visit Europe.
+卡: North America | 北美洲 | 🦅 | North America has big mountains. | Eagles fly in North America. | Canada and America are in North America.
+卡: South America | 南美洲 | 🦙 | South America has a big rainforest. | Llamas live in South America. | Brazil is in South America.
+卡: Oceania | 大洋洲 | 🦘 | Oceania has many islands. | Kangaroos live in Oceania. | Australia and New Zealand are in Oceania.
+卡: Antarctica | 南極洲 | 🐧 | Antarctica is very cold. | Penguins live in Antarctica. | Antarctica is white with snow and ice.
+
 【影片】🎬
-// 認識世界的兒歌，一樣自己一區。都是官方頻道（Sesame Street、Super Simple、Jack Hartmann、Pinkfong……），加進來前確認過允許嵌入播放
+// 認識世界的兒歌，一樣自己一區。都是官方頻道（Sesame Street、Super Simple、Jack Hartmann、Pinkfong、寶寶巴士、貝貝彬……），加進來前確認過允許嵌入播放
 
 《大自然 🌱》
 https://youtu.be/eImKfbwXGQ0 | 植物 Elmo's Apple Tree Song
-階段: 小班
+階段: 幼幼班～小班
 https://youtu.be/DPL0F2V9_gY | 植物 What a Plant Needs
 階段: 中班
 https://youtu.be/VoSrZ_lE8eQ | 動物寶寶 Baby Animals
-階段: 中班
+階段: 小班～中班
 https://youtu.be/R3ZVxuflUY0 | 動物寶寶 Baby Farm Animals
-階段: 中班
+階段: 小班～中班
 https://youtu.be/51fBJ0D3VsQ | 動物的家 Animal Houses
-階段: 中班
+階段: 小班～中班
 https://youtu.be/DTp_YFZcvoU | 動物的家 Animal Habitats
 階段: 大班
+https://youtu.be/P46vcU5My9Q | 環保 Reduce Reuse Recycle（Kiboomers）
+階段: 小班～大班
 
 《我自己 🧒》
 https://youtu.be/KVymeq5NSTI | 五感 Five Senses
-階段: 小班
+階段: 幼幼班～小班
 https://youtu.be/uW4Lyz52Q8w | 五感 My 5 Senses
 階段: 中班
 https://youtu.be/_mZbzDOpylA | 冷靜 Belly Breathe（芝麻街）
-階段: 小班～中班
+階段: 幼幼班～中班
 https://youtu.be/OrbN-nSTe-E | 冷靜 When You Feel So Mad（小老虎丹尼爾）
-階段: 小班～中班
+階段: 幼幼班～中班
+https://youtu.be/9LARhB-2Byc | 地震安全歌（寶寶巴士）
+階段: 小班～大班
 
 《一起生活 🏘️》
 https://youtu.be/7p38bHv7Zxc | 輪流 Let's Take Turns
@@ -179,5 +382,9 @@ https://youtu.be/17nQ74S5SfU | 工程車 Construction Machines
 階段: 中班
 https://youtu.be/TjmGTbNLj6Q | 恐龍 10 Little Dinosaurs
 階段: 小班～中班
+https://youtu.be/MdYsH1GgQRQ | 恐龍 10 Little Dinosaurs 2
+階段: 小班～中班
+https://youtu.be/nct2O57LyA4 | 恐龍 暴龍之歌（貝貝彬）
+階段: 中班
 https://youtu.be/82ooOpJLzr8 | 恐龍 We Are The Dinosaurs
 階段: 中班～大班

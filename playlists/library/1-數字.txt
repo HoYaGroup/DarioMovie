@@ -178,15 +178,24 @@
 // 四季、星期、月份、時鐘：一年、一週、一天的數字。問的時候不加 the（Where is Monday?）
 
 字卡本: 四季 | Seasons
-階段: 小班
+階段: 幼幼班～小班
 // 春夏秋冬：看窗外的樹和天氣，說說現在是哪一季
 卡: spring | 春天 | 🌸 | Spring is warm. | Flowers bloom in spring. | Hello, spring!
 卡: summer | 夏天 | 🌞 | Summer is hot. | I swim in summer. | Let's eat watermelon in summer!
 卡: autumn | 秋天 | 🍂 | Autumn is cool. | The leaves fall in autumn. | Crunch, crunch! Autumn leaves.
 卡: winter | 冬天 | ❄️ | Winter is cold. | It snows in winter. | Put on your coat. It's winter!
 
+字卡本: 一天的時間 | Parts of the Day
+階段: 幼幼班～中班
+// 一天分成早上、中午、下午、傍晚、晚上：看窗外太陽在哪裡。問「What time of day is it?」（中文：現在是一天的什麼時候？），問的時候不加 the。night 的句子跟「相反詞 3」同一組
+卡: morning | 早上 | 🌅 | Good morning! | The sun comes up in the morning. | I brush my teeth in the morning.
+卡: noon | 中午 | 🌞 | It's noon. Time for lunch. | The sun is high at noon. | We eat lunch at noon.
+卡: afternoon | 下午 | 🌤️ | Good afternoon! | I take a nap in the afternoon. | We play outside in the afternoon.
+卡: evening | 傍晚 | 🌆 | Good evening! | The sun goes down in the evening. | We eat dinner in the evening.
+卡: night | 夜晚 | 🌃 | Good night! | The stars come out at night. | I sleep at night.
+
 字卡本: 星期 | Days of the Week
-階段: 中班
+階段: 小班～中班
 // 圖是「七曜」：月亮日、火、水、木、金、土星日，星期天是太陽日——英文的 Monday 就是 Moon day
 卡: Monday | 星期一 | 🌙 | Today is Monday. | Monday comes after Sunday. | I go to school on Monday.
 卡: Tuesday | 星期二 | 🔥 | Today is Tuesday. | Tuesday comes after Monday. | I go to school on Tuesday.
@@ -211,6 +220,22 @@
 卡: ten o'clock | 十點鐘 | 🕙 | It's ten o'clock. | Tick, tock! It's ten o'clock. | Ten o'clock. Let's draw a picture.
 卡: eleven o'clock | 十一點鐘 | 🕚 | It's eleven o'clock. | Tick, tock! It's eleven o'clock. | Eleven o'clock. Let's play outside.
 卡: twelve o'clock | 十二點鐘 | 🕛 | It's twelve o'clock. | Tick, tock! It's twelve o'clock. | Twelve o'clock. Time for lunch.
+
+字卡本: 時鐘 半點 | Half Past
+階段: 大班
+// 接在「時鐘 整點」後面：長針指到 6 就是半點，短針停在兩個數字中間。每個鐘點配一件小朋友一天裡會做的事
+卡: half past one | 一點半 | 🕜 | It's half past one. | Tick, tock! It's half past one. | Half past one. Wake up from your nap.
+卡: half past two | 兩點半 | 🕝 | It's half past two. | Tick, tock! It's half past two. | Half past two. Time to play.
+卡: half past three | 三點半 | 🕞 | It's half past three. | Tick, tock! It's half past three. | Half past three. Let's eat a snack.
+卡: half past four | 四點半 | 🕟 | It's half past four. | Tick, tock! It's half past four. | Half past four. Let's go home.
+卡: half past five | 五點半 | 🕠 | It's half past five. | Tick, tock! It's half past five. | Half past five. Time to cook dinner.
+卡: half past six | 六點半 | 🕡 | It's half past six. | Tick, tock! It's half past six. | Half past six. Dinner is ready.
+卡: half past seven | 七點半 | 🕢 | It's half past seven. | Tick, tock! It's half past seven. | Half past seven. Let's go to school.
+卡: half past eight | 八點半 | 🕣 | It's half past eight. | Tick, tock! It's half past eight. | Half past eight. Class begins.
+卡: half past nine | 九點半 | 🕤 | It's half past nine. | Tick, tock! It's half past nine. | Half past nine. Let's sing a song.
+卡: half past ten | 十點半 | 🕥 | It's half past ten. | Tick, tock! It's half past ten. | Half past ten. Let's play outside.
+卡: half past eleven | 十一點半 | 🕦 | It's half past eleven. | Tick, tock! It's half past eleven. | Half past eleven. Let's wash our hands.
+卡: half past twelve | 十二點半 | 🕧 | It's half past twelve. | Tick, tock! It's half past twelve. | Half past twelve. Time for a nap.
 
 字卡本: 月份 | Months
 階段: 大班
@@ -260,10 +285,14 @@ https://youtu.be/F3-AY1B-0qc | 數到 100 Counting to 100 is Fun to Do!
 
 《時間 🕒》
 https://youtu.be/4LsInzDH3q0 | 四季 The Seasons Song
-階段: 小班～中班
+階段: 幼幼班～中班
 https://youtu.be/vcMmiR7jWQc | 星期 Days Of The Week
-階段: 中班
+階段: 小班～中班
+https://youtu.be/uOn9jksYuFw | 星期 Days Of The Week（Noodle & Pals）
+階段: 小班～中班
 https://youtu.be/HGgsklW-mtg | 時鐘 Hickory Dickory Dock
+階段: 中班～大班
+https://youtu.be/f3lwtdmnS6c | 時鐘 Tick Tock I'm a Little Cuckoo Clock
 階段: 中班～大班
 https://youtu.be/gtc4c1JlAEM | 月份 The Months Chant
 階段: 大班

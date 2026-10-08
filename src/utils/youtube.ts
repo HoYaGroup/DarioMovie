@@ -50,7 +50,7 @@ export interface Card {
  */
 export type AskKind =
   | 'thing' | 'color' | 'shape' | 'feeling' | 'action' | 'should' | 'say' | 'like'
-  | 'who' | 'where' | 'weather' | 'season' | 'day' | 'month' | 'time' | 'sense'
+  | 'who' | 'where' | 'weather' | 'season' | 'day' | 'month' | 'time' | 'daypart' | 'sense'
 
 /** 影片在片單中的資料形狀 */
 export interface VideoItem {

@@ -18,7 +18,7 @@ import { parseVideoId, type AskKind, type Card, type CardClip, type VideoItem } 
  *   ‧ 只有 emoji，或是圖片網址／路徑的是圖；寫兩張的話，第一張是正面、第二張是背面
  *   ‧ 有英文、而且用 . ! ? 結尾的是句子，翻面時接在單字後面唸；寫好幾句（每句一欄）就輪流唸
  *   ‧ 「唸:」開頭的是語音要怎麼唸這個字（注音符號用同音字代替）
- *   ‧ 「問:」開頭的是這張卡自己的正面問法（東西、顏色、形狀、心情、動作、誰、哪裡、天氣……），
+ *   ‧ 「問:」開頭的是這張卡自己的正面問法（東西、顏色、形狀、心情、動作、誰、哪裡、天氣、時段……），
  *     沒寫就照字卡本的名稱決定；同一本裡有幾張不適用的（天氣裡的雪人）才需要寫
  *   ‧ 「對:」開頭的是相反詞的另一半（對:small）：正面問「Is it big or small?」，兩個字誰先講每次換
  *   ‧ 其他的是說明（英文、中文都可以寫在一起）
@@ -197,7 +197,8 @@ export function isPicture(card: Card): boolean {
   return Boolean(card.image) && !isEmojiOnly(card.image)
 }
 
-const latin = (s: string) => (s.match(/[A-Za-z][A-Za-z' .-]*[A-Za-z]|[A-Za-z]/g) ?? []).join(' ')
+/** 英文部分：字母開頭，中間可以接數字（Taipei 101），單獨的數字不算 */
+const latin = (s: string) => (s.match(/[A-Za-z][A-Za-z0-9' .-]*[A-Za-z0-9]|[A-Za-z]/g) ?? []).join(' ')
 const hasHan = (s: string) => /\p{Script=Han}/u.test(s)
 
 /**
@@ -390,11 +391,12 @@ const UNCOUNTABLE = new Set([
   'tea', 'jelly', 'yogurt', 'sushi', 'pizza', 'corn', 'broccoli', 'lettuce', 'garlic', 'soap',
   'bubble tea', 'shaved ice', 'oden', 'curry rice', 'fried chicken', 'paint', 'paper', 'grass', 'bamboo',
   'rain', 'snow', 'wind', 'lightning',
+  'soy milk', 'honey', 'cereal', 'toast', 'popcorn', 'chocolate', 'pudding', 'sunscreen', 'medicine', 'money', 'sand', 'hair',
 ])
 /** 一定是複數的東西：These are glasses */
 const PLURAL = new Set([
   'glasses', 'jeans', 'scissors', 'pants', 'shorts', 'shoes', 'socks', 'chopsticks', 'fries', 'grapes', 'noodles',
-  'vegetables', 'gloves', 'boots', 'blocks',
+  'vegetables', 'gloves', 'boots', 'blocks', 'sunglasses', 'flip-flops', 'twins', 'grandparents',
 ])
 
 /**
@@ -402,7 +404,7 @@ const PLURAL = new Set([
  * （Woody、Poli、Japan），不是「一個東西」：問的時候不加 the（Where is happy? / Where is Monday?），也不說 a（This is sad.）。
  */
 export function isBareDeck(title: string): boolean {
-  return /動作|心情|相反|四季|星期|月份|時鐘|習慣|過馬路|禮貌|五感|好朋友|冷靜|世界各國|波力|汪汪隊|玩具總動員|Actions?|Feelings?|Opposites?|Seasons?|Days|Months?|O'clock|Habits?|Cross Safely|Manners|Magic Words|Senses|Good Friends|Calm Down|Around the World|Robocar Poli|PAW Patrol|Toy Story/i.test(title)
+  return /動作|心情|不舒服|運動|作息|相反|四季|星期|月份|一天的時間|時鐘|習慣|過馬路|口令|守則|步驟|地震|禮貌|問候|五感|好朋友|冷靜|世界各國|大洲|好地方|波力|汪汪隊|玩具總動員|Actions?|Feelings?|Not Feeling Well|Sports|Routine|Opposites?|Seasons?|Days|Months?|Parts of the Day|O'clock|Habits?|Cross Safely|Commands|Rules|Steps|Earthquake|Manners|Magic Words|Greetings|Senses|Good Friends|Calm Down|Around the World|Continents|in Taiwan|Robocar Poli|PAW Patrol|Toy Story/i.test(title)
 }
 
 /**
@@ -427,6 +429,7 @@ export const FRONT_QUESTIONS: Record<AskKind, { en: string; zh: string }> = {
   day: { en: 'What day is it?', zh: '今天是星期幾？' },
   month: { en: 'What month is it?', zh: '這是幾月？' },
   time: { en: 'What time is it?', zh: '現在幾點鐘？' },
+  daypart: { en: 'What time of day is it?', zh: '現在是一天的什麼時候？' },
   // 五感：正面是眼睛、耳朵，答案是 see、hear
   sense: { en: 'What can you do with it?', zh: '可以用它做什麼？' },
 }
@@ -436,15 +439,16 @@ export function askKindOf(title: string): AskKind {
   const t = (re: RegExp) => re.test(title)
   if (t(/顏色|Colors?/i)) return 'color'
   if (t(/形狀|Shapes?/i)) return 'shape'
-  if (t(/心情|Feelings?/i)) return 'feeling'
-  if (t(/動作|Actions?/i)) return 'action'
-  if (t(/習慣|過馬路|好朋友|冷靜|Habits?|Cross Safely|Good Friends|Calm Down/i)) return 'should'
-  if (t(/禮貌|Magic Words|Manners/i)) return 'say'
+  if (t(/心情|不舒服|Feelings?|Not Feeling Well/i)) return 'feeling'
+  if (t(/動作|運動|作息|Actions?|Sports|Routine/i)) return 'action'
+  if (t(/習慣|過馬路|好朋友|冷靜|口令|守則|步驟|地震|Habits?|Cross Safely|Good Friends|Calm Down|Commands|Rules|Steps|Earthquake/i)) return 'should'
+  if (t(/禮貌|問候|Magic Words|Manners|Greetings/i)) return 'say'
   if (t(/相反|Opposites?/i)) return 'like'
-  if (t(/家人|職業|波力|汪汪隊|玩具總動員|Family|Jobs|Robocar Poli|PAW Patrol|Toy Story/i)) return 'who'
-  if (t(/地方|世界各國|Places?|Around the World/i)) return 'where'
+  if (t(/家人|職業|親戚|童話|波力|汪汪隊|玩具總動員|Family|Jobs|Relatives|Fairy Tale|Robocar Poli|PAW Patrol|Toy Story/i)) return 'who'
+  if (t(/地方|世界各國|房間|大洲|Places?|Around the World|Rooms|Continents/i)) return 'where'
   if (t(/五感|Senses/i)) return 'sense'
   if (t(/天氣|Weather/i)) return 'weather'
+  if (t(/一天的時間|Parts of the Day/i)) return 'daypart'
   if (t(/四季|Seasons?/i)) return 'season'
   if (t(/星期|Days/i)) return 'day'
   if (t(/月份|Months?/i)) return 'month'
@@ -456,7 +460,7 @@ export function askKindOf(title: string): AskKind {
 const ASK_NAMES: Record<string, AskKind> = {
   東西: 'thing', 顏色: 'color', 形狀: 'shape', 心情: 'feeling', 動作: 'action', 該做什麼: 'should', 說什麼: 'say',
   樣子: 'like', 誰: 'who', 哪裡: 'where', 天氣: 'weather', 季節: 'season', 星期: 'day', 月份: 'month', 幾點: 'time',
-  感官: 'sense',
+  時段: 'daypart', 感官: 'sense',
 }
 
 export function parseAskKind(text: string): AskKind | undefined {
