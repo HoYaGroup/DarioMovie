@@ -1,0 +1,600 @@
+import {
+  parseVideoId, makeVideoUid, DEFAULT_SECTION_ID, DEFAULT_SECTION_NAME,
+  type Section, type Category, type SubCategory, type VideoItem, type LibraryData, type Mission,
+} from './youtube'
+import { parseCard, parseMission, parseAskName, missionsOf, numberCards, NUMBER_MAX } from './cards'
+import { parseStages, type StageId } from './stage'
+
+/**
+ * 純文字片單的解析器。
+ *
+ * 設計目標：家長用任何文字編輯器（記事本、備忘錄）就能維護，
+ * 不會因為少一個引號或逗號就整份壞掉。
+ *
+ * 三層結構，由大到小：
+ *
+ *   # 學習 🎓                大分類　只有一個的話小朋友端不會顯示這排
+ *   【第一冊】🐰              分區　　也可以寫 ## 第一冊　或　[第一冊]
+ *   《第 1 課》               冊／單元　也可以寫 ### 第 1 課　或　-- 第 1 課
+ *   https://youtu.be/xxx | 第一課    影片，| 後面的標題可以省略
+ *   site: https://example.com | 每日英文   網站，會在 App 裡面開，小朋友不會跳出去
+ *   卡: cat | 貓 | 🐱         字卡，同一個單元裡的卡會集成一本（寫法見 utils/cards.ts）
+ *   字卡本: 數字像什麼          開一本新的字卡，不另外分一層，同一區的好幾本排在同一個畫面
+ *                              | 後面可以寫英文名稱（字卡本: 數字像什麼 | Number Shapes），全英文模式顯示
+ *   階段: 小班～中班            寫在上面任何一項的下面（大分類、分區、冊、字卡本、影片都可以）：
+ *                              這一項適合哪幾班（幼幼班、小班、中班、大班；可以寫 幼幼班、小班 或 小班～大班）。
+ *                              家長設定了孩子的出生年度，小朋友端就只顯示適合他這一班的（和家長另外開放的）；
+ *                              項目自己沒寫就沿用冊、分區、大分類的，都沒寫的一直顯示
+ *   書頁: cards/books/animals/pets.webp
+ *                              寫在字卡本下面：這本字卡是照家裡哪本書的哪一頁做的（那一頁的照片）。
+ *                              清單上用它當封面，打開時先秀出整頁，小朋友把書翻到同一頁再開始翻卡
+ *   任務: 家裡找找看，還有哪些車子？ | Find more vehicles at home! | 認識:bus | 找:3 | 提示:玩具車、書上的車都算
+ *                              寫在字卡本下面：這本字卡多一個「任務」模式，先認識一個東西（認識:），再到家裡找幾個（找:），
+ *                              找到了回來按一下；提示:是給家長看的。寫法見 utils/cards.ts 的 parseMission
+ *   順序: 是                  寫在字卡本下面：這本字卡的卡片本身就是依順序排的（洗手步驟、一天作息、星期、月份、數字），
+ *                              字卡本多一個「排順序」遊戲：每題三張照順序點
+ *   // 這行是註解            也可以用 ; 開頭
+ *
+ * 每一筆都歸到它上面最近的那一層。大分類和冊都可以省略。
+ */
+
+const RE_SECTION = [
+  /^#(?!#)\s*(.+)$/,             // # 學習
+  /^〖\s*(.+?)\s*〗\s*(.*)$/,     // 〖學習〗🎓
+]
+
+const RE_CATEGORY = [
+  /^【\s*(.+?)\s*】\s*(.*)$/,     // 【第一冊】🐰
+  /^\[\s*(.+?)\s*\]\s*(.*)$/,    // [第一冊] 🐰
+  /^##(?!#)\s*(.+)$/,            // ## 第一冊
+]
+
+/** 網站連結：site: 開頭，後面接網址 */
+const RE_SITE = /^(?:site|網站)\s*[:：]\s*(\S+)\s*$/i
+
+/** 字卡：卡: 開頭，也可以寫 字卡: 或 card: */
+const RE_CARD = /^(?:字?卡|card)\s*[:：]\s*(.*)$/i
+
+/**
+ * 開一本新的字卡，但不另外分一層：字卡本: 數字像什麼
+ * 同一個分區裡的好幾本會排在同一個畫面，點一下就打開，不用再多點一排標籤
+ */
+const RE_DECK = /^(?:字卡本|deck)\s*[:：]\s*(.+)$/i
+
+/** 階段: 小班～中班（寫在它要管的那一項下面） */
+const RE_STAGE = /^(?:階段|stage)\s*[:：]\s*(.+)$/i
+
+/** 書頁: cards/books/animals/pets.webp（寫在字卡本下面） */
+const RE_PAGE = /^(?:書頁|page)\s*[:：]\s*(\S+)\s*$/i
+
+/** 任務: 家裡找找看… | Find… | 認識:bus | 找:3 | 提示:…（寫在字卡本下面） */
+const RE_MISSION = /^(?:任務|mission)\s*[:：]\s*(.+)$/i
+
+/** 任務: 無（這本字卡不要任務，也不要用分區寫的預設任務） */
+const RE_MISSION_NONE = /^(?:無|沒有|不要|none|no|off)$/i
+
+/** 順序: 是（寫在字卡本下面：卡片本身就是依順序排的） */
+const RE_ORDER = /^(?:順序|排序|order)\s*[:：]\s*(.*)$/i
+
+/** 問法: 顏色（寫在字卡本下面：這本每張卡正面預設問哪一句，卡自己寫了「問:」的優先；「問句: 顏色」也一樣） */
+const RE_DECK_ASK = /^(?:問法|問句|ask)\s*[:：]\s*(.+)$/i
+
+/** 一次產生一串數字卡：數字卡: 0～100 */
+const RE_NUMBERS = /^(?:數字卡|numbers)\s*[:：]\s*(\d+)\s*[-~～到]\s*(\d+)\s*(?:\|\s*(\S+))?\s*$/i
+
+const RE_SUB = [
+  /^《\s*(.+?)\s*》\s*$/,         // 《第 1 課》
+  /^###\s*(.+)$/,                // ### 第 1 課
+  /^--\s*(.+)$/,                 // -- 第 1 課
+]
+
+/** 抓出字串裡的第一個 emoji 當分區圖示 */
+function pickEmoji(...parts: string[]): string {
+  const re = /(\p{Extended_Pictographic}(?:️)?(?:‍\p{Extended_Pictographic}(?:️)?)*)/u
+  for (const p of parts) {
+    const m = p?.match(re)
+    if (m?.[1]) return m[1]
+  }
+  return ''
+}
+
+/** 把 emoji 從名稱裡拿掉，剩下純文字 */
+function stripEmoji(s: string): string {
+  return s
+    .replace(/(\p{Extended_Pictographic}(?:️)?(?:‍\p{Extended_Pictographic}(?:️)?)*)/gu, '')
+    .trim()
+}
+
+/** 名稱轉成安全的 id，中文也能用 */
+function toId(prefix: string, name: string, taken: string[]): string {
+  const base = name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+  const seed = base || prefix
+  let id = seed
+  let n = 2
+  while (taken.includes(id)) id = `${seed}-${n++}`
+  return id
+}
+
+export interface ParseResult extends LibraryData {
+  /** 解析時遇到的問題，會顯示在家長設定頁 */
+  warnings: string[]
+}
+
+export function parsePlaylist(text: string): ParseResult {
+  const sections: Section[] = []
+  const categories: Category[] = []
+  const subCategories: SubCategory[] = []
+  const videos: VideoItem[] = []
+  const warnings: string[] = []
+
+  let currentSection: Section | null = null
+  let currentCat: Category | null = null
+  let currentSub: SubCategory | null = null
+  /** 目前這個單元的字卡本；換了分區或單元就重新開一本 */
+  let currentDeck: VideoItem | null = null
+  /** 「字卡本: 名稱」指定的下一本字卡名稱；沒指定就用單元或分區的名字 */
+  let deckTitle: string | null = null
+  /** 「字卡本: 名稱 | English name」的英文名稱 */
+  let deckTitleEn = ''
+  /** 「書頁:」寫的那一頁照片；跟階段一樣，字卡本讀到第一張卡才建出來，先記著 */
+  let deckPage = ''
+  /** 「任務:」寫的生活任務；跟書頁一樣，字卡本讀到第一張卡才建出來，先記著 */
+  let deckMission: Mission | undefined
+  /** 同一本字卡後面幾行「任務:」寫的其他題目（第一行是 deckMission） */
+  let deckMissionAlt: Mission[] = []
+  /** 這本字卡寫了「任務: 無」：不用分區寫的預設任務；跟任務一樣先記著 */
+  let deckNoMission = false
+  /** 寫了「任務: 無」的字卡本 */
+  const optedOut = new Set<VideoItem>()
+  /**
+   * 寫在冊、分區、大分類下面（還沒開始寫字卡本）的任務：底下沒有自己寫任務的字卡本都用它，最近的一層優先。
+   * 空的表示那一層寫了「任務: 無」，不再往上找
+   */
+  const defaultMissions = new Map<object, Mission[]>()
+  /** 「順序:」寫的；跟任務一樣，字卡本讀到第一張卡才建出來，先記著 */
+  let deckOrder = false
+  /** 「問法:」寫的：這本字卡預設問哪一種問題；跟順序一樣，字卡本讀到第一張卡才建出來，先記著 */
+  let deckAsk: string | undefined
+  /** 每個題目寫在第幾行：認識的那張卡找不到時，提醒要指出是哪一行 */
+  const missionAt = new Map<Mission, number>()
+  const takenUids = new Set<string>()
+  /** 以前的字卡本識別碼用到哪裡，見 deckHere */
+  const legacyDeckUids = new Set<string>()
+  /**
+   * 「階段:」要寫到哪一項：每開一個大分類、分區、冊、字卡本、影片，就換成那一項的寫入函式。
+   * 字卡本是讀到第一張卡才真的建出來，所以先記在 deckStages，建出來時再帶上。
+   */
+  let setStages: ((stages: StageId[]) => void) | null = null
+  let deckStages: StageId[] | undefined
+  const stagesOf = (item: { stages?: StageId[] }) => {
+    setStages = (stages) => { item.stages = stages }
+  }
+
+  /** 檔案沒寫大分類時，所有分區都歸到一個隱形的預設分類 */
+  function ensureSection(): Section {
+    if (currentSection) return currentSection
+    const fallback: Section = {
+      id: DEFAULT_SECTION_ID,
+      name: DEFAULT_SECTION_NAME,
+      emoji: '📚',
+    }
+    sections.push(fallback)
+    currentSection = fallback
+    return fallback
+  }
+
+  const lines = text.split(/\r?\n/)
+
+  lines.forEach((raw, index) => {
+    const line = raw.trim()
+    const lineNo = index + 1
+
+    if (!line) return
+    if (line.startsWith('//') || line.startsWith(';')) return
+
+    // ---- 階段：管上面最近的那一項 ----
+    {
+      const m = line.match(RE_STAGE)
+      if (m) {
+        const stages = parseStages(m[1]!)
+        if (!stages) warnings.push(`第 ${lineNo} 行：看不懂階段「${m[1]!.trim()}」（要寫幼幼班、小班、中班、大班），已略過。`)
+        else if (!setStages) warnings.push(`第 ${lineNo} 行：這個階段上面還沒有大分類、分區或影片，已略過。`)
+        else setStages(stages)
+        return
+      }
+    }
+
+    // ---- 大分類 ----
+    for (const re of RE_SECTION) {
+      const m = line.match(re)
+      if (m) {
+        const rest = m[2] ?? ''
+        const emoji = pickEmoji(m[1]!, rest) || '📚'
+        const name = stripEmoji(m[1]!) || m[1]!.trim()
+
+        const existing = sections.find((x) => x.name === name)
+        if (existing) {
+          currentSection = existing
+        } else {
+          currentSection = { id: toId('sec', name, sections.map((x) => x.id)), name, emoji }
+          sections.push(currentSection)
+        }
+        currentCat = null
+        currentSub = null
+        currentDeck = null
+        deckTitle = null
+        deckStages = undefined
+        deckPage = ''
+        deckMission = undefined
+        deckMissionAlt = []
+        deckNoMission = false
+        deckOrder = false
+        deckAsk = undefined
+        stagesOf(currentSection)
+        return
+      }
+    }
+
+    // ---- 分區 ----
+    for (const re of RE_CATEGORY) {
+      const m = line.match(re)
+      if (m) {
+        const rest = m[2] ?? ''
+        const emoji = pickEmoji(m[1]!, rest) || '📁'
+        const name = stripEmoji(m[1]!) || m[1]!.trim()
+
+        const section = ensureSection()
+        const existing = categories.find((c) => c.name === name && c.sectionId === section.id)
+        if (existing) {
+          currentCat = existing
+        } else {
+          currentCat = {
+            id: toId('cat', name, categories.map((c) => c.id)),
+            sectionId: section.id,
+            name,
+            emoji,
+          }
+          categories.push(currentCat)
+        }
+        currentSub = null
+        currentDeck = null
+        deckTitle = null
+        deckStages = undefined
+        deckPage = ''
+        deckMission = undefined
+        deckMissionAlt = []
+        deckNoMission = false
+        deckOrder = false
+        deckAsk = undefined
+        stagesOf(currentCat)
+        return
+      }
+    }
+
+    // ---- 冊／單元 ----
+    for (const re of RE_SUB) {
+      const m = line.match(re)
+      if (m) {
+        if (!currentCat) {
+          warnings.push(`第 ${lineNo} 行：「${m[1]}」上面還沒有分區，已略過。`)
+          return
+        }
+        const name = m[1]!.trim()
+        const existing = subCategories.find((s) => s.categoryId === currentCat!.id && s.name === name)
+        if (existing) {
+          currentSub = existing
+        } else {
+          currentSub = {
+            id: toId('sub', name, subCategories.map((s) => s.id)),
+            categoryId: currentCat.id,
+            name,
+          }
+          subCategories.push(currentSub)
+        }
+        currentDeck = null
+        deckTitle = null
+        deckStages = undefined
+        deckPage = ''
+        deckMission = undefined
+        deckMissionAlt = []
+        deckNoMission = false
+        deckOrder = false
+        deckAsk = undefined
+        stagesOf(currentSub)
+        return
+      }
+    }
+
+    // ---- 字卡 ----
+    /** 同一個單元的卡集成一本，出現在第一張卡的位置 */
+    const deckHere = (cat: Category): VideoItem => {
+      if (!currentDeck) {
+        const sectionName = sections.find((s) => s.id === cat.sectionId)?.name ?? ''
+        currentDeck = {
+          kind: 'deck',
+          // 識別碼（星星記在這上面）用名稱組成：中文分區的 id 是照出現順序編的（cat-3），
+          // 前面多一個分區就全部往後挪；用名稱的話，新的分區、字卡本加在哪裡都不影響別本的星星
+          uid: makeVideoUid(`deck:${sectionName}›${cat.name}›${currentSub?.name ?? ''}›${deckTitle ?? ''}`, takenUids),
+          legacyUid: makeVideoUid(`deck:${cat.id}:${currentSub?.id ?? ''}:${deckTitle ?? ''}`, legacyDeckUids),
+          id: '',
+          title: deckTitle ?? currentSub?.name ?? cat.name,
+          ...(deckTitle !== null && deckTitleEn ? { titleEn: deckTitleEn } : {}),
+          categoryId: cat.id,
+          subId: currentSub?.id ?? null,
+          cards: [],
+          ...(deckStages ? { stages: deckStages } : {}),
+          ...(deckPage ? { page: deckPage } : {}),
+          ...(deckMission ? { mission: deckMission } : {}),
+          ...(deckMissionAlt.length ? { missionAlt: [...deckMissionAlt] } : {}),
+          ...(deckOrder ? { order: true } : {}),
+          ...(deckAsk ? { ask: deckAsk } : {}),
+        }
+        videos.push(currentDeck)
+        if (deckNoMission) optedOut.add(currentDeck)
+      }
+      return currentDeck
+    }
+
+    {
+      const m = line.match(RE_DECK)
+      if (m) {
+        if (!currentCat) {
+          warnings.push(`第 ${lineNo} 行：這本字卡上面還沒有分區，已略過。`)
+          return
+        }
+        // 接下來的卡放進一本新的字卡；| 後面是英文名稱，不算進識別碼，加上去星星也不會歸零
+        const [name = '', en = ''] = m[1]!.split('|').map((x) => x.trim())
+        deckTitle = stripEmoji(name) || name
+        deckTitleEn = en
+        deckPage = ''
+        deckMission = undefined
+        deckMissionAlt = []
+        deckNoMission = false
+        deckOrder = false
+        deckAsk = undefined
+        currentDeck = null
+        // 下面的「階段:」是管這本字卡的；字卡本要等讀到第一張卡才建出來，先記著
+        deckStages = undefined
+        setStages = (stages) => {
+          deckStages = stages
+          if (currentDeck) currentDeck.stages = stages
+        }
+        return
+      }
+    }
+
+    // ---- 書頁：管上面最近的那一本字卡 ----
+    {
+      const m = line.match(RE_PAGE)
+      if (m) {
+        if (deckTitle === null && !currentDeck) {
+          warnings.push(`第 ${lineNo} 行：「書頁」要寫在「字卡本:」下面，已略過。`)
+          return
+        }
+        deckPage = m[1]!
+        if (currentDeck) currentDeck.page = deckPage
+        return
+      }
+    }
+
+    // ---- 任務：管上面最近的那一本字卡；還沒開始寫字卡本的話，是這一層底下所有字卡本的預設任務 ----
+    {
+      const m = line.match(RE_MISSION)
+      if (m) {
+        const none = RE_MISSION_NONE.test(m[1]!.trim())
+        if (deckTitle === null && !currentDeck) {
+          const owner = currentSub ?? currentCat ?? currentSection
+          if (!owner) {
+            warnings.push(`第 ${lineNo} 行：「任務」上面還沒有大分類或分區，已略過。`)
+            return
+          }
+          if (none) {
+            defaultMissions.set(owner, [])
+            return
+          }
+          const { mission, issue } = parseMission(m[1]!)
+          if (issue) warnings.push(`第 ${lineNo} 行：${issue}。`)
+          if (!mission) return
+          missionAt.set(mission, lineNo)
+          defaultMissions.set(owner, [...(defaultMissions.get(owner) ?? []), mission])
+          return
+        }
+        if (none) {
+          // 這本字卡不要任務：也不要用上層寫的預設任務
+          deckMission = undefined
+          deckMissionAlt = []
+          deckNoMission = true
+          if (currentDeck) {
+            delete currentDeck.mission
+            delete currentDeck.missionAlt
+            optedOut.add(currentDeck)
+          }
+          return
+        }
+        const { mission, issue } = parseMission(m[1]!)
+        if (issue) warnings.push(`第 ${lineNo} 行：${issue}。`)
+        if (!mission) return
+        missionAt.set(mission, lineNo)
+        // 第一行是主要的題目，後面幾行是其他題目
+        if (!deckMission) deckMission = mission
+        else deckMissionAlt.push(mission)
+        if (currentDeck) {
+          currentDeck.mission = deckMission
+          if (deckMissionAlt.length) currentDeck.missionAlt = [...deckMissionAlt]
+        }
+        return
+      }
+    }
+
+    // ---- 順序：管上面最近的那一本字卡 ----
+    {
+      const m = line.match(RE_ORDER)
+      if (m) {
+        if (deckTitle === null && !currentDeck) {
+          warnings.push(`第 ${lineNo} 行：「順序」要寫在「字卡本:」下面，已略過。`)
+          return
+        }
+        // 寫「順序: 否」可以關掉；其他（是、有、空白）都是開
+        deckOrder = !/^(?:否|不|no|false|0)$/i.test(m[1]!.trim())
+        if (currentDeck) currentDeck.order = deckOrder || undefined
+        return
+      }
+    }
+
+    // ---- 問法：管上面最近的那一本字卡 ----
+    {
+      const m = line.match(RE_DECK_ASK)
+      if (m) {
+        if (deckTitle === null && !currentDeck) {
+          warnings.push(`第 ${lineNo} 行：「問法」要寫在「字卡本:」下面，已略過。`)
+          return
+        }
+        const kind = parseAskName(m[1]!)
+        if (!kind) {
+          warnings.push(`第 ${lineNo} 行：「問法:」後面的「${m[1]!.trim()}」不能當問句的名字，這一本先照字卡本名稱的問句。`)
+          return
+        }
+        deckAsk = kind
+        if (currentDeck) currentDeck.ask = kind
+        return
+      }
+    }
+
+    {
+      const m = line.match(RE_CARD)
+      if (m) {
+        if (!currentCat) {
+          warnings.push(`第 ${lineNo} 行：這張字卡上面還沒有分區，已略過。`)
+          return
+        }
+        const { card, issue } = parseCard(m[1]!)
+        if (issue) warnings.push(`第 ${lineNo} 行：${issue}。`)
+        if (!card) return
+        deckHere(currentCat).cards!.push(card)
+        return
+      }
+    }
+
+    // ---- 一串數字卡 ----
+    {
+      const m = line.match(RE_NUMBERS)
+      if (m) {
+        if (!currentCat) {
+          warnings.push(`第 ${lineNo} 行：這串數字卡上面還沒有分區，已略過。`)
+          return
+        }
+        const from = Number(m[1])
+        const to = Number(m[2])
+        if (from > to || to > NUMBER_MAX) {
+          warnings.push(`第 ${lineNo} 行：數字卡的範圍要從小寫到大、最多到 ${NUMBER_MAX}，已略過。`)
+          return
+        }
+        // 以前後面要寫「| 中文」或「| 英文」，現在每張卡中英文都唸，寫了也不影響
+        deckHere(currentCat).cards!.push(...numberCards(from, to))
+        return
+      }
+    }
+
+    // ---- 網站連結 ----
+    {
+      const [head, ...rest] = line.split('|')
+      const m = head!.trim().match(RE_SITE)
+      if (m) {
+        if (!currentCat) {
+          warnings.push(`第 ${lineNo} 行：這個網站上面還沒有分區，已略過。`)
+          return
+        }
+        const url = m[1]!
+        const site: VideoItem = {
+          kind: 'site',
+          url,
+          // 用網址當識別：照排第幾個的話，前面多一筆就整個錯開，在這台裝置上改過的網站會對到別筆
+          uid: makeVideoUid(`site:${url}`, takenUids),
+          id: '',
+          title: rest.join('|').trim() || url.replace(/^https?:\/\//, '').replace(/\/$/, ''),
+          categoryId: currentCat.id,
+          subId: currentSub?.id ?? null,
+        }
+        videos.push(site)
+        stagesOf(site)
+        return
+      }
+    }
+
+    // ---- 影片 ----
+    const [urlPart, ...titleParts] = line.split('|')
+    const id = parseVideoId(urlPart!.trim())
+
+    if (!id) {
+      warnings.push(`第 ${lineNo} 行看不懂，已略過：${line.slice(0, 40)}`)
+      return
+    }
+    if (!currentCat) {
+      warnings.push(`第 ${lineNo} 行：這部影片上面還沒有分區，已略過。`)
+      return
+    }
+    // 同一支影片可以出現在不同單元（教材常這樣編），
+    // 但同一個單元裡貼兩次就是手誤了
+    const dupInSameGroup = videos.some(
+      (v) => v.id === id
+        && v.categoryId === currentCat!.id
+        && v.subId === (currentSub?.id ?? null),
+    )
+    if (dupInSameGroup) {
+      warnings.push(`第 ${lineNo} 行：這部影片在同一個單元裡重複了，已略過。`)
+      return
+    }
+
+    const video: VideoItem = {
+      uid: makeVideoUid(id, takenUids),
+      id,
+      title: titleParts.join('|').trim(),
+      categoryId: currentCat.id,
+      subId: currentSub?.id ?? null,
+    }
+    videos.push(video)
+    stagesOf(video)
+  })
+
+  // 沒有自己寫任務的字卡本，用上層寫的預設任務（冊 → 分區 → 大分類，最近的一層）
+  if (defaultMissions.size) {
+    const catOf = new Map(categories.map((c) => [c.id, c]))
+    const subOf = new Map(subCategories.map((s) => [s.id, s]))
+    const secOf = new Map(sections.map((s) => [s.id, s]))
+    for (const deck of videos) {
+      if (deck.kind !== 'deck' || deck.mission || optedOut.has(deck)) continue
+      const cat = catOf.get(deck.categoryId)
+      const owners = [deck.subId ? subOf.get(deck.subId) : undefined, cat, cat ? secOf.get(cat.sectionId) : undefined]
+      const found = owners.find((o) => o && defaultMissions.has(o))
+      const list = found ? defaultMissions.get(found) : undefined
+      if (!list?.length) continue
+      deck.mission = list[0]
+      if (list.length > 1) deck.missionAlt = list.slice(1)
+    }
+  }
+
+  // 任務要認識的那張卡得在這本字卡裡，不然只好用第一張（要等所有卡都讀完才看得出來）
+  for (const deck of videos) {
+    for (const m of missionsOf(deck)) {
+      const want = m.card.trim().toLowerCase()
+      if (want && !deck.cards?.some((c) => c.word.trim().toLowerCase() === want)) {
+        warnings.push(`第 ${missionAt.get(m)} 行：任務要認識的「${m.card}」不在「${deck.title}」這本字卡裡，先用第一張。`)
+      }
+    }
+  }
+
+  return { sections, categories, subCategories, videos, warnings }
+}
+
+/**
+ * 內容的指紋。
+ * 家長改過試算表，指紋就會變，各台 iPad 下次開啟就知道該更新了 ——
+ * 不必自己記得去改版本號。
+ */
+export function hashText(s: string): string {
+  let h = 5381
+  for (let i = 0; i < s.length; i++) {
+    h = ((h << 5) + h + s.charCodeAt(i)) | 0
+  }
+  return (h >>> 0).toString(36)
+}

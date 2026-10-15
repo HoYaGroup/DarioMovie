@@ -1,0 +1,41 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+# build 的輸出：dist 是指向 .output/public 的捷徑
+.output
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# 書單（影片、網站、字卡）放在家長的 Google 試算表，不放在專案裡：就算本機有 txt 書單也不要 commit
+/playlists/
+/public/playlist*.txt
+# 任何 txt 都不進版控；只有網站要用的 robots.txt（不要被搜尋引擎收錄）例外
+*.txt
+!/public/robots.txt
+
+# 書的原始照片（放在這裡裁圖用，有版權、很大，不進版控）
+/drive/
+/Little Fox/
+# 書頁照片和裁下來的圖有版權，不放在公開的 repo 和網站：打包成「素材包」（node scripts/pack-media.mjs）放在自己的雲端硬碟，iPad 匯入
+/public/cards/books/
+# 學校給的教材轉成試算表匯入檔（放這裡不進版控，內容不要公開）
+/private/
