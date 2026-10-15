@@ -269,6 +269,11 @@ export function isPicture(card: Card): boolean {
   return Boolean(card.image) && !isEmojiOnly(card.image)
 }
 
+/** 數東西的卡：放了 emoji 的 1～20，正面畫出那麼多個讓小朋友點著數；有自己的圖的（數字形狀卡）就直接看圖 */
+export function isCounting(card: Card): boolean {
+  return countOf(card) !== null && !!card.image && !isPicture(card)
+}
+
 /**
  * 一張卡的圖放了幾個 emoji（👧⚽👦 是 3 個，👨‍🍳 是 1 個）：詞句卡用兩三個 emoji 畫出情境，
  * 卡片上的大圖要依個數縮小才擺得下一行。最多算 3，更多的（🍪🍪🍪🍪🍪🍪）讓它自己換行。

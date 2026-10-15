@@ -84,6 +84,10 @@ export const PROMPTS = {
   cmpBigger: { en: 'Which number is bigger?', zh: '哪一個數字比較大？' },
   cmpSmaller: { en: 'Which number is smaller?', zh: '哪一個數字比較小？' },
   cmpThisIs: { en: 'This is', zh: '這是' },
+  // 練習：數一數、哪一堆、給我幾個、找出所有的、描一描
+  practiceIntro: { en: "Let's practice!", zh: '我們來練習！' },
+  countHow: { en: 'How many are there?', zh: '有幾個？' },
+  traceIt: { en: 'Trace it with your finger!', zh: '用手指描一描！' },
 } as const satisfies Record<string, Cheer>
 
 /** 錄音清單用：App 說的每一句固定的話（讚美、提醒、開場），英文一組、中文一組 */

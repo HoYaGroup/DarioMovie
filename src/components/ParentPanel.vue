@@ -76,7 +76,8 @@ initCollapse()
 
 /**
  * 設定項目多，全部排在同一頁要一直捲。照用途分成幾頁，每頁只放那一類的面板；
- * panels 是這一頁有哪些面板（PanelSection 的 id），切到這一頁時會自動展開。
+ * panels 是切到這一頁時要自動展開的面板（PanelSection 的 id）。片單頁的「新增影片」刻意不列：
+ * 平常是來看片單，不是每次都要加影片，維持收起（標題旁有一行摘要），要加再點開。
  * 面板的 span 是照「這一頁只有這幾個」排的，兩欄、三欄都不會留空格；改分頁內容時要兩種都對一下：
  *   觀看時間：時間(全)
  *   片單：新增(全) / 片單(全)
@@ -88,7 +89,7 @@ initCollapse()
  */
 const TABS = [
   { id: 'time', emoji: '⏱️', label: '觀看時間', panels: ['time'] },
-  { id: 'library', emoji: '🎬', label: '片單', panels: ['add', 'list'] },
+  { id: 'library', emoji: '🎬', label: '片單', panels: ['list'] },
   { id: 'categories', emoji: '🗂️', label: '分區', panels: ['categories'] },
   { id: 'kid', emoji: '👶', label: '小朋友', panels: ['child', 'display', 'missions', 'voice'] },
   { id: 'photos', emoji: '📷', label: '照片素材', panels: ['media', 'photos'] },

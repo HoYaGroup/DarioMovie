@@ -2,12 +2,14 @@
 import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { categoryColor, type Card, type CardClip, type VideoItem } from '~/utils/youtube'
 import {
-  countOf, countNounOf, isPicture, imageSrc, speechOf, isAbcDeck, initialOf, cardsOf, thisIs, isNumberCard,
+  countOf, countNounOf, isCounting, isPicture, imageSrc, speechOf, isAbcDeck, initialOf, cardsOf, thisIs, isNumberCard,
   numberLabels, sentencesOf, enNumber, zhNumber, englishOf, askOf, askZhOf, ASK_STYLES, isBareDeck, englishTitle,
   chineseTitle, isZhCard, isBopomofoCard, zhReading, askKindOf, frontQuestion, specialQuestion, pairQuestion, emojiCount, sentenceLines,
   missionCardOf, missionOf, missionTextOf, missionGoalOf, missionActOf, isPluralName, isPutMission,
 } from '~/utils/cards'
 import { placeById, type Place } from '~/utils/places'
+import { practiceSourceOf, canPractice as sourceCanPractice, lookalikeDigits } from '~/utils/practice'
+import PracticeBoard from '~/components/PracticeBoard.vue'
 import { canSpeak, speak, stopSpeaking, chimeRight, chimeWrong, type SpeechPart, type SpeechText } from '~/utils/speech'
 import { cheerParts, cheerText, PROMPTS as P, type CheerKind } from '~/utils/cheers'
 import { useChildName } from '~/composables/useChildName'
@@ -97,8 +99,8 @@ const color = computed(() => {
   return categoryColor(Math.max(0, idx), themeResolved.value)
 })
 
-/** learn 看卡片、play 跟我說／做動作、quiz 考考我、mission 生活任務（認識一個東西，再到家裡找）、place 放哪裡（把東西拖到對的地方）、order 排順序（照順序點）、compare 比一比（哪邊比較多／哪個數字比較大） */
-type Mode = 'learn' | 'play' | 'quiz' | 'mission' | 'place' | 'order' | 'compare'
+/** learn 看卡片、play 跟我說／做動作、quiz 考考我、mission 生活任務（認識一個東西，再到家裡找）、place 放哪裡（把東西拖到對的地方）、order 排順序（照順序點）、compare 比一比（哪邊比較多／哪個數字比較大）、practice 練習（數一數、找出所有的、描一描，見 PracticeBoard.vue） */
+type Mode = 'learn' | 'play' | 'quiz' | 'mission' | 'place' | 'order' | 'compare' | 'practice'
 const mode = ref<Mode>('learn')
 
 const en = (text: string): SpeechText => ({ text, lang: 'en-US' })
@@ -294,10 +296,6 @@ const card = computed(() => cards.value[index.value])
 const zhCard = computed(() => !!card.value && isZhCard(card.value))
 const count = computed(() => (card.value ? countOf(card.value) : null))
 
-/** 數東西的卡：放了 emoji 的 1～20，正面畫出那麼多個讓小朋友點著數；有自己的圖的（數字形狀卡）就直接看圖 */
-function isCounting(c: Card): boolean {
-  return countOf(c) !== null && !!c.image && !isPicture(c)
-}
 const showCount = computed(() => !!card.value && isCounting(card.value))
 
 /** 背面的圖：有指定背面圖就用它，否則跟正面同一張 */
@@ -697,11 +695,12 @@ function kindsFor(c: Card): QuizKind[] {
   return countOf(c) !== null && isPicture(c) ? ['picture', 'listen'] : ['listen']
 }
 
-/** 數字容易搞混的數字：31 → 13（左右顛倒，最優先）、30、32、21、41（差一點點） */
+/** 數字容易搞混的數字：6 → 9（上下顛倒）、31 → 13（左右顛倒，最優先）、30、32、21、41（差一點點） */
 function confusablesOf(n: number): number[] {
   const s = String(n)
   const flipped = s.length === 2 ? [Number(s[1]! + s[0]!)] : []
-  return [...flipped, ...shuffle([n - 1, n + 1, n - 10, n + 10])].filter((x) => x !== n && x >= 0)
+  const lookalike = s.length === 1 ? lookalikeDigits(s).slice(0, 1).map(Number) : []
+  return [...lookalike, ...flipped, ...shuffle([n - 1, n + 1, n - 10, n + 10])].filter((x) => x !== n && x >= 0)
 }
 
 function makeQuestion(answer: number, retry = false): Question {
@@ -1845,9 +1844,34 @@ function placeLabel(p: Place): { main: string; sub: string } {
   return { main: englishOnly.value ? p.en : p.zh, sub: mixed.value ? p.en : '' }
 }
 
+/* ---------- 練習：數一數、找出所有的、描一描（畫面和題目在 PracticeBoard.vue、utils/practice.ts） ---------- */
+
+/**
+ * 題材由字卡本自己的卡算出來，不用在試算表多寫什麼：數一數的卡出數一數／哪一堆／給我幾個，
+ * 數字卡和 ABC 字母卡出「找出所有的 6／b」，數字、字母、注音、國字都能描一描。學校只教到某個字母的話，字母只用教過的。
+ */
+const practiceSource = computed(() => practiceSourceOf(cards.value, { abc: isAbc.value, maxLetter: missionPlan.value.letter }))
+const canPractice = computed(() => sourceCanPractice(practiceSource.value))
+/** 每按一次「練習」換一個編號，已經在練習的時候再按也會重新開始一輪 */
+const practiceRun = ref(0)
+
+function startPractice() {
+  clearQuizTimers()
+  clearPlayTimers()
+  clearMissionTimers()
+  clearPlaceTimers()
+  clearOrderTimers()
+  clearCmpTimers()
+  clearPrompt()
+  stopSpeaking()
+  if (!canPractice.value) return
+  practiceRun.value++
+  mode.value = 'practice'
+}
+
 /** 上面有幾顆模式按鈕：五顆（看卡片、跟我說、放哪裡、任務、考考我）手機放不下，圖示先藏起來 */
 const modeTabCount = computed(() =>
-  1 + [canPlay.value, !!bookPage.value && canPlay.value, canPlace.value, canOrder.value, canCompare.value, canMission.value, canSounds.value, canQuiz.value].filter(Boolean).length,
+  1 + [canPlay.value, !!bookPage.value && canPlay.value, canPlace.value, canOrder.value, canCompare.value, canMission.value, canPractice.value, canSounds.value, canQuiz.value].filter(Boolean).length,
 )
 
 /** 玩完一輪之後「真的放放看」：用最後放對的那樣東西開任務 */
@@ -2172,6 +2196,16 @@ onBeforeUnmount(() => {
           @click="startMission()"
         >
           <span aria-hidden="true">🔎</span>{{ t('任務', 'Mission') }}
+        </button>
+        <!-- 練習：一個畫面一個題目，數一數、找出所有的 6、用手指描一描；數字卡、ABC 字母卡、注音、國字的字卡本才有 -->
+        <button
+          v-if="canPractice"
+          class="mode-tab"
+          :class="{ 'is-active': mode === 'practice' }"
+          :aria-current="mode === 'practice' ? 'true' : undefined"
+          @click="startPractice()"
+        >
+          <span aria-hidden="true">✏️</span>{{ t('練習', 'Practice') }}
         </button>
         <!-- 聽聲音：有真正叫聲（片單的「聲:」）的字卡本，聽叫聲點出是哪隻動物 -->
         <button
@@ -2816,6 +2850,16 @@ onBeforeUnmount(() => {
         </div>
       </div>
     </main>
+
+    <!-- ===== 練習：數一數、找出所有的、描一描 ===== -->
+    <PracticeBoard
+      v-else-if="mode === 'practice'"
+      :key="practiceRun"
+      :source="practiceSource"
+      :deck-uid="props.deck.uid"
+      :lang="lang"
+      @back="toLearn"
+    />
 
     <!-- ===== 影片片段 ===== -->
     <div v-if="clip" class="clip-veil" role="dialog" aria-label="影片片段" @click.self="closeClip">
