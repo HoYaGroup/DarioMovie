@@ -10,7 +10,8 @@ import { lineOfFileName, type VoiceLine } from './voiceLines'
 /**
  * 從 Google 雲端硬碟的資料夾同步（選填；家長按「立即同步」才會下載，不會自己跑）：填好資料夾網址和 Google API 金鑰，
  * 這台就能把資料夾裡的東西抓下來。一個資料夾管三種東西：
- *   ‧ 最上層的照片：用檔名對卡（規則同 utils/photoFiles.ts：apple.jpg、place-kitchen.jpg），存成「換成家裡的照片」
+ *   ‧ 最上層的照片，和最上層 photos 子資料夾裡的照片（App 的「上傳」放的地方，utils/driveUpload.ts）：用檔名對卡
+ *     （規則同 utils/photoFiles.ts：apple.jpg、place-kitchen.jpg），存成「換成家裡的照片」；photos 不當素材，不然會多下載一份
  *   ‧ 最上層的音檔：檔名就是那句話（I'm hungry.m4a，規則同 utils/clipFiles.ts），存成爸媽的錄音
  *   ‧ 子資料夾裡的圖片和音檔：資料夾結構跟「素材包」一樣（cards/books/animals/pets.webp），路徑就是試算表
  *     「圖」「背面圖」「聲音」欄寫的路徑，原樣存成素材（utils/media.ts）；雲端硬碟上刪掉的，這台也跟著刪
@@ -207,6 +208,10 @@ async function call(url: string): Promise<Response> {
 const FOLDER_MIME = 'application/vnd.google-apps.folder'
 
 export interface DriveFolder { id: string; name: string }
+
+/** 上傳的照片集中放的子資料夾（跟 scripts/apps-script/drive-upload.gs 的 PHOTO_DIR 一樣）：裡面的照片跟最上層的一樣依檔名換卡片的圖 */
+export const PHOTO_DIR = 'photos'
+const isPhotoDir = (f: DriveFolder) => f.name.trim().toLowerCase() === PHOTO_DIR
 
 /** 列出資料夾裡的檔案和子資料夾（一層）。回來的資料都是外面來的，逐欄檢查過才收；truncated＝太多了沒有列完 */
 async function listChildren(folderId: string, apiKey: string): Promise<{ files: DriveFile[]; folders: DriveFolder[]; truncated: boolean }> {
@@ -566,8 +571,13 @@ async function run(folderUrl: string, apiKey: string, words: Map<string, string>
   await loadPhotos()
   const top = await listChildren(folderId, apiKey)
   const files = top.files
+  // photos 子資料夾（一層）：裡面的圖片當照片，其他子資料夾才是路徑對應的素材
+  const photoDirs = top.folders.filter(isPhotoDir)
+  const mediaDirs = top.folders.filter((f) => !isPhotoDir(f))
+  const dirFiles: DriveFile[] = []
+  for (const d of photoDirs) dirFiles.push(...(await listChildren(d.id, apiKey)).files)
   const report: DriveSyncReport = {
-    total: files.length, saved: [], unchanged: 0, localNewer: [], unmatched: [], older: [], ignored: 0, failed: [],
+    total: files.length + dirFiles.length, saved: [], unchanged: 0, localNewer: [], unmatched: [], older: [], ignored: 0, failed: [],
     clips: { saved: [], unchanged: 0, localNewer: [], unmatched: [], older: [], failed: [] },
     media: { total: 0, saved: 0, unchanged: 0, removed: 0, older: [], ignored: 0, failed: [], partial: false },
   }
@@ -579,7 +589,8 @@ async function run(folderUrl: string, apiKey: string, words: Map<string, string>
     if (/^audio\//i.test(f.mimeType) || CLIP_EXT_RE.test(f.name)) clipFiles.push(f)
     else photoFiles.push(f)
   }
-  if (photoFiles.length > MAX_IMPORT_FILES) throw new DriveError('other', `資料夾最上層有 ${photoFiles.length} 個檔案，一次最多同步 ${MAX_IMPORT_FILES} 個。`)
+  photoFiles.push(...dirFiles)
+  if (photoFiles.length > MAX_IMPORT_FILES) throw new DriveError('other', `資料夾最上層和 ${PHOTO_DIR} 資料夾共有 ${photoFiles.length} 個檔案，一次最多同步 ${MAX_IMPORT_FILES} 個。`)
   if (clipFiles.length > MAX_CLIPS) throw new DriveError('other', `資料夾最上層有 ${clipFiles.length} 個音檔，一次最多同步 ${MAX_CLIPS} 個。`)
 
   // 依對到的照片分組，每組只看最新的那個檔
@@ -643,6 +654,6 @@ async function run(folderUrl: string, apiKey: string, words: Map<string, string>
   }
 
   // 子資料夾裡的素材（cards/books/… 這種跟素材包一樣的結構）
-  report.media = await syncMedia(top.folders, apiKey, onProgress)
+  report.media = await syncMedia(mediaDirs, apiKey, onProgress)
   return report
 }

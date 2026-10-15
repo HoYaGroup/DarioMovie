@@ -15,7 +15,7 @@ const props = defineProps<{
   defaultText?: string
 }>()
 
-const { own, busy, msg, pick, reset } = usePhotoSlot(() => props.photoKey, () => props.legacyKey)
+const { own, busy, msg, cloud, pick, reset } = usePhotoSlot(() => props.photoKey, () => props.legacyKey)
 </script>
 
 <template>
@@ -39,6 +39,9 @@ const { own, busy, msg, pick, reset } = usePhotoSlot(() => props.photoKey, () =>
     <span v-if="meaning" class="meaning">{{ meaning }}</span>
     <button v-if="own" class="undo" :disabled="busy" @click="reset">還原</button>
     <span v-if="msg?.kind === 'err'" class="err" role="alert">{{ msg.text }}</span>
+    <!-- 上傳到雲端硬碟的結果：成功只要一個小標記，失敗要講原因（照片已經換好了，只是還沒傳上去） -->
+    <span v-if="cloud?.kind === 'err'" class="err" role="alert">{{ cloud.text }}</span>
+    <span v-else-if="cloud" class="cloud" role="status">{{ cloud.kind === 'busy' ? '☁️ 上傳中…' : '☁️ 已上傳' }}</span>
   </div>
 </template>
 
@@ -122,4 +125,5 @@ const { own, busy, msg, pick, reset } = usePhotoSlot(() => props.photoKey, () =>
 .undo:active:not(:disabled) { transform: scale(.95); }
 .undo:disabled { opacity: .45; }
 .err { font-size: 12px; line-height: 1.4; color: var(--danger); text-align: center; overflow-wrap: anywhere; }
+.cloud { font-size: 12px; font-weight: 700; color: var(--text-dim); }
 </style>

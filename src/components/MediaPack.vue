@@ -102,7 +102,7 @@ async function onClear() {
     </template>
 
     <details class="adv" :open="driveOn">
-      <summary class="way">做法二：雲端硬碟資料夾自動同步（進階，要自己申請 Google API 金鑰）</summary>
+      <summary class="way">做法二：雲端硬碟資料夾（進階，按「立即同步」下載；要自己申請 Google API 金鑰）</summary>
       <DriveFolder />
     </details>
 

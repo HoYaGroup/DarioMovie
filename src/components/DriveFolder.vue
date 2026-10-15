@@ -3,11 +3,13 @@ import { computed, ref } from 'vue'
 import { cleanFolderUrl, readFolderUrl, saveFolderUrl } from '~/utils/photoFiles'
 import { cleanApiKey, folderIdOf, forgetSynced, readApiKey, saveApiKey } from '~/utils/driveSync'
 import { useDriveSync } from '~/composables/useDriveSync'
+import DriveUpload from './DriveUpload.vue'
 
 /**
- * 家長設定「圖片和聲音」的「雲端硬碟資料夾同步」（進階，選填）：填好資料夾網址和自己的 Google API 金鑰，按「立即同步」就把
+ * 家長設定「圖片和聲音」的「雲端硬碟資料夾」（進階，選填）：填好資料夾網址和自己的 Google API 金鑰，按「立即同步」就把
  * 資料夾裡的素材（子資料夾裡的圖片、聲音）、照片（最上層，檔名＝卡上的字）和錄音（最上層的音檔，檔名＝那句話）抓下來。
- * 只有按了才會下載。同步本身在 utils/driveSync.ts。
+ * 只有按了才會下載。同步本身在 utils/driveSync.ts。最下面是「上傳」（components/DriveUpload.vue）：金鑰只能讀，
+ * 要寫進資料夾得靠自己部署的 Apps Script。
  */
 const { syncing, report: syncReport, last: syncLast, error: syncError, progress, sync } = useDriveSync()
 
@@ -91,15 +93,18 @@ const names = (list: string[]) => (list.length > SHOWN ? `${list.slice(0, SHOWN)
         <b>子資料夾裡的圖片和聲音</b>：結構跟素材包一樣，路徑就是試算表「圖」「背面圖」「聲音」欄寫的
         （<code>cards/books/animals/pets.webp</code>）。有素材包 zip 的話，解壓縮後把整個 <code>cards</code> 資料夾丟進去就好
       </li>
-      <li><b>最上層的照片</b>：檔名就是卡上的字（<code>apple.jpg</code>），會換掉所有字是 apple 的卡（見下面「換成家裡的照片」）</li>
+      <li>
+        <b><code>photos</code> 資料夾（或最上層）裡的照片</b>：檔名就是卡上的字（<code>apple.jpg</code>），會換掉所有字是 apple 的卡（見下面「換成家裡的照片」）。
+        下面的「上傳」會把照片統一放進 <code>photos</code>，最上層就不會越來越亂
+      </li>
       <li>
         <b>最上層的音檔</b>：檔名就是那句話（<code>I'm hungry.m4a</code>、<code>我餓了.m4a</code>），變成爸媽的錄音。
         在「小朋友 › 用自己的聲音錄音」按「📤 全部存到共用資料夾」就會做好這些檔案；錄音只會加進來，不會因為資料夾裡沒有就被刪
       </li>
     </ul>
     <p class="hint">
-      只讀資料夾，不會上傳、不會改、不會刪。資料夾要設成「知道連結的人都能檢視」；
-      網址和金鑰<b>只存在這台裝置</b>，不進備份、不進 GitHub。
+      同步只讀資料夾（金鑰沒辦法寫），不會改、不會刪。資料夾要設成「知道連結的人都能檢視」；
+      想把照片從這台直接存進資料夾，看最下面的「上傳」。網址和金鑰<b>只存在這台裝置</b>，不進備份、不進 GitHub。
     </p>
 
     <label class="folder">
@@ -187,13 +192,15 @@ const names = (list: string[]) => (list.length > SHOWN ? `${list.slice(0, SHOWN)
       <p v-if="syncReport.unchanged" class="dim">{{ syncReport.unchanged }} 張照片早就是最新的，沒有重新下載</p>
       <p v-if="syncReport.localNewer.length" class="warn">這台自己拍的比資料夾裡的新，沒有蓋掉：{{ names(syncReport.localNewer) }}</p>
       <p v-if="syncReport.unmatched.length" class="warn">
-        ⚠ {{ syncReport.unmatched.length }} 個最上層的檔名對不到任何卡（檔名要跟卡上的字一樣）：{{ names(syncReport.unmatched) }}
+        ⚠ {{ syncReport.unmatched.length }} 個照片的檔名對不到任何卡（檔名要跟卡上的字一樣）：{{ names(syncReport.unmatched) }}
       </p>
       <p v-if="syncReport.older.length" class="warn">⚠ 同一個名字有好幾個檔，只用了最新的，略過 {{ syncReport.older.length }} 個：{{ names(syncReport.older) }}</p>
       <p v-for="f in syncReport.failed" :key="'p' + f.name" class="warn">⚠ {{ f.name }}：{{ f.why }}</p>
-      <p v-if="syncReport.ignored" class="dim">最上層略過 {{ syncReport.ignored }} 個不是照片也不是音檔的檔</p>
+      <p v-if="syncReport.ignored" class="dim">略過 {{ syncReport.ignored }} 個不是照片也不是音檔的檔</p>
       <p v-if="!syncReport.total && !syncReport.media.total" class="warn">資料夾裡沒有檔案（或這把金鑰看不到）。</p>
     </div>
+
+    <DriveUpload />
   </div>
 </template>
 

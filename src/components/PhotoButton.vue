@@ -1,12 +1,15 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { getPhoto } from '~/utils/photos'
-import { photoFiles, shareFiles } from '~/utils/photoFiles'
+import { photoFiles, readFolderUrl, shareFiles } from '~/utils/photoFiles'
+import { readAutoUpload, uploadConfigured } from '~/utils/driveUpload'
 import { usePhotoSlot } from '~/composables/usePhotoSlot'
 
 /**
  * 「拍照或選照片」＋「存到共用資料夾」＋「還原預設圖」：換掉某一張圖（photoKey 見 utils/photos.ts）。
  * 手機和 iPad 按下去會問要拍照還是從相簿選；照片縮小、去掉位置資訊、一律轉成 JPEG，只存在這台裝置。
- * 分享出去的檔案，檔名程式自己取好（apple.jpg），丟進雲端的共用資料夾，另一台就能匯入。
+ * 要給其他裝置用：設好雲端硬碟上傳（家長設定「圖片和聲音」）的話，換好照片就自動傳進共用資料夾，按鈕是重傳；
+ * 沒設的話，分享出去的檔案檔名程式自己取好（apple.jpg），丟進雲端的共用資料夾，另一台就能匯入。
  */
 const props = defineProps<{
   /** 新照片存在這個 key */
@@ -19,14 +22,27 @@ const props = defineProps<{
   disabled?: boolean
 }>()
 
-const { own, busy, msg, pick, reset: onReset } = usePhotoSlot(() => props.photoKey, () => props.legacyKey)
+const { own, busy, msg, cloud, pick, reset: onReset, uploadNow } = usePhotoSlot(() => props.photoKey, () => props.legacyKey)
+
+/** 設好上傳：按鈕直接傳到雲端硬碟；沒設：叫出分享選單 */
+const canUpload = computed(() => uploadConfigured())
+/** 上傳成功後給一個連結，家長看得到傳到哪（跟 script 寫入的是同一個資料夾，測試連線會比對） */
+const folderUrl = computed(() => (cloud.value?.kind === 'ok' ? readFolderUrl() : ''))
 
 function onPick(e: Event) {
-  return pick(e, '已換成你的照片。要給其他裝置用，按「存到共用資料夾」。')
+  return pick(e, canUpload.value && readAutoUpload()
+    ? '已換成你的照片。'
+    : canUpload.value
+      ? '已換成你的照片。要給其他裝置用，按「上傳到雲端硬碟」。'
+      : '已換成你的照片。要給其他裝置用，按「存到共用資料夾」。')
 }
 
 /** 分享選單要在點擊的當下叫出來：這裡到 shareFiles 之間不能有 await */
 function onShare() {
+  if (canUpload.value) {
+    void uploadNow()
+    return
+  }
   const rec = getPhoto(props.legacyKey ?? '') ?? getPhoto(props.photoKey)
   const files = rec ? photoFiles([rec]) : []
   if (!files.length) return
@@ -63,11 +79,15 @@ function onShare() {
           @change="onPick"
         >
       </label>
-      <button v-if="own" class="pb" :disabled="busy" @click="onShare">📤 存到共用資料夾</button>
+      <button v-if="own" class="pb" :disabled="busy" @click="onShare">{{ canUpload ? '☁️ 上傳到雲端硬碟' : '📤 存到共用資料夾' }}</button>
       <button v-if="own" class="pb" :disabled="busy" @click="onReset">還原預設圖</button>
     </div>
 
     <p v-if="msg" class="msg" :class="msg.kind" role="status">{{ msg.text }}</p>
+    <p v-if="cloud" class="msg" :class="cloud.kind" role="status">
+      {{ cloud.text }}
+      <a v-if="cloud.kind === 'ok' && folderUrl" class="folder-link" :href="folderUrl" target="_blank" rel="noopener noreferrer">開啟資料夾</a>
+    </p>
   </div>
 </template>
 
@@ -121,4 +141,5 @@ function onShare() {
 .file-input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
 
 .msg { flex-basis: 100%; margin: 0; min-height: 0; font-size: 14px; }
+.folder-link { margin-left: 6px; font-weight: 700; color: var(--text); white-space: nowrap; }
 </style>

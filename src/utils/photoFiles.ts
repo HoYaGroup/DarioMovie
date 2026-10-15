@@ -10,7 +10,8 @@ import { allPhotos, pathPhotoKey, preparePhoto, savePhoto, wordPhotoKey, type Ph
  * ‧ 分享出去的檔案，檔名由程式照卡上的字取好，家長不用改名；一律是縮小過、去掉位置資訊的 JPEG
  * ‧ 匯入時用檔名對卡：副檔名、大小寫、重複檔名後面的「 (1)」都不計較；同一個名字有好幾個檔，取最新的
  * ‧ 匯入的每一張都照一般照片重新處理一次（縮小、去 EXIF、擋掉不是圖片的），不直接相信資料夾裡的檔案
- * ‧ 程式不連任何雲端：上傳靠 iPad 的分享選單，匯入靠「檔案」App 的選檔
+ * ‧ 這個檔案不連任何雲端：上傳靠 iPad 的分享選單，匯入靠「檔案」App 的選檔
+ *   （選填的自動上傳在 utils/driveUpload.ts，下載同步在 utils/driveSync.ts）
  */
 
 export const PHOTO_EXT_RE = /\.(?:jpe?g|png|webp|heic|heif|gif|avif|bmp)$/i

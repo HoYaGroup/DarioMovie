@@ -8,14 +8,16 @@ import {
   allPhotos, cardPhotoKey, clearPhotos, pathPhotoKey, photosBytes, photoUrl, removePhoto, wordPhotoKey,
 } from '~/utils/photos'
 import { importPhotoFiles, photoFiles, shareFiles, type ImportReport } from '~/utils/photoFiles'
+import { uploadConfigured, uploadFiles, whereText } from '~/utils/driveUpload'
 import { useDriveSync } from '~/composables/useDriveSync'
 import PhotoTile from './PhotoTile.vue'
 
 /**
  * 家長設定「照片」頁：選一本字卡本，每張卡一格，按一下就拍照或選照片；放哪裡的地點照片也在這裡換。
  * 跟其他裝置共用：「存到共用資料夾」把照片用卡上的字當檔名交給分享選單，另一台「從資料夾匯入照片」用檔名對卡。
- * 這裡不連雲端：存的時候在分享選單選、匯入時在「檔案」App 選。想讓 iPad 自己從雲端硬碟資料夾抓，
- * 在上面「圖片和聲音」設定雲端硬碟資料夾同步（components/DriveFolder.vue），最上層的照片一樣用檔名對卡。
+ * 沒設雲端硬碟上傳的話，這裡不連雲端：存的時候在分享選單選、匯入時在「檔案」App 選。想讓 iPad 自己從雲端硬碟資料夾抓，
+ * 在上面「圖片和聲音」設定雲端硬碟資料夾同步（components/DriveFolder.vue），最上層的照片一樣用檔名對卡；
+ * 同一個地方也能設上傳（utils/driveUpload.ts）：設好之後換好照片就自動傳進資料夾，「全部存到共用資料夾」變成「全部上傳」。
  */
 const { videos, sections, categories } = useLibrary()
 
@@ -105,8 +107,33 @@ async function onRemove(key: string, label: string) {
 
 const shareMsg = ref<{ text: string; kind: 'ok' | 'err' } | null>(null)
 
+const canUpload = computed(() => uploadConfigured())
+const uploading = ref(false)
+const uploadProgress = ref({ done: 0, total: 0 })
+
+async function onUploadAll() {
+  const files = photoFiles()
+  if (!files.length || uploading.value) return
+  uploading.value = true
+  shareMsg.value = null
+  try {
+    const r = await uploadFiles(files, (done, total) => { uploadProgress.value = { done, total } })
+    shareMsg.value = r.failed.length
+      ? { text: `上傳了 ${r.saved.length} 張，${r.failed.length} 張沒成功：${r.failed.map((f) => `${f.name}（${f.why}）`).join('、')}`, kind: 'err' }
+      : { text: `已上傳 ${r.saved.length} 張到${whereText(r.paths)}。其他裝置按「立即同步」就會換上。`, kind: 'ok' }
+  } catch (e) {
+    shareMsg.value = { text: `沒有上傳成功：${(e as Error).message}`, kind: 'err' }
+  } finally {
+    uploading.value = false
+  }
+}
+
 /** 分享選單要在點擊的當下叫出來：這裡到 shareFiles 之間不能有 await */
 function onShareAll() {
+  if (canUpload.value) {
+    void onUploadAll()
+    return
+  }
   const files = photoFiles()
   if (!files.length) return
   shareFiles(files, '家裡的照片').then((how) => {
@@ -151,7 +178,10 @@ const names = (list: string[]) => (list.length > SHOWN ? `${list.slice(0, SHOWN)
       <strong class="howto-title">怎麼用</strong>
       <ol>
         <li><b>換照片</b>：在下面選一本字卡本，<b>按一下卡片</b>就能拍照，或從相簿選。換好的卡會打勾。</li>
-        <li><b>給其他裝置用</b>：按「存到共用資料夾」，跳出分享選單後選「雲端硬碟」，再選你的資料夾。檔名已經取好，不用改。</li>
+        <li>
+          <b>給其他裝置用</b>：按「存到共用資料夾」，跳出分享選單後選「雲端硬碟」，再選你的資料夾。檔名已經取好，不用改。
+          （在「圖片和聲音」設好「上傳」的話，換好照片就會自動傳進資料夾，這一步不用做。）
+        </li>
         <li><b>另一台裝置</b>：按「從資料夾匯入照片」，在「檔案」App 裡打開那個資料夾，把照片全選。</li>
       </ol>
       <p class="howto-note">
@@ -207,7 +237,11 @@ const names = (list: string[]) => (list.length > SHOWN ? `${list.slice(0, SHOWN)
 
     <h3 class="sub">跟其他裝置共用照片</h3>
     <div class="io-row">
-      <button class="ghost-btn primary" :disabled="!total" @click="onShareAll">📤 全部存到共用資料夾（{{ total }} 張）</button>
+      <button class="ghost-btn primary" :disabled="!total || uploading" @click="onShareAll">
+        <template v-if="uploading">上傳中 {{ uploadProgress.done }}/{{ uploadProgress.total }}</template>
+        <template v-else-if="canUpload">☁️ 全部上傳到雲端硬碟（{{ total }} 張）</template>
+        <template v-else>📤 全部存到共用資料夾（{{ total }} 張）</template>
+      </button>
       <label class="ghost-btn file" :class="{ 'is-disabled': importing }">
         {{ importing ? '匯入中…' : '📥 從資料夾匯入照片' }}
         <input
@@ -224,9 +258,10 @@ const names = (list: string[]) => (list.length > SHOWN ? `${list.slice(0, SHOWN)
     <p class="hint">
       檔名就是對應：<code>apple.jpg</code> 換掉所有字是 apple 的卡，<code>place-kitchen.jpg</code> 換廚房的地點照片。
       <b>知道資料夾網址的人都看得到裡面的照片，請不要放拍得到小朋友的照片。</b>
-      想讓 iPad 自己從雲端硬碟抓：到上面「圖片和聲音」設定資料夾同步，資料夾最上層的照片（檔名＝卡上的字）也會自動換上。
+      想讓 iPad 自己從雲端硬碟抓：到上面「圖片和聲音」設定資料夾同步，資料夾的 photos 資料夾（或最上層）裡的照片（檔名＝卡上的字）按「立即同步」就會換上；
+      同一個地方也能設「上傳」，之後換好照片就自動存進那個資料夾，不用再從分享選單挑位置。
     </p>
-    <p v-if="shareMsg" class="msg ok" role="status">{{ shareMsg.text }}</p>
+    <p v-if="shareMsg" class="msg" :class="shareMsg.kind" role="status">{{ shareMsg.text }}</p>
     <p v-if="importErr" class="msg err" role="alert">{{ importErr }}</p>
 
     <div v-if="report" class="report" role="status">
