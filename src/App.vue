@@ -8,9 +8,11 @@ import { useDisplay } from '~/composables/useDisplay'
 import { useChildStage } from '~/composables/useChildStage'
 import { useContinueWatching } from '~/composables/useContinueWatching'
 import { useParentGate } from '~/composables/useParentGate'
+import { useTvMode } from '~/composables/useTvMode'
 import { warmUpYouTubeApi } from '~/composables/useYouTubePlayer'
 import { useStageImageSync } from '~/composables/useStageImages'
-import VideoLibrary from '~/components/VideoLibrary.vue'
+import LearnHome from '~/components/LearnHome.vue'
+import FunLibrary from '~/components/FunLibrary.vue'
 import VideoStage from '~/components/VideoStage.vue'
 import SiteStage from '~/components/SiteStage.vue'
 import CardDeck from '~/components/CardDeck.vue'
@@ -18,7 +20,11 @@ import StickerBook from '~/components/StickerBook.vue'
 import ParentPanel from '~/components/ParentPanel.vue'
 import PinLock from '~/components/PinLock.vue'
 
-type Screen = 'library' | 'watch' | 'site' | 'cards' | 'parent' | 'stickers'
+/**
+ * library 是小朋友一打開看到的學習首頁（字卡本、今日任務）；
+ * fun 是影片和網站，要家長輸入密碼才進得去。
+ */
+type Screen = 'library' | 'fun' | 'watch' | 'site' | 'cards' | 'parent' | 'stickers'
 
 const { appTitle, init } = useLibrary()
 const { init: initWatchTime, resetSession } = useWatchTime()
@@ -27,6 +33,7 @@ const { init: initChild } = useChildStage()
 const { init: initContinueWatching } = useContinueWatching()
 const { init: initTheme, resolved: themeResolved } = useTheme()
 const { requestAccess } = useParentGate()
+const { isTv } = useTvMode()
 
 const screen = ref<Screen>('library')
 const playing = ref<VideoItem | null>(null)
@@ -65,16 +72,25 @@ onBeforeUnmount(() => {
 /**
  * 電視遙控器的「返回」鍵在 TWA 裡預設會被當成瀏覽器上一頁，
  * 沒特別處理的話，在播放畫面按一下返回鍵會直接把整個 App 關掉。
- * 用 pushState 記一筆「目前不在片單畫面」，讓返回鍵第一下先回到片單。
+ * 每進一個畫面就 pushState 記一筆，返回鍵一次退一層（影片 → 影片時間 → 首頁），
+ * trail 記的是「現在這個畫面底下是哪幾個畫面」，App 內的返回鈕照它退。
  */
+const trail: Screen[] = []
 let navigatingViaPopstate = false
+/** App 內的返回鈕自己呼叫了 history.back()，等一下 popstate 進來時要略過，不然會多退一層 */
+let pendingPops = 0
 
 function pushScreen(next: Screen) {
   const from = screen.value
+  const inCardFlow = (from === 'cards' || from === 'stickers') && (next === 'cards' || next === 'stickers')
   screen.value = next
   // 在字卡和貼紙本之間來回，只換掉那一筆歷史記錄、不另外堆一筆，遙控器的返回鍵才不用多按
-  if (from !== 'library' && history.state?.screen) history.replaceState({ screen: next }, '')
-  else history.pushState({ screen: next }, '')
+  if (inCardFlow && history.state?.screen) {
+    history.replaceState({ screen: next }, '')
+  } else {
+    trail.push(from)
+    history.pushState({ screen: next }, '')
+  }
 }
 
 /** 任務貼紙本：首頁和任務完成的畫面都開得到 */
@@ -103,12 +119,14 @@ function advance(video: VideoItem) {
   playing.value = video
 }
 
-function backToLibrary() {
-  screen.value = 'library'
-  playing.value = null
+/** 退回上一層：看完影片回影片時間，離開影片時間、字卡、貼紙本、家長設定回首頁 */
+function goBack() {
+  screen.value = trail.pop() ?? 'library'
+  if (screen.value === 'library' || screen.value === 'fun') playing.value = null
   // App 內的「返回」按鈕觸發時，順手把剛剛推的那筆歷史記錄消耗掉，
   // 避免遙控器返回鍵之後還要多按一次才能真的離開
   if (!navigatingViaPopstate && history.state?.screen) {
+    pendingPops++
     history.back()
   }
 }
@@ -122,23 +140,40 @@ async function openParent() {
   }
 }
 
+/** 影片和網站：家長輸入密碼才打得開；電視沒有密碼鍵盤，直接開放 */
+async function openFun() {
+  const granted = isTv || await requestAccess('fun')
+  if (granted) pushScreen('fun')
+}
+
 function onPopState() {
+  if (pendingPops > 0) {
+    pendingPops--
+    return
+  }
   if (screen.value === 'library') return
   navigatingViaPopstate = true
-  backToLibrary()
+  goBack()
   navigatingViaPopstate = false
 }
 </script>
 
 <template>
   <div class="app-root">
-    <VideoLibrary
+    <LearnHome
       v-if="screen === 'library'"
       @play="play"
       @mission="(video) => play(video, [video], 'mission')"
       @stickers="openStickers"
-      @resume="playResume"
+      @open-fun="openFun"
       @open-parent="openParent"
+    />
+
+    <FunLibrary
+      v-else-if="screen === 'fun'"
+      @close="goBack"
+      @play="play"
+      @resume="playResume"
     />
 
     <!--
@@ -150,33 +185,33 @@ function onPopState() {
       :video="playing"
       :queue="queue"
       :resume-at="resumeAt"
-      @close="backToLibrary"
+      @close="goBack"
       @advance="advance"
     />
 
     <SiteStage
       v-else-if="screen === 'site' && playing"
       :item="playing"
-      @close="backToLibrary"
+      @close="goBack"
     />
 
     <CardDeck
       v-else-if="screen === 'cards' && playing"
       :deck="playing"
       :start="deckStart"
-      @close="backToLibrary"
+      @close="goBack"
       @stickers="openStickers"
     />
 
     <StickerBook
       v-else-if="screen === 'stickers'"
-      @close="backToLibrary"
+      @close="goBack"
       @mission="(video) => play(video, [video], 'mission')"
     />
 
     <ParentPanel
       v-else-if="screen === 'parent'"
-      @close="backToLibrary"
+      @close="goBack"
     />
 
     <!-- 密碼鍵盤放在最外層，任何畫面都能叫得出來 -->

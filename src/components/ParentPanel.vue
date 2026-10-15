@@ -1810,7 +1810,7 @@ function onRevertAll() {
           <input
             v-model="newSectionName"
             class="cat-name"
-            placeholder="新增大分類，例如 娛樂"
+            placeholder="新增大分類，例如 生活"
             aria-label="新大分類名稱"
             @keyup.enter="onAddSection"
           >

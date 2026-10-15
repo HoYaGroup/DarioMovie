@@ -2,7 +2,7 @@
 import { ref, watch } from 'vue'
 import { useParentGate } from '~/composables/useParentGate'
 
-const { isAsking, errorText, submit, cancel } = useParentGate()
+const { isAsking, errorText, purpose, submit, cancel } = useParentGate()
 const buffer = ref('')
 
 // 每次重新開啟都從空白開始
@@ -29,7 +29,8 @@ function press(key: string) {
 <template>
   <div v-if="isAsking" class="pin-dialog">
     <div class="pin-card">
-      <h2>請輸入家長密碼</h2>
+      <h2 :class="{ 'has-why': purpose === 'fun' }">請輸入家長密碼</h2>
+      <p v-if="purpose === 'fun'" class="pin-why"><span aria-hidden="true">🎬</span> 要讓孩子看影片嗎？</p>
 
       <div class="pin-dots">
         <i v-for="n in 4" :key="n" :class="{ on: buffer.length >= n }" />
@@ -68,6 +69,8 @@ function press(key: string) {
   text-align: center;
 }
 .pin-card h2 { margin: 0 0 22px; font-size: 20px; font-weight: 800; }
+.pin-card h2.has-why { margin-bottom: 6px; }
+.pin-why { margin: 0 0 20px; font-size: 15px; font-weight: 700; color: var(--text-dim); }
 
 .pin-dots {
   display: flex;

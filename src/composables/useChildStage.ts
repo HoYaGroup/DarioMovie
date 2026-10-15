@@ -1,5 +1,5 @@
 import { computed } from 'vue'
-import type { Category, Section, VideoItem } from '~/utils/youtube'
+import type { VideoItem } from '~/utils/youtube'
 import { STAGES, stageOf, type StageId, type StageResult } from '~/utils/stage'
 import { useLibrary } from './useLibrary'
 import { useState } from './useState'
@@ -44,13 +44,13 @@ function read(): ChildProfile {
  *   ‧ 標了的：適合的班有一個是開放的才顯示（孩子這一班，加上家長另外開放的）
  *   ‧ 沒標的（自己加的影片、娛樂）：一直顯示
  * 還沒設定出生年度時，四個階段都開放，等於不篩選。
- * 數字、英文單字這些主題原本怎麼分就怎麼分，只是年紀不合的字卡本和影片不出現；
- * 一個分區裡的東西全都不合，整個分區（甚至整個大分類）也跟著收起來。
+ * 數字、英文單字這些主題原本怎麼分就怎麼分，只是年紀不合的字卡本和影片不出現
+ * （整個分區都不合就收起來，見 useShelf.ts）。
  */
 export function useChildStage() {
   const profile = useState<ChildProfile>('child.profile', () => ({ ...DEFAULTS }))
   const isReady = useState<boolean>('child.ready', () => false)
-  const { sections, categories, subCategories, videos, groupsIn } = useLibrary()
+  const { sections, categories, subCategories, videos } = useLibrary()
 
   function init() {
     if (isReady.value) return
@@ -122,48 +122,9 @@ export function useChildStage() {
     return visibleUids.value.has(video.uid)
   }
 
-  /**
-   * 分區看不看得到：裡面有看得到的東西，或是本來就空的（家長剛建好、還沒放東西）。
-   * 裡面的東西全都因為年紀不合被收起來的，分區也收起來，小朋友不會點進一個空的畫面。
-   */
-  const visibleCategoryIds = computed(() => {
-    const total = new Map<string, number>()
-    const shown = new Map<string, number>()
-    for (const v of videos.value) {
-      total.set(v.categoryId, (total.get(v.categoryId) ?? 0) + 1)
-      if (visibleUids.value.has(v.uid)) shown.set(v.categoryId, (shown.get(v.categoryId) ?? 0) + 1)
-    }
-    return new Set(categories.value.filter((c) => !total.get(c.id) || shown.get(c.id)).map((c) => c.id))
-  })
-
-  function visibleCategoriesIn(sectionId: string): Category[] {
-    return categories.value.filter((c) => c.sectionId === sectionId && visibleCategoryIds.value.has(c.id))
-  }
-
-  /** 至少有一個看得到的分區的大分類 */
-  const visibleSections = computed<Section[]>(() =>
-    sections.value.filter((sec) => visibleCategoriesIn(sec.id).length > 0),
-  )
-
-  function visibleCountIn(categoryId: string): number {
-    return videos.value.filter((v) => v.categoryId === categoryId && visibleUids.value.has(v.uid)).length
-  }
-
-  function visibleCountInSection(sectionId: string): number {
-    return visibleCategoriesIn(sectionId).reduce((n, c) => n + visibleCountIn(c.id), 0)
-  }
-
-  /** 分區底下的分組，只留看得到的東西；整組都看不到的單元不出現 */
-  function visibleGroupsIn(categoryId: string) {
-    return groupsIn(categoryId)
-      .map((g) => ({ ...g, videos: g.videos.filter(isVideoVisible) }))
-      .filter((g) => g.videos.length > 0)
-  }
-
   return {
     profile, current, openStages, init,
     setBirth, toggleStage,
     stagesOf, isVideoVisible,
-    visibleSections, visibleCategoriesIn, visibleCountIn, visibleCountInSection, visibleGroupsIn,
   }
 }
