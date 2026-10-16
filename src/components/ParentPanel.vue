@@ -1456,7 +1456,7 @@ function onRevertAll() {
           </div>
         </div>
         <p class="hint">
-          一天玩一兩個就夠了，覺得太多就調少一點。手機畫面一排最多放三個。
+          一天玩一兩個就夠了，覺得太多就調少一點。手機畫面三個一排，四個排成兩排。
         </p>
 
         <label class="field" style="margin-top: 18px">

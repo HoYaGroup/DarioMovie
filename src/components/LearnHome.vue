@@ -201,7 +201,7 @@ onBeforeUnmount(cancelHold)
             <strong>{{ stickerProgress.got }}/{{ stickerProgress.all }}</strong>
           </button>
         </h2>
-        <div class="missions-grid">
+        <div class="missions-grid" :class="{ 'is-four': todayMissions.length >= 4 }">
           <button
             v-for="m in todayMissions"
             :key="m.video.uid"
@@ -366,7 +366,7 @@ onBeforeUnmount(cancelHold)
 .stickers-btn span { font-size: 20px; }
 .stickers-btn strong { color: var(--accent); font-variant-numeric: tabular-nums; }
 
-/* 四張並排；手機寬度放三張，每張才夠大、好點 */
+/* 四張並排；手機寬度三張一排，四張就排成 2×2，每張才夠大、好點 */
 .missions-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -579,9 +579,13 @@ onBeforeUnmount(cancelHold)
 }
 
 @media (max-width: 560px) {
-  /* 手機：任務放三張，第四張先不放，每張才夠大 */
+  /* 手機：任務三張一排；四張排成 2×2（圖用 4:3 扁一點，不然兩排疊起來把大分類擠到畫面外） */
   .missions-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
-  .mission-tile:nth-child(n + 4) { display: none; }
+  .missions-grid.is-four { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .is-four .mission-thumb { aspect-ratio: 4 / 3; }
+  .is-four .mission-name { padding: 0 14px; font-size: 18px; }
+  .is-four .mission-desc { padding: 0 14px; font-size: 13px; }
+  .is-four .mission-tag { margin: 2px 14px 0; }
   .mission-name { padding: 0 10px; font-size: 16px; }
   .mission-desc { padding: 0 10px; font-size: 12px; }
   .mission-tag { margin: 2px 10px 0; font-size: 11px; }
@@ -597,6 +601,16 @@ onBeforeUnmount(cancelHold)
 
   /* 手機的橫向空間要留給標題：右上角三顆鈕縮小一點，額度只留數字 */
   .app-bar { gap: 8px; }
+  /* 標題放不下一行就折成兩行，不要被切成「我的學…」 */
+  .app-bar h1 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    white-space: normal;
+    font-size: 19px;
+    line-height: 1.25;
+  }
   .icon-btn { width: 46px; height: 46px; border-radius: 15px; }
   .icon-btn svg { width: 24px; height: 24px; }
   .fun-btn { font-size: 23px; }
@@ -604,5 +618,17 @@ onBeforeUnmount(cancelHold)
   .quota-label { display: none; }
   .quota { padding: 9px 12px; font-size: 14px; }
   .quota-icon { margin-right: 5px; }
+}
+
+/* 360 寬這種小手機：標題只剩幾十 px，額度只留時間、按鈕和邊距再縮一點 */
+@media (max-width: 400px) {
+  .app-bar {
+    gap: 6px;
+    padding-left: calc(var(--safe-l) + 16px);
+    padding-right: calc(var(--safe-r) + 16px);
+  }
+  .icon-btn { width: 42px; height: 42px; border-radius: 14px; }
+  .quota-icon { display: none; }
+  .quota { margin-right: 0; padding: 8px 10px; font-size: 13px; }
 }
 </style>

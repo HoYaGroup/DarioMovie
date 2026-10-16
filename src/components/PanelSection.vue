@@ -68,8 +68,9 @@ h2 {
   font-weight: 800;
 }
 
+/* flex-basis 要照內容（auto），不能是 0：不然標題旁的復原鈕放不下時不會換行，會壓在標題和數量上面 */
 .panel-toggle {
-  flex: 1;
+  flex: 1 1 auto;
   min-width: 0;
   display: flex;
   align-items: center;

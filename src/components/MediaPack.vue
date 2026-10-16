@@ -73,7 +73,8 @@ async function onClear() {
       <button class="ghost-btn small clear" :disabled="busy || !count" @click="onClear">清掉這台的素材</button>
     </div>
 
-    <h4 class="way">做法一：素材包（zip）</h4>
+    <details class="adv">
+      <summary class="way">做法一：素材包（zip，簡單、不用金鑰，改了要重新匯入）</summary>
     <ol class="steps">
       <li>
         把素材包 zip 傳到你的 Google 雲端硬碟。zip 自己做也可以（電腦、iPad 的「檔案」App 都能把資料夾壓縮成 zip，
@@ -100,6 +101,7 @@ async function onClear() {
         <li v-if="report.failed.length + report.skipped.length > 40">…還有更多</li>
       </ul>
     </template>
+    </details>
 
     <details class="adv" :open="driveOn">
       <summary class="way">做法二：雲端硬碟資料夾（進階，按「立即同步」下載；要自己申請 Google API 金鑰）</summary>
