@@ -170,3 +170,20 @@ body {
 
 /* 字卡圖片載入失敗（素材包還沒匯入、圖片不在網站上）：不顯示破圖的小圖示，見 main.ts */
 img.img-missing { visibility: hidden; }
+
+/*
+ * 共用：YouTube 播放器上的透明遮罩，在廣告期間把右下角裁掉（影片頁和字卡影片片段都用）。
+ * clip-path 裁掉的範圍不接收點擊，點擊會直接落到底下 iframe 的「略過」鈕。
+ * 缺口抓得比略過鈕大一圈，留點餘裕給不同螢幕大小；只開右下角，其他地方（標題列、廣告的連結）仍然蓋著。
+ */
+.yt-ad-hole {
+  --hole-w: clamp(150px, 32%, 300px);
+  --hole-h: clamp(70px, 28%, 160px);
+  clip-path: polygon(
+    0 0, 100% 0,
+    100% calc(100% - var(--hole-h)),
+    calc(100% - var(--hole-w)) calc(100% - var(--hole-h)),
+    calc(100% - var(--hole-w)) 100%,
+    0 100%
+  );
+}

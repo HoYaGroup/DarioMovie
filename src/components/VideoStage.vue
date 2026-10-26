@@ -101,7 +101,7 @@ function restIfDue(): boolean {
 }
 
 const {
-  hostRef, status, isPlaying, currentTime, duration, progress,
+  hostRef, status, isPlaying, currentTime, duration, progress, autoplayBlocked, likelyAd,
   load, toggle, play, pause, seekBy, previewSeek, commitSeek,
   playbackRate, setPlaybackRate, repeat, toggleRepeat,
 } = useYouTubePlayer({
@@ -165,9 +165,22 @@ function flashBigCover() {
 
 function loadVideo(id: string) {
   flashBigCover()
-  armTapHint()
   page.value = 0
   load(id)
+}
+
+// 廣告播完、正片真的開始的那一刻，推薦卡一樣會浮出來；廣告常常超過 9 秒，換片時放大的那次早就收回去了
+watch(likelyAd, (ad, was) => {
+  if (was && !ad) flashBigCover()
+})
+
+/**
+ * 廣告期間點畫面只負責「播放」，不切換暫停：多半是 iOS 擋自動播放時保底用，
+ * 真的在播廣告時點了也不會把廣告停住，讓小朋友以為壞掉。
+ */
+function onShieldTap() {
+  if (likelyAd.value) play()
+  else toggle()
 }
 
 // 休息開始就停下畫面；倒數完不自動播，讓小朋友自己決定要不要繼續
@@ -182,10 +195,10 @@ watch(isResting, (resting, was) => {
 
 /**
  * 保險：遮罩蓋著的時候不管怎麼被叫醒（換片自動播放、拖進度條、緩衝完自動接著播），
- * 只要播放器回報「正在播」就立刻再停一次，不會出現看不到畫面卻聽得到聲音的情況。
+ * 只要播放器回報「正在播」、或看起來在播廣告，就立刻再停一次，不會出現看不到畫面卻聽得到聲音的情況。
  */
-watch([status, blocked], ([s, b]) => {
-  if (b && s === 'playing') pause()
+watch([status, blocked, likelyAd], ([s, b, ad]) => {
+  if (b && (s === 'playing' || ad)) pause()
 })
 
 function continueWatching() {
@@ -201,18 +214,6 @@ const isFullscreen = ref(false)
  * 0 = 常用控制（返回／上下一首／播放／全螢幕），1 = 較少用到的設定（倒退10秒／速度／重複）。
  */
 const page = ref<0 | 1>(0)
-
-/** iOS 可能擋掉自動播放；等太久就改口提示小朋友點畫面。換片都算一次新的自動播放，要重新武裝這個計時器 */
-const needsTap = ref(false)
-let tapHintTimer: ReturnType<typeof setTimeout> | null = null
-
-function armTapHint() {
-  needsTap.value = false
-  if (tapHintTimer) clearTimeout(tapHintTimer)
-  tapHintTimer = setTimeout(() => {
-    if (status.value === 'loading') needsTap.value = true
-  }, 3000)
-}
 
 const seekValue = ref(0)
 watch(progress, (p) => { seekValue.value = Math.round(p * 1000) })
@@ -244,17 +245,12 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
-  if (tapHintTimer) clearTimeout(tapHintTimer)
   if (bigCoverTimer) clearTimeout(bigCoverTimer)
   // 離開也是個空檔：時間到了的話，回到清單就是休息畫面
   restIfDue()
   // 把還沒落地的觀看秒數、接續播放的進度都寫進 localStorage
   flush()
   saveProgress()
-})
-
-watch(status, (s) => {
-  if (s !== 'loading') needsTap.value = false
 })
 
 function onSeekInput(e: Event) {
@@ -312,15 +308,17 @@ async function toggleFullscreen() {
         第一道防線：透明層整片蓋住播放器。
         小朋友因此點不到 YouTube 的 logo、標題列、結束畫面推薦卡，
         點畫面只會觸發我們自己的播放／暫停。
+        廣告期間例外：右下角挖空，讓 YouTube 的「略過」按得到（見 main.css 的 .yt-ad-hole）。
       -->
-      <div class="shield" @click="toggle" />
+      <div class="shield" :class="{ 'yt-ad-hole': likelyAd }" @click="onShieldTap" />
 
       <!--
         YouTube 自己的浮水印固定在右下角，modestbranding 也擋不掉；剛開始播放的頭幾秒
         還會浮出一張帶縮圖的「更多影片」推薦卡，比浮水印大很多，過一陣子才會自動收合。
         兩種都只能自己蓋一塊底色蓋住；pointer-events:none 讓點擊繼續穿透給上面的 shield。
+        廣告期間要拿掉：「略過」鈕就出現在同一個角落。
       -->
-      <div class="watermark-cover" :class="{ 'is-wide': showBigCover }" aria-hidden="true" />
+      <div v-show="!likelyAd" class="watermark-cover" :class="{ 'is-wide': showBigCover }" aria-hidden="true" />
 
       <!-- 今天的額度用完了 -->
       <div v-if="overlay === 'limit'" class="veil veil-stop">
@@ -355,12 +353,20 @@ async function toggleFullscreen() {
         <p>暫停中</p>
       </div>
 
+      <!--
+        多半是廣告在播：不能再用「準備中」遮罩蓋住，否則只聽得到廣告聲音、看不到畫面，
+        「略過」也按不到。只在上方放一行小字，點擊照樣穿透給 shield。
+      -->
+      <p v-else-if="likelyAd" class="ad-hint">
+        {{ isTv ? '廣告播完就會開始' : '廣告：右下角出現「略過」就可以按' }}
+      </p>
+
       <div v-else-if="status === 'loading'" class="veil" @click="toggle">
-        <div v-if="!needsTap" class="spinner" />
+        <div v-if="!autoplayBlocked" class="spinner" />
         <div v-else class="veil-badge">
           <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
         </div>
-        <p>{{ needsTap ? '點一下畫面開始播放' : '影片準備中…' }}</p>
+        <p>{{ autoplayBlocked ? '點一下畫面開始播放' : '影片準備中…' }}</p>
       </div>
 
       <div v-else-if="status === 'error'" class="veil">
@@ -485,6 +491,26 @@ async function toggleFullscreen() {
   inset: 0;
   z-index: 3;
   background: transparent;
+}
+
+.ad-hint {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  z-index: 4;
+  transform: translateX(-50%);
+  max-width: calc(100% - 24px);
+  margin: 0;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: rgba(8, 7, 20, .75);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
 }
 
 .watermark-cover {

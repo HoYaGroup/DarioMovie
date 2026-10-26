@@ -33,6 +33,16 @@ declare global {
  */
 const END_GUARD_SEC = 0.8
 
+/**
+ * 正片的時間卡住這麼久沒動，就當作是廣告在播。
+ *
+ * YouTube 沒有任何官方的廣告事件。iPad 上實際遇到前置廣告時，播放器從頭到尾都沒回報 PLAYING，
+ * 看起來跟「還在載入」一模一樣，結果「準備中」遮罩把廣告整個蓋住，右下角的「略過」也按不到。
+ * 所以只能反過來推：播放器準備好了、沒被擋自動播放、也沒暫停，正片卻遲遲不前進，十之八九是廣告。
+ * 網路慢在緩衝也會長這樣，誤判的代價只是右下角暫時打開幾秒。略過鈕在廣告開始 5 秒後才出現，3 秒還來得及。
+ */
+const AD_STALL_MS = 3000
+
 /** IFrame API 全域只載入一次 */
 let apiPromise: Promise<void> | null = null
 function loadIframeApi(): Promise<void> {
@@ -90,6 +100,15 @@ export function useYouTubePlayer(options: {
   const playbackRate = ref(1)
   const repeat = ref(false)
 
+  /** 瀏覽器擋掉了自動播放（iOS 常見），要小朋友點一下畫面才會開始 */
+  const autoplayBlocked = ref(false)
+  /** 多半是廣告在播（判斷方式見 AD_STALL_MS），畫面要讓出右下角給 YouTube 的「略過」 */
+  const likelyAd = ref(false)
+  let adWatchTimer: ReturnType<typeof setInterval> | null = null
+  /** 最後一次看到正片真的往前走的時間 */
+  let lastProgressAt = 0
+  let lastContentTime = -1
+
   const isPlaying = computed(() => status.value === 'playing')
   const progress = computed(() => (duration.value ? currentTime.value / duration.value : 0))
 
@@ -134,6 +153,49 @@ export function useYouTubePlayer(options: {
       clearInterval(tickTimer)
       tickTimer = null
     }
+  }
+
+  /**
+   * 廣告偵測跟 tick 分開跑：前置廣告期間播放器根本不會進 PLAYING，tick 也就不會啟動。
+   * 從 load 開始一路盯到 teardown。
+   */
+  function startAdWatch() {
+    stopAdWatch()
+    likelyAd.value = false
+    lastProgressAt = Date.now()
+    lastContentTime = -1
+    adWatchTimer = setInterval(() => {
+      const now = Date.now()
+      // 這些時候正片不動是正常的：還沒準備好、已經播完、暫停、出錯、等小朋友點畫面、正在拖進度條
+      if (!player || !ready || finished || autoplayBlocked.value || isSeeking.value
+        || status.value === 'paused' || status.value === 'error') {
+        lastProgressAt = now
+        likelyAd.value = false
+        return
+      }
+      const cur = player.getCurrentTime() || 0
+      // 只有回報 PLAYING 而且時間真的有變才算正片在走；還在「載入」時時間就算有跳也不算
+      if (status.value === 'playing' && cur !== lastContentTime) {
+        lastProgressAt = now
+        likelyAd.value = false
+      }
+      lastContentTime = cur
+      if (now - lastProgressAt >= AD_STALL_MS) likelyAd.value = true
+    }, 500)
+  }
+
+  function stopAdWatch() {
+    if (adWatchTimer) {
+      clearInterval(adWatchTimer)
+      adWatchTimer = null
+    }
+    likelyAd.value = false
+  }
+
+  /** 小朋友點了畫面：就算剛剛被擋過自動播放，現在也有手勢了，卡住的計時從這裡重新算 */
+  function onUserPlay() {
+    autoplayBlocked.value = false
+    lastProgressAt = Date.now()
   }
 
   function finish() {
@@ -185,6 +247,7 @@ export function useYouTubePlayer(options: {
     const S = window.YT!.PlayerState
     if (e.data === S.PLAYING) {
       status.value = 'playing'
+      autoplayBlocked.value = false
       duration.value = player?.getDuration() || 0
       startTick()
     } else if (e.data === S.PAUSED) {
@@ -232,6 +295,8 @@ export function useYouTubePlayer(options: {
         onStateChange,
         // 字幕模組掛上（或換片後重新掛上）就會 fire，這是唯一能可靠強制關閉字幕的時機
         onApiChange: forceCaptionsOff,
+        // 官方事件：iOS 這類瀏覽器擋掉自動播放時會 fire，比「轉太久就猜是被擋」準，廣告在播時不會誤報
+        onAutoplayBlocked: () => { autoplayBlocked.value = true },
         onError: () => { status.value = 'error' },
       },
     })
@@ -248,6 +313,8 @@ export function useYouTubePlayer(options: {
     duration.value = 0
     clipStart = range.start ?? 0
     clipEnd = range.end ?? 0
+    autoplayBlocked.value = false
+    startAdWatch()
 
     try {
       await loadIframeApi()
@@ -270,6 +337,7 @@ export function useYouTubePlayer(options: {
 
   function play() {
     if (!player || !ready) return
+    onUserPlay()
     try { player.playVideo() } catch { /* 使用者手勢不足，等他點畫面 */ }
   }
 
@@ -283,7 +351,10 @@ export function useYouTubePlayer(options: {
     const S = window.YT!.PlayerState
     const st = player.getPlayerState()
     if (st === S.PLAYING || st === S.BUFFERING) player.pauseVideo()
-    else player.playVideo()
+    else {
+      onUserPlay()
+      player.playVideo()
+    }
   }
 
   function seekBy(delta: number) {
@@ -309,6 +380,7 @@ export function useYouTubePlayer(options: {
 
   function teardown() {
     stopTick()
+    stopAdWatch()
     try { player?.destroy() } catch { /* 已經沒了就算了 */ }
     if (hostRef.value) hostRef.value.innerHTML = ''
     player = null
@@ -318,7 +390,7 @@ export function useYouTubePlayer(options: {
   onBeforeUnmount(teardown)
 
   return {
-    hostRef, status, isPlaying, currentTime, duration, progress,
+    hostRef, status, isPlaying, currentTime, duration, progress, autoplayBlocked, likelyAd,
     load, toggle, play, pause, seekBy, previewSeek, commitSeek, finish, teardown,
     playbackRate, setPlaybackRate, repeat, toggleRepeat,
   }

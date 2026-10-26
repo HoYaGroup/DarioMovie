@@ -2020,8 +2020,14 @@ const clip = ref<CardClip | null>(null)
 const clipCloseRef = ref<HTMLButtonElement | null>(null)
 
 const {
-  hostRef, status: clipStatus, load: loadClip, toggle: toggleClip, teardown: teardownClip,
+  hostRef, status: clipStatus, likelyAd: clipAd, load: loadClip, toggle: toggleClip, play: playClip, teardown: teardownClip,
 } = useYouTubePlayer({ onFinish: closeClip })
+
+/** 廣告期間點畫面只播放、不暫停，原因同影片頁（VideoStage 的 onShieldTap） */
+function onClipShieldTap() {
+  if (clipAd.value) playClip()
+  else toggleClip()
+}
 
 async function openClip(c: CardClip) {
   clearPrompt()
@@ -2865,10 +2871,18 @@ onBeforeUnmount(() => {
     <div v-if="clip" class="clip-veil" role="dialog" aria-label="影片片段" @click.self="closeClip">
       <div class="clip-box">
         <div ref="hostRef" class="clip-player" />
-        <!-- 蓋一層在影片上：點畫面就是暫停／播放，不會點到 YouTube 自己的東西 -->
-        <button class="clip-shield" :aria-label="clipStatus === 'playing' ? '暫停' : '播放'" @click="toggleClip">
+        <!--
+          蓋一層在影片上：點畫面就是暫停／播放，不會點到 YouTube 自己的東西。
+          廣告期間右下角挖空讓「略過」按得到，也不放播放鈕擋住廣告畫面。
+        -->
+        <button
+          class="clip-shield"
+          :class="{ 'yt-ad-hole': clipAd }"
+          :aria-label="clipStatus === 'playing' ? '暫停' : '播放'"
+          @click="onClipShieldTap"
+        >
           <span v-if="clipStatus === 'error'" class="clip-msg">😅 {{ t('這段影片沒辦法播放', "This video can't play.") }}</span>
-          <span v-else-if="clipStatus !== 'playing'" class="clip-play" aria-hidden="true">
+          <span v-else-if="clipStatus !== 'playing' && !clipAd" class="clip-play" aria-hidden="true">
             <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
           </span>
         </button>
