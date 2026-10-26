@@ -456,9 +456,118 @@ function askCardLater() {
 
 function flip() {
   clearPrompt()
+  // 答案還在唸：連點卡片不會翻回去把答案切掉
+  if (answering.value) return
   flipped.value = !flipped.value
-  if (flipped.value && card.value) speak(withSound(card.value, answerParts(card.value)))
+  if (flipped.value && card.value) hearAnswer(speak(withSound(card.value, answerParts(card.value))))
   else stopSpeaking()
+}
+
+/* ---------- 不讓小朋友亂點換卡：看過答案才往下，連按只換一張 ---------- */
+
+/** 換過一張之後這麼久內再按換卡都不理，小朋友連按好幾下也只換一張 */
+const NAV_GAP = 1000
+let navAt = 0
+/** 這一次看過答案的卡（第幾張）：倒回去再往下不用重翻一次 */
+const seenCards = ref(new Set<number>())
+/** 翻到背面、答案正在唸 */
+const answering = ref(false)
+let answerToken = 0
+
+/** 答案唸完（或被打斷）才算看過這張；沒有語音的裝置至少停一下，讓他看到背面 */
+function hearAnswer(spoken: Promise<void>) {
+  const at = index.value
+  const mine = ++answerToken
+  answering.value = true
+  Promise.all([spoken, new Promise((r) => setTimeout(r, 1200))]).then(() => {
+    if (mine !== answerToken) return
+    answering.value = false
+    if (index.value === at) seenCards.value.add(at)
+  })
+}
+
+/**
+ * 這張還沒看過答案：還沒翻面（這一次看過的卡除外；數東西的卡要先數完、答對才翻得過去），或答案還在唸。
+ * 這時有 data-guard 的按鈕（返回、語言、模式、上面那排、上一張、下一張、看影片、這一頁）點了都不理，
+ * 只把題目再問一次；家長要離開就按住 0.8 秒（跟長按齒輪進家長設定一樣是大人的手勢）。電視遙控器的返回鍵不受影響。
+ */
+const cardLocked = computed(() =>
+  mode.value === 'learn' && !!card.value && (answering.value || (!flipped.value && !seenCards.value.has(index.value))),
+)
+
+/** 鎖著的時候按了別的：答案還在唸就等它唸完，還沒翻面就把題目再問一次 */
+function lockedTap() {
+  if (!answering.value) nudge()
+}
+
+function navReady(): boolean {
+  const now = Date.now()
+  if (now - navAt < NAV_GAP) return false
+  navAt = now
+  return true
+}
+
+/** 下一張（最後一張是考考我） */
+function goOn(then: () => void = () => go(1)) {
+  if (navReady()) then()
+}
+
+function goBack() {
+  if (navReady()) go(-1)
+}
+
+/** 上面那排字母、數字：家長拿來跳到今天教的那張 */
+function jumpToIndex(i: number) {
+  if (navReady()) go(i - index.value)
+}
+
+/* ---------- 鎖著的按鈕：點了提醒，家長按住才放行 ---------- */
+
+const HOLD_PASS_MS = 800
+let passTimer: ReturnType<typeof setTimeout> | null = null
+let holdingEl: HTMLElement | null = null
+/** 按滿了，正在替家長按那顆鈕：這一下要放行 */
+let passing = false
+/** 按滿時已經替他按過了，放開手指的那一下 click 要吃掉，不然會按兩次 */
+let swallowClick = false
+
+const guardOf = (e: Event) => (e.target as Element | null)?.closest<HTMLElement>('[data-guard]') ?? null
+
+function clearPass() {
+  if (passTimer) clearTimeout(passTimer)
+  passTimer = null
+  holdingEl?.classList.remove('is-holding')
+  holdingEl = null
+}
+
+function guardDown(e: PointerEvent) {
+  swallowClick = false
+  clearPass()
+  const el = guardOf(e)
+  if (!el || !cardLocked.value) return
+  holdingEl = el
+  el.classList.add('is-holding')
+  passTimer = setTimeout(() => {
+    clearPass()
+    passing = true
+    el.click()
+    passing = false
+    swallowClick = true
+  }, HOLD_PASS_MS)
+}
+
+function guardClick(e: MouseEvent) {
+  if (!guardOf(e)) return
+  if (swallowClick) {
+    swallowClick = false
+    e.stopPropagation()
+    e.preventDefault()
+    return
+  }
+  if (passing || !cardLocked.value) return
+  e.stopPropagation()
+  e.preventDefault()
+  lockedTap()
 }
 
 let nudgeTimer: ReturnType<typeof setTimeout> | null = null
@@ -495,6 +604,8 @@ function listen() {
 
 function resetCard() {
   if (flipTimer) clearTimeout(flipTimer)
+  answerToken++
+  answering.value = false
   flipped.value = false
   counted.value = []
   countOptions.value = []
@@ -514,7 +625,7 @@ function go(step: number) {
 
 function jumpTo(letter: string) {
   const i = letterIndex.value.get(letter)
-  if (i !== undefined) go(i - index.value)
+  if (i !== undefined) jumpToIndex(i)
 }
 
 /** 點一個東西就用英文數一個，數到最後一個就問 How many …? */
@@ -553,7 +664,7 @@ function pickCount(opt: number) {
     chimeRight()
     countSolved.value = true
     flipped.value = true
-    speak([{ pause: 250 }, ...cheer('right'), { pause: 300 }, ...answerParts(c)])
+    hearAnswer(speak([{ pause: 250 }, ...cheer('right'), { pause: 300 }, ...answerParts(c)]))
     return
   }
   if (countWrong.value.includes(opt)) return
@@ -582,10 +693,17 @@ function onPointerUp(e: PointerEvent) {
   if (swipeX === null) return
   const dx = e.clientX - swipeX
   swipeX = null
-  if (Math.abs(dx) > 60) {
+  if (Math.abs(dx) <= 60) return
+  // 還沒看過答案：滑了也不換卡。數東西的卡那一下照樣算點到東西；其他卡把題目再問一次，不順便翻面
+  if (cardLocked.value) {
+    if (showCount.value) return
     swiped = true
-    go(dx < 0 ? 1 : -1)
+    lockedTap()
+    return
   }
+  swiped = true
+  if (dx < 0) goOn()
+  else goBack()
 }
 
 function onCardClick() {
@@ -1869,10 +1987,62 @@ function startPractice() {
   mode.value = 'practice'
 }
 
-/** 上面有幾顆模式按鈕：五顆（看卡片、跟我說、放哪裡、任務、考考我）手機放不下，圖示先藏起來 */
-const modeTabCount = computed(() =>
-  1 + [canPlay.value, !!bookPage.value && canPlay.value, canPlace.value, canOrder.value, canCompare.value, canMission.value, canPractice.value, canSounds.value, canQuiz.value].filter(Boolean).length,
-)
+/* ---------- 頂部的選單：語言和模式 ---------- */
+
+/** 這本字卡有哪幾種玩法，照這個順序排在選單裡 */
+const modeItems = computed(() => [
+  { key: 'learn', show: true, icon: '📖', label: t('看卡片', 'Cards'), active: mode.value === 'learn', start: toLearn },
+  // 跟我說（一般字卡）／做動作（動作、口令、習慣）：換小朋友開口、動一動
+  {
+    key: 'act', show: canPlay.value, icon: actKind.value === 'say' ? '🗣️' : '🏃',
+    label: actKind.value === 'say' ? t('跟我說', 'Say it') : t('做動作', 'Do it'),
+    active: mode.value === 'play' && playKind.value !== 'find', start: startAct,
+  },
+  // 書上找：照家裡的書做的字卡本才有，聽到名字就在手上的書裡找出來
+  { key: 'find', show: !!bookPage.value && canPlay.value, icon: '🔍', label: t('書上找', 'Find'), active: mode.value === 'play' && playKind.value === 'find', start: startFind },
+  // 放哪裡：有寫「放:」的卡，把東西拖到對的地方
+  { key: 'place', show: canPlace.value, icon: '🏠', label: t('放哪裡', 'Where'), active: mode.value === 'place', start: startPlace },
+  // 比一比：數一數的字卡本比哪邊比較多、純數字的字卡本比哪個數字比較大
+  { key: 'compare', show: canCompare.value, icon: '⚖️', label: t('比一比', 'Compare'), active: mode.value === 'compare', start: startCompare },
+  // 排順序：卡片本身依順序排的字卡本（片單的「順序:」），照順序一張一張點
+  { key: 'order', show: canOrder.value, icon: '🔢', label: t('排順序', 'Order'), active: mode.value === 'order', start: startOrder },
+  // 任務：認識一個東西，再到家裡找找看；片單有寫「任務:」的字卡本才有
+  { key: 'mission', show: canMission.value, icon: '🔎', label: t('任務', 'Mission'), active: mode.value === 'mission', start: () => startMission() },
+  // 練習：數一數、找出所有的 6、用手指描一描；數字卡、ABC 字母卡、注音、國字的字卡本才有
+  { key: 'practice', show: canPractice.value, icon: '✏️', label: t('練習', 'Practice'), active: mode.value === 'practice', start: startPractice },
+  // 聽聲音：有真正叫聲（片單的「聲:」）的字卡本，聽叫聲點出是哪隻動物
+  { key: 'sounds', show: canSounds.value, icon: '🔊', label: t('聽聲音', 'Sounds'), active: mode.value === 'quiz' && quizSound.value, start: startSounds },
+  { key: 'quiz', show: canQuiz.value, icon: '🎯', label: t('考考我', 'Quiz'), active: mode.value === 'quiz' && !quizSound.value, start: startQuiz },
+].filter((m) => m.show))
+
+/** 選單按鈕上寫的：現在是哪個模式 */
+const currentMode = computed(() => modeItems.value.find((m) => m.active) ?? modeItems.value[0]!)
+
+const menuOpen = ref(false)
+const menuBtnRef = ref<HTMLButtonElement | null>(null)
+const menuPanelRef = ref<HTMLElement | null>(null)
+
+function toggleMenu() {
+  if (menuOpen.value) {
+    closeMenu()
+    return
+  }
+  menuOpen.value = true
+  // 電視遙控器沒有手指可以點：焦點直接放到現在的模式上
+  if (isTv) nextTick(() => menuPanelRef.value?.querySelector<HTMLElement>('.mode-tab.is-active')?.focus())
+}
+
+function closeMenu() {
+  if (!menuOpen.value) return
+  menuOpen.value = false
+  if (isTv) nextTick(() => menuBtnRef.value?.focus())
+}
+
+/** 選了一種玩法：先收起選單再開始（各模式自己會把焦點放到該放的地方） */
+function pickMode(start: () => void) {
+  menuOpen.value = false
+  start()
+}
 
 /** 玩完一輪之後「真的放放看」：用最後放對的那樣東西開任務 */
 function startPutMission() {
@@ -2049,6 +2219,10 @@ let ticker: ReturnType<typeof setInterval> | null = null
 let lastTick = 0
 
 function onKey(e: KeyboardEvent) {
+  if (menuOpen.value) {
+    if (e.key === 'Escape') closeMenu()
+    return
+  }
   if (e.key === 'Escape' && clip.value) {
     closeClip()
     return
@@ -2059,8 +2233,9 @@ function onKey(e: KeyboardEvent) {
   }
   // 電視上方向鍵要留給遙控器移動焦點；電腦鍵盤才用左右鍵換卡
   if (isTv || clip.value || mode.value !== 'learn') return
-  if (e.key === 'ArrowLeft') go(-1)
-  else if (e.key === 'ArrowRight') go(1)
+  if (cardLocked.value && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) lockedTap()
+  else if (e.key === 'ArrowLeft') goBack()
+  else if (e.key === 'ArrowRight') goOn()
 }
 
 onMounted(() => {
@@ -2090,6 +2265,7 @@ onMounted(() => {
 onBeforeUnmount(() => {
   if (ticker) clearInterval(ticker)
   if (flipTimer) clearTimeout(flipTimer)
+  clearPass()
   clearPrompt()
   clearQuizTimers()
   clearPlayTimers()
@@ -2104,9 +2280,17 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <section class="deck-view" :style="{ '--deck': color }">
+  <section
+    class="deck-view"
+    :class="{ 'is-card-locked': cardLocked }"
+    :style="{ '--deck': color }"
+    @pointerdown.capture="guardDown"
+    @pointerup.capture="clearPass"
+    @pointercancel.capture="clearPass"
+    @click.capture="guardClick"
+  >
     <header class="deck-bar">
-      <button class="bar-back" aria-label="回到清單" @click="emit('close')">
+      <button class="bar-back" aria-label="回到清單" data-guard @click="emit('close')">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.4 7.4 14 6l-6 6 6 6 1.4-1.4-4.6-4.6z" /></svg>
         <span>{{ t('返回', 'Back') }}</span>
       </button>
@@ -2117,122 +2301,54 @@ onBeforeUnmount(() => {
         <span aria-hidden="true">⭐</span>{{ stars }}
       </span>
 
-      <!-- 兩排的時候（直放、窄的橫放）在這裡換行：第一排返回、名稱、星星，第二排語言和模式按鈕，每一顆就有更多寬度 -->
-      <span class="bar-break" aria-hidden="true" />
-
-      <!-- 中文／中英／English：記在這台裝置上，每一本字卡都照這個設定 -->
-      <div v-if="!zhDeck" class="lang-toggle" role="group" aria-label="字卡語言">
+      <!--
+        語言和模式收在同一個選單裡：頂部列只剩一排，高度都留給卡片。
+        按鈕上寫現在是哪個模式；還沒看過答案時跟其他按鈕一起鎖住，家長按住才打得開，打開了裡面照常點
+      -->
+      <div class="deck-menu">
         <button
-          v-for="l in LANGS"
-          :key="l.id"
-          class="lang-btn"
-          :class="{ 'is-active': cardLang === l.id }"
-          :aria-pressed="cardLang === l.id"
-          @click="switchLang(l.id)"
+          ref="menuBtnRef"
+          class="menu-btn"
+          data-guard
+          aria-haspopup="true"
+          :aria-expanded="menuOpen"
+          :aria-label="t(`選單，現在是${currentMode.label}`, `Menu, now ${currentMode.label}`)"
+          @click="toggleMenu"
         >
-          {{ l.label }}
+          <span aria-hidden="true">{{ currentMode.icon }}</span>
+          <span class="menu-label">{{ currentMode.label }}</span>
+          <svg class="menu-caret" viewBox="0 0 24 24" aria-hidden="true"><path d="M7.4 8.6 6 10l6 6 6-6-1.4-1.4-4.6 4.6z" /></svg>
         </button>
+        <div v-if="menuOpen" class="menu-veil" @click="closeMenu" />
+        <div v-if="menuOpen" ref="menuPanelRef" class="menu-panel">
+          <!-- 中文／中英／English：記在這台裝置上，每一本字卡都照這個設定；換了選單不收起來，看得到換成哪個 -->
+          <div v-if="!zhDeck" class="lang-toggle" role="group" aria-label="字卡語言">
+            <button
+              v-for="l in LANGS"
+              :key="l.id"
+              class="lang-btn"
+              :class="{ 'is-active': cardLang === l.id }"
+              :aria-pressed="cardLang === l.id"
+              @click="switchLang(l.id)"
+            >
+              {{ l.label }}
+            </button>
+          </div>
+
+          <nav class="mode-tabs" aria-label="模式">
+            <button
+              v-for="m in modeItems"
+              :key="m.key"
+              class="mode-tab"
+              :class="{ 'is-active': m.active }"
+              :aria-current="m.active ? 'true' : undefined"
+              @click="pickMode(m.start)"
+            >
+              <span aria-hidden="true">{{ m.icon }}</span>{{ m.label }}
+            </button>
+          </nav>
+        </div>
       </div>
-
-      <nav class="mode-tabs" :class="{ 'is-many': modeTabCount >= 5 }" aria-label="模式">
-        <button
-          class="mode-tab"
-          :class="{ 'is-active': mode === 'learn' }"
-          :aria-current="mode === 'learn' ? 'true' : undefined"
-          @click="toLearn"
-        >
-          <span aria-hidden="true">📖</span>{{ t('看卡片', 'Cards') }}
-        </button>
-        <!-- 跟我說（一般字卡）／做動作（動作、口令、習慣）：換小朋友開口、動一動 -->
-        <button
-          v-if="canPlay"
-          class="mode-tab"
-          :class="{ 'is-active': mode === 'play' && playKind !== 'find' }"
-          :aria-current="mode === 'play' && playKind !== 'find' ? 'true' : undefined"
-          @click="startAct"
-        >
-          <span aria-hidden="true">{{ actKind === 'say' ? '🗣️' : '🏃' }}</span>{{ actKind === 'say' ? t('跟我說', 'Say it') : t('做動作', 'Do it') }}
-        </button>
-        <!-- 書上找：照家裡的書做的字卡本才有，聽到名字就在手上的書裡找出來 -->
-        <button
-          v-if="bookPage && canPlay"
-          class="mode-tab"
-          :class="{ 'is-active': mode === 'play' && playKind === 'find' }"
-          :aria-current="mode === 'play' && playKind === 'find' ? 'true' : undefined"
-          @click="startFind"
-        >
-          <span aria-hidden="true">🔍</span>{{ t('書上找', 'Find') }}
-        </button>
-        <!-- 放哪裡：有寫「放:」的卡，把東西拖到對的地方 -->
-        <button
-          v-if="canPlace"
-          class="mode-tab"
-          :class="{ 'is-active': mode === 'place' }"
-          :aria-current="mode === 'place' ? 'true' : undefined"
-          @click="startPlace"
-        >
-          <span aria-hidden="true">🏠</span>{{ t('放哪裡', 'Where') }}
-        </button>
-        <!-- 比一比：數一數的字卡本比哪邊比較多、純數字的字卡本比哪個數字比較大 -->
-        <button
-          v-if="canCompare"
-          class="mode-tab"
-          :class="{ 'is-active': mode === 'compare' }"
-          :aria-current="mode === 'compare' ? 'true' : undefined"
-          @click="startCompare"
-        >
-          <span aria-hidden="true">⚖️</span>{{ t('比一比', 'Compare') }}
-        </button>
-        <!-- 排順序：卡片本身依順序排的字卡本（片單的「順序:」），照順序一張一張點 -->
-        <button
-          v-if="canOrder"
-          class="mode-tab"
-          :class="{ 'is-active': mode === 'order' }"
-          :aria-current="mode === 'order' ? 'true' : undefined"
-          @click="startOrder"
-        >
-          <span aria-hidden="true">🔢</span>{{ t('排順序', 'Order') }}
-        </button>
-        <!-- 任務：認識一個東西，再到家裡找找看；片單有寫「任務:」的字卡本才有 -->
-        <button
-          v-if="canMission"
-          class="mode-tab"
-          :class="{ 'is-active': mode === 'mission' }"
-          :aria-current="mode === 'mission' ? 'true' : undefined"
-          @click="startMission()"
-        >
-          <span aria-hidden="true">🔎</span>{{ t('任務', 'Mission') }}
-        </button>
-        <!-- 練習：一個畫面一個題目，數一數、找出所有的 6、用手指描一描；數字卡、ABC 字母卡、注音、國字的字卡本才有 -->
-        <button
-          v-if="canPractice"
-          class="mode-tab"
-          :class="{ 'is-active': mode === 'practice' }"
-          :aria-current="mode === 'practice' ? 'true' : undefined"
-          @click="startPractice()"
-        >
-          <span aria-hidden="true">✏️</span>{{ t('練習', 'Practice') }}
-        </button>
-        <!-- 聽聲音：有真正叫聲（片單的「聲:」）的字卡本，聽叫聲點出是哪隻動物 -->
-        <button
-          v-if="canSounds"
-          class="mode-tab"
-          :class="{ 'is-active': mode === 'quiz' && quizSound }"
-          :aria-current="mode === 'quiz' && quizSound ? 'true' : undefined"
-          @click="startSounds()"
-        >
-          <span aria-hidden="true">🔊</span>{{ t('聽聲音', 'Sounds') }}
-        </button>
-        <button
-          v-if="canQuiz"
-          class="mode-tab"
-          :class="{ 'is-active': mode === 'quiz' && !quizSound }"
-          :aria-current="mode === 'quiz' && !quizSound ? 'true' : undefined"
-          @click="startQuiz()"
-        >
-          <span aria-hidden="true">🎯</span>{{ t('考考我', 'Quiz') }}
-        </button>
-      </nav>
     </header>
 
     <!-- ===== 看卡片 ===== -->
@@ -2243,6 +2359,7 @@ onBeforeUnmount(() => {
           v-for="l in ALPHABET"
           :key="l"
           class="jump-chip"
+          data-guard
           :class="{ 'is-current': l === currentLetter }"
           :disabled="!letterIndex.has(l)"
           :aria-current="l === currentLetter ? 'true' : undefined"
@@ -2257,9 +2374,10 @@ onBeforeUnmount(() => {
           v-for="chip in numberChips"
           :key="chip.index"
           class="jump-chip is-number"
+          data-guard
           :class="{ 'is-current': chip.index === currentChip }"
           :aria-current="chip.index === currentChip ? 'true' : undefined"
-          @click="go(chip.index - index)"
+          @click="jumpToIndex(chip.index)"
         >
           {{ chip.label }}
         </button>
@@ -2379,7 +2497,7 @@ onBeforeUnmount(() => {
       </div>
 
       <div class="learn-controls">
-        <button class="ctl ctl-nav" aria-label="上一張" @click="go(-1)">
+        <button class="ctl ctl-nav" aria-label="上一張" data-guard @click="goBack">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.4 7.4 14 6l-6 6 6 6 1.4-1.4-4.6-4.6z" /></svg>
         </button>
 
@@ -2388,12 +2506,12 @@ onBeforeUnmount(() => {
         </button>
 
         <!-- 照家裡的書做的：再看一次是書上的哪一頁 -->
-        <button v-if="bookPage" class="ctl ctl-wide ctl-page" :aria-label="t('看書上的這一頁', 'Book page')" @click="openPage">
+        <button v-if="bookPage" class="ctl ctl-wide ctl-page" data-guard :aria-label="t('看書上的這一頁', 'Book page')" @click="openPage">
           <span aria-hidden="true">📖</span><span class="ctl-text">{{ t('這一頁', 'Page') }}</span>
         </button>
 
         <!-- 影片片段要有網路才放得出來，沒網路時先藏起來，字卡本身照常玩 -->
-        <button v-if="card.clip && online" class="ctl ctl-wide ctl-video" @click="openClip(card.clip)">
+        <button v-if="card.clip && online" class="ctl ctl-wide ctl-video" data-guard @click="openClip(card.clip)">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>{{ t('看影片', 'Video') }}
         </button>
 
@@ -2402,11 +2520,24 @@ onBeforeUnmount(() => {
           <span aria-hidden="true">🔊</span>{{ t('叫聲', 'Sound') }}
         </button>
 
-        <!-- 看到最後一張，下一步順勢接到考考我 -->
-        <button v-if="isLast && canQuiz" class="ctl ctl-wide ctl-quiz" @click="startQuiz()">
+        <!-- 看到最後一張，下一步順勢接到考考我；聽完答案、按得動了會招手 -->
+        <button
+          v-if="isLast && canQuiz"
+          class="ctl ctl-wide ctl-quiz"
+          data-guard
+          :class="{ 'is-ready': !cardLocked && flipped }"
+          @click="goOn(startQuiz)"
+        >
           <span aria-hidden="true">🎯</span>{{ t('考考我', 'Quiz') }}
         </button>
-        <button v-else class="ctl ctl-nav" aria-label="下一張" @click="go(1)">
+        <button
+          v-else
+          class="ctl ctl-nav"
+          data-guard
+          :class="{ 'is-ready': !cardLocked && flipped }"
+          aria-label="下一張"
+          @click="goOn()"
+        >
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.6 16.6 10 18l6-6-6-6-1.4 1.4 4.6 4.6z" /></svg>
         </button>
       </div>
@@ -2919,13 +3050,12 @@ onBeforeUnmount(() => {
   overflow: hidden;
 }
 
-/* ---------- 頂部列 ---------- */
+/* ---------- 頂部列：返回、名稱、星星、選單，一排就好 ---------- */
 .deck-bar {
   flex: none;
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: 10px 14px;
+  gap: 14px;
   padding: calc(var(--safe-t) + 14px) calc(var(--safe-r) + 20px) 10px calc(var(--safe-l) + 20px);
 }
 
@@ -2950,8 +3080,7 @@ onBeforeUnmount(() => {
 
 .deck-title {
   flex: 1;
-  /* 三個模式按鈕加語言切換擠在同一排時，名稱不能被壓成「M…」：寬度不夠就讓按鈕換到第二排 */
-  min-width: 150px;
+  min-width: 0;
   margin: 0;
   font-size: clamp(19px, 2.4vw, 26px);
   font-weight: 800;
@@ -2959,8 +3088,6 @@ onBeforeUnmount(() => {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
-.bar-break { display: none; }
 
 .star-pill {
   flex: none;
@@ -2975,41 +3102,71 @@ onBeforeUnmount(() => {
   font-variant-numeric: tabular-nums;
 }
 
-/* 中英對照／全英文：比模式切換小一號，放在旁邊不搶眼 */
+/* ---------- 頂部的選單：語言和模式 ---------- */
+.deck-menu { position: relative; flex: none; }
+
+/* 跟返回鈕一樣高，寫著現在的模式，右邊一個往下的箭頭 */
+.menu-btn {
+  height: 52px;
+  padding: 0 10px 0 16px;
+  border: 0;
+  border-radius: 16px;
+  background: var(--bg-card);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 17px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+.menu-btn:active { transform: scale(.94); }
+.menu-btn[aria-expanded="true"] { background: var(--deck); color: var(--ink); }
+.menu-caret { width: 24px; height: 24px; fill: currentColor; transition: rotate .2s ease; }
+.menu-btn[aria-expanded="true"] .menu-caret { rotate: 180deg; }
+
+/* 打開時蓋一層在畫面上：點選單外面就收起來，也不會順手點到卡片 */
+.menu-veil {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: rgba(0, 0, 0, .3);
+}
+
+.menu-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 41;
+  width: min(440px, calc(100vw - var(--safe-l) - var(--safe-r) - 32px));
+  max-height: calc(100dvh - var(--safe-t) - 100px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 24px;
+  background: var(--bg-card);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, .35);
+  animation: menu-in .15s ease-out;
+}
+@keyframes menu-in {
+  from { opacity: 0; translate: 0 -8px; }
+}
+
+/* 中文／中英／English：一排三顆平分 */
 .lang-toggle {
-  flex: none;
   display: flex;
   gap: 4px;
   padding: 4px;
   border-radius: 999px;
-  background: var(--bg-card);
+  background: var(--bg);
 }
 .lang-btn {
-  height: 36px;
-  padding: 0 12px;
-  border: 0;
-  border-radius: 999px;
-  background: transparent;
-  color: var(--text-dim);
-  font-family: inherit;
-  font-size: 14px;
-  font-weight: 800;
-  cursor: pointer;
-}
-.lang-btn.is-active { background: var(--text); color: var(--bg); }
-
-.mode-tabs {
-  flex: none;
-  display: flex;
-  gap: 6px;
-  padding: 5px;
-  border-radius: 999px;
-  background: var(--bg-card);
-}
-
-.mode-tab {
+  flex: 1;
   height: 44px;
-  padding: 0 18px;
+  padding: 0 12px;
   border: 0;
   border-radius: 999px;
   background: transparent;
@@ -3017,11 +3174,35 @@ onBeforeUnmount(() => {
   font-family: inherit;
   font-size: 16px;
   font-weight: 800;
-  display: flex;
-  align-items: center;
-  gap: 6px;
   cursor: pointer;
 }
+.lang-btn.is-active { background: var(--text); color: var(--bg); }
+
+/* 玩法：兩欄的大按鈕，手指好點、字也不用縮 */
+.mode-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.mode-tab {
+  height: 58px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 18px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 18px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.mode-tab span[aria-hidden] { font-size: 24px; }
+.mode-tab:active { transform: scale(.96); }
 .mode-tab.is-active {
   background: var(--deck);
   color: var(--ink);
@@ -3439,10 +3620,21 @@ onBeforeUnmount(() => {
   justify-content: center;
   gap: 8px;
   cursor: pointer;
-  transition: transform .15s ease;
+  transition: transform .15s ease, opacity .3s ease;
 }
 .ctl:active { transform: scale(.93); }
 .ctl svg { width: 30px; height: 30px; fill: currentColor; }
+/* 還沒看過答案：會把他帶走的按鈕都淡掉，視線留在卡片上；家長按住時慢慢亮回來，亮滿就放行 */
+.is-card-locked [data-guard] { opacity: .35; }
+.is-card-locked [data-guard].is-holding { opacity: 1; transition: opacity .8s linear; }
+/* 家長按住打開了選單：展開中的選單按鈕亮著，看得出是從這裡打開的 */
+.is-card-locked .menu-btn[aria-expanded="true"] { opacity: 1; }
+/* 聽完答案、按鈕都亮回來了：下一張（最後一張是考考我）往右招手，提醒小朋友往下 */
+.ctl.is-ready { animation: point-on 1.4s ease-in-out .3s infinite; }
+@keyframes point-on {
+  0%, 60%, 100% { translate: 0 0; }
+  30% { translate: 8px 0; }
+}
 /* 上一張、下一張：要跟旁邊的「聽」搭得起來，不能小小一顆；
    只用字卡本的顏色描一圈邊，裡面不塗色，才不會跟「How many」的實心答案鈕搶焦點 */
 .ctl-nav { padding: 0; width: 88px; height: 76px; border: 4px solid var(--deck); }
@@ -4290,19 +4482,10 @@ onBeforeUnmount(() => {
   box-shadow: 0 10px 30px rgba(0, 0, 0, .45);
 }
 
-/* ---------- 頂部列：直放，或橫放但寬度不夠一排放下（手機橫放）---------- */
-/* 第一排放返回、名稱、星星（星星靠右）；第二排放語言、看卡片／跟我說／考考我，放得下就同一排，
-   放不下（手機）就換行，換行後每一排的按鈕都撐滿整排寬度。要比手機的 max-width 規則先寫，手機的才蓋得過。
-   橫放寬度 1100px 以上（iPad mini 橫放 1133）一排放得下，不走這一段；
-   高度 520px 以下的手機橫放，寬度 844px 以上也一排放得下（高度寶貴，不拆成兩排） */
-@media (orientation: portrait), (max-width: 843px), (min-height: 521px) and (max-width: 1099px) {
-  /* 行距改用每顆按鈕下緣的留白，換行用的空元素才不會多出一段空隙 */
-  .deck-bar { gap: 0 10px; padding-bottom: 0; }
-  .deck-bar > * { margin-bottom: var(--bar-gap, 10px); }
-  .deck-bar > .bar-break { display: block; flex: 0 0 100%; height: 0; margin: 0; }
-  /* 名稱和星星同一排，名稱讓出位置：長的名稱折成兩行（跟旁邊的返回鈕一樣高），不夠再用刪節號 */
+/* ---------- 頂部列：直放、窄的螢幕 ---------- */
+/* 名稱讓出位置給返回、星星和選單：長的名稱折成兩行（跟旁邊的返回鈕一樣高），不夠再用刪節號 */
+@media (orientation: portrait), (max-width: 843px) {
   .deck-title {
-    min-width: 0;
     white-space: normal;
     line-height: 1.15;
     display: -webkit-box;
@@ -4310,34 +4493,22 @@ onBeforeUnmount(() => {
     -webkit-line-clamp: 2;
     line-clamp: 2;
   }
-  /* 空間夠就拉寬：語言和模式按鈕分掉第二排剩下的寬度，每一顆平分 */
-  .lang-toggle { flex: 1 1 auto; }
-  .lang-btn { flex: 1 1 auto; }
-  .mode-tabs { flex: 1.4 1 auto; min-width: 0; }
-  /* 左右留白收小一點，三顆（照家裡的書做的字卡本有四顆）才擠得進星星、語言旁邊同一排 */
-  .mode-tab { flex: 1 1 auto; justify-content: center; padding: 0 12px; }
-  .lang-btn { padding: 0 10px; }
 }
 
-/* 兩排、而且橫向有很多空間（iPad 橫放，寬 900～1099）：按鈕放大一點，小朋友比較好點 */
-@media (min-width: 900px) and (max-width: 1099px) and (min-height: 521px) {
+/* iPad 這種大螢幕：頂部列的按鈕放大一點，小朋友比較好點 */
+@media (min-width: 700px) and (min-height: 600px) {
   .bar-back { height: 58px; font-size: 18px; }
   .deck-title { font-size: 28px; }
   .star-pill { padding: 10px 18px; font-size: 21px; }
-  .lang-btn { height: 46px; padding: 0 16px; font-size: 17px; }
-  .mode-tab { height: 54px; padding: 0 18px; font-size: 19px; }
+  .menu-btn { height: 58px; font-size: 19px; }
 }
 
 /* ---------- 窄螢幕與手機橫向 ---------- */
 @media (max-width: 560px) {
-  /* 語言和看卡片／跟我說／考考我：手機放得下就同一排，放不下就各占一整排，都撐滿寬度 */
-  .mode-tabs { flex: 1.4 1 auto; min-width: 0; }
-  /* 照家裡的書做的字卡本多一顆「書上找」，四顆要擠進手機一排：字和間距都收小一點 */
-  .mode-tab { flex: 1 1 auto; justify-content: center; gap: 3px; padding: 0 6px; font-size: 15px; white-space: nowrap; }
-  .lang-btn { padding: 0 8px; font-size: 13px; }
-  /* 五顆模式按鈕（有任務、放哪裡的字卡本）：小圖示先藏起來，字才放得下一排 */
-  .mode-tabs.is-many .mode-tab { padding: 0 5px; }
-  .mode-tabs.is-many .mode-tab span[aria-hidden] { display: none; }
+  /* 選單按鈕只留模式的圖示和箭頭，名稱才有位置；打開的選單裡照樣寫字 */
+  .deck-bar { gap: 10px; }
+  .menu-label { display: none; }
+  .menu-btn { padding: 0 6px 0 12px; gap: 4px; }
   .ctl { height: 58px; padding: 0 16px; font-size: 17px; }
   .ctl-listen { height: 68px; padding: 0 20px; font-size: 22px; }
   .ctl-nav { width: 70px; height: 68px; }
@@ -4348,20 +4519,13 @@ onBeforeUnmount(() => {
   .ask-btn { font-size: 18px; }
 }
 
-/* 很窄的手機：模式按鈕上的小圖示先藏起來，字才放得下一行 */
-@media (max-width: 380px) {
-  .mode-tab span[aria-hidden] { display: none; }
-}
-
 @media (max-height: 520px) {
-  /* 手機橫向高度很少：名稱少留一點，按鈕才不用換到第二排 */
-  .deck-title { min-width: 100px; }
+  /* 手機橫向高度很少：頂部列整排矮一點 */
   .deck-bar { padding-top: calc(var(--safe-t) + 8px); padding-bottom: 6px; }
-  .deck-bar { gap: 6px 10px; }
+  .deck-bar { gap: 10px; }
   .bar-back { height: 42px; }
   .star-pill { padding: 6px 10px; font-size: 15px; }
-  .lang-btn { height: 32px; padding: 0 9px; font-size: 13px; }
-  .mode-tab { height: 36px; padding: 0 12px; font-size: 15px; }
+  .menu-btn { height: 42px; font-size: 15px; }
   .progress { margin: 8px 0 6px; }
   .ctl { height: 48px; font-size: 16px; }
   .ctl-listen { height: 56px; font-size: 19px; }
@@ -4377,14 +4541,6 @@ onBeforeUnmount(() => {
   /* 卡片矮：題目常折成兩行、按鈕又不能再小，數過的東西再縮一點讓位置 */
   .is-asking .count-grid { margin-bottom: 54cqh; }
   .is-asking .count-emoji { font-size: min(calc(60cqw / var(--cols)), calc(22cqh / var(--rows)), 18cqh); }
-}
-
-/* 手機橫放、頂部列要換行的時候：行距縮小一點，把高度留給卡片（要寫在上面「gap: 6px 10px」那段的後面才蓋得過） */
-@media (max-height: 520px) and (orientation: portrait), (max-height: 520px) and (max-width: 843px) {
-  .deck-bar { --bar-gap: 6px; gap: 0 10px; padding-bottom: 0; }
-  /* 四顆模式按鈕（照家裡的書做的字卡本）也要擠進星星、語言旁邊同一排：字和左右留白再縮一點，多出的寬度仍會撐開 */
-  .mode-tab { padding: 0 7px; gap: 4px; font-size: 14px; }
-  .lang-btn { padding: 0 8px; }
 }
 
 /* 手機橫向：高度只剩一點點，卡片才能用滿整個高度（版面跟 iPad 橫放一樣，在下面） */
@@ -4507,6 +4663,7 @@ onBeforeUnmount(() => {
   .is-nudging .face-hint,
   .is-nudging .count-question,
   .is-nudging .count-emoji,
+  .ctl.is-ready,
   .option-caption { animation: none; }
 }
 </style>

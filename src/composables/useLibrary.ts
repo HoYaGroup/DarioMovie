@@ -471,7 +471,9 @@ export function useLibrary() {
    */
   async function syncFromPlaylist(force = false): Promise<SyncStatus> {
     const source = useSheetSource()
-    if (!source.link.value) {
+    // 開發時（npm run dev）還沒設定試算表：用內建的測試字卡（src/dev/sampleDecks.ts）；部署出去的網站整段拿掉
+    const devSample = import.meta.env.DEV && !source.link.value
+    if (!source.link.value && !devSample) {
       syncStatus.value = {
         state: 'missing',
         message: '還沒設定學習單試算表的網址，目前用的是這台裝置上的書單。家長設定 →「來源備份」貼上網址就會讀進來。',
@@ -482,7 +484,7 @@ export function useLibrary() {
 
     syncStatus.value = { state: 'syncing', message: '正在讀取試算表…', warnings: [] }
 
-    const sheet = await source.load()
+    const sheet = devSample ? (await import('~/dev/sampleDecks')).sampleSheet() : await source.load()
     if (!sheet) {
       // 讀不到，而且從來沒讀成功過
       syncStatus.value = {
@@ -547,7 +549,7 @@ export function useLibrary() {
       : ''
     syncStatus.value = {
       state: 'updated',
-      message: `已從試算表更新：${secPart}${parsed.categories.length} 個分區、${parsed.videos.length - deckCount} 部影片${deckPart}。${keptPart}${droppedPart}${discardedPart}`,
+      message: `${devSample ? '開發模式，用內建的測試字卡（src/dev/sampleDecks.ts）' : '已從試算表更新'}：${secPart}${parsed.categories.length} 個分區、${parsed.videos.length - deckCount} 部影片${deckPart}。${keptPart}${droppedPart}${discardedPart}`,
       warnings: parsed.warnings,
       discarded: discarded + dropped,
     }

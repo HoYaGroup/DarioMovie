@@ -1282,11 +1282,18 @@ const huntFound = (i: number) => found.value.indexOf(i) + 1
 }
 
 /* ---------- 描一描 ---------- */
+/* 手指描字要大：題目以外的空間全部給板子，外框量出放得下多大，板子取裡面最大的正方形 */
+.is-trace .body,
+.is-trace .board-wrap {
+  flex: 1;
+  min-height: 0;
+  align-self: stretch;
+}
+.is-trace .board-wrap { container-type: size; align-items: center; }
 .trace-board {
-  --tw: min(90vw, 46vh, 520px);
   position: relative;
-  width: var(--tw);
-  height: var(--tw);
+  width: min(100cqw, 100cqh);
+  height: min(100cqw, 100cqh);
   border-radius: 28px;
   background: var(--paper);
   box-shadow: 0 12px 28px var(--shadow);
@@ -1396,7 +1403,13 @@ const huntFound = (i: number) => found.value.indexOf(i) + 1
   .head, .body { gap: 22px; }
   .board { height: min(34vh, 380px); }
   .is-take .board { height: min(26vh, 300px); }
-  .trace-board { --tw: min(80vw, 46vh, 600px); }
+}
+
+/* 橫放（iPad、電腦）描一描：題目放左邊，板子吃滿整個高度 */
+@media (min-aspect-ratio: 4 / 3) {
+  .practice.is-trace { flex-direction: row; gap: 24px; }
+  .is-trace .head { flex: none; }
+  .is-trace .prompt-row { flex-direction: column; }
 }
 
 @media (max-width: 560px) {
@@ -1415,7 +1428,6 @@ const huntFound = (i: number) => found.value.indexOf(i) + 1
   .panel { --pw: min(18vw, 40vh, 150px); }
   .hunt-board { --cell: min(15vw, 20vh, 100px); gap: 8px; }
   .hunt-hint { display: none; }
-  .trace-board { --tw: min(58vh, 90vw, 280px); }
   .tray { min-height: 56px; }
   .tray-thing { font-size: 28px; }
   .ask-btn { padding: 8px 20px 8px 10px; font-size: 17px; }
